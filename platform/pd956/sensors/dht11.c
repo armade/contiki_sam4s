@@ -1,0 +1,262 @@
+#include "contiki.h"
+#include "contiki-conf.h"
+#include "platform-conf.h"
+#include "lib/sensors.h"
+
+#include "compiler.h"
+#include <gpio.h>
+#include "pio_handler.h"
+#include "dht11.h"
+
+/*---------------------------------------------------------------------------*/
+#define DEBUG 0
+#if DEBUG
+#define PRINTF(...) printf(__VA_ARGS__)
+#else
+#define PRINTF(...)
+#endif
+/*---------------------------------------------------------------------------*/
+#define data_pin PIO_PB2
+
+
+#define SENSOR_STATUS_DISABLED     0
+#define SENSOR_STATUS_INITIALISED  1
+#define SENSOR_STATUS_NOT_READY    2
+#define SENSOR_STATUS_READY        3
+
+static int sensor_status = SENSOR_STATUS_DISABLED;
+
+static int dht_state;
+static uint64_t data_bytes;
+volatile int timer,old_timer,new_timer;
+volatile char bitcounter;
+
+int temperature = SENSOR_ERROR, humidity = SENSOR_ERROR, parity;
+int temperature_split = SENSOR_ERROR, humidity_split = SENSOR_ERROR;
+
+#define BUSYWAIT_UNTIL(cond, max_time)                                  \
+  do {                                                                  \
+    rtimer_clock_t t0;                                                  \
+    t0 = RTIMER_NOW();                                                  \
+    while(!(cond) && RTIMER_CLOCK_LT(RTIMER_NOW(), t0 + (max_time)));   \
+  } while(0)
+/*---------------------------------------------------------------------------*/
+struct ctimer dht_timeout_timer;
+volatile uint8_t par;
+static void
+dht11_timeout(void *data)
+{
+	if(dht_state == 3)
+	{
+		parity = (data_bytes>>(40-8))&0xff;
+		parity += (data_bytes>>(40-16))&0xff;
+		parity += (data_bytes>>(40-24))&0xff;
+		parity += (data_bytes>>(40-32))&0xff;
+
+		par = (data_bytes&0xff);
+
+		if((parity&0xff) == (data_bytes&0xff))
+		{
+			humidity =  (data_bytes>>(40-8))&0xff;
+			humidity *= 1000;
+			humidity += (data_bytes>>(40-16))&0xff;
+
+			temperature =  (data_bytes>>(40-24))&0xff;
+			temperature *= 1000;
+			temperature += (data_bytes>>(40-32))&0xff;
+
+			humidity_split =(data_bytes>>(40-16))&0xffff;
+			temperature_split = (data_bytes>>(40-32))&0xffff;
+		}
+	}
+	else
+	{
+		pio_disable_interrupt(PIOB, data_pin);
+		dht_state = 77;
+		temperature = SENSOR_ERROR;
+		humidity = SENSOR_ERROR;
+	}
+
+	sensor_status = SENSOR_STATUS_READY;
+	sensors_changed(&dht11_sensor);
+}
+
+volatile int debug_time[42];
+/*
+ * Sample on falling edge. depending on the time between samples
+ * we can determine if the bit is '1' or '0'.
+ */
+void dht11_data_pin_irq(uint32_t a, uint32_t b)
+{
+	new_timer = SysTick->VAL;
+	timer = old_timer - new_timer; // systimer is counting down
+	if(timer < 0) // if tickcounter ticks :)
+		timer += SysTick->LOAD;
+	timer = (timer*1000000)/F_CPU;
+
+	switch(dht_state)
+	{
+		// Delay DHT 20-40us
+		case 0:
+			debug_time[0] = timer;
+			bitcounter=0;
+			dht_state++;
+			break;
+
+		// Start 80us*2
+		case 1:
+			debug_time[1] = timer;
+			dht_state++;
+			break;
+		// Data
+		case 2:
+			data_bytes <<=1;
+			debug_time[2+bitcounter] = timer;
+			bitcounter++;
+			if((timer < 130) && (timer > 110)) 		// 120us = '1'
+				data_bytes |= 1;
+			else if((timer < 90) && (timer > 65)) 	// 76-78us = '0'
+				data_bytes &= ~(1ULL);
+			else									//got to error if it's not a '0' or a '1'.
+				dht_state = 77;
+
+			if(bitcounter==40)
+			{
+				// After 1 sec from start we timeout and hit 'dht11_timeout()'.
+				// If we have completed dht_state is 3. if state is 2 then we hit a timeout.
+				// if state is 77 we have a data error.
+				dht_state++;
+				pio_disable_interrupt(PIOB, data_pin);
+			}
+
+			break;
+
+		default:
+			break;
+	}
+	old_timer = new_timer;
+}
+/*---------------------------------------------------------------------------*/
+/**
+ * \brief Returns a reading from the sensor
+ * \ Temperature = temp *1000
+ * \ Humidity = hud * 1000
+ * \ Temperature_split = temp<<8 | temp_dec
+ * \ Humidity_split = hud<<8 | hud_dec
+ */
+static int
+dht11_get_reading(int type)
+{
+	if(type == TEMPERATURE_READING) // temperature
+		return temperature;
+
+	if(type == HUMIDITY_READING)
+		return humidity;
+// Split reading represent the same as in the transfer.
+	// 8 bit for integer and 8 bit for decimal
+	if(type==TEMPERATURE_READING_SPLIT)
+		return temperature_split;
+
+	if(type==HUMIDITY_READING_SPLIT)
+		return humidity_split;
+
+	return SENSOR_ERROR;
+}
+
+struct ctimer dht11_timer;
+
+void
+dht11_start_measurement(void *ptr)
+{
+	dht_state = 0;
+	data_bytes = 0;
+	pio_set_output(PIOB, data_pin,0,0,1);
+	BUSYWAIT_UNTIL(0,(18 * RTIMER_SECOND) / 1000);//18ms
+	pio_set_pin_group_high(PIOB,data_pin);
+
+	// Set timeout to 1 sec
+	ctimer_set(&dht_timeout_timer, (1*CLOCK_SECOND), dht11_timeout, NULL);
+	pio_set_input(PIOB,data_pin,PIO_PULLUP);
+	pio_enable_interrupt(PIOB, data_pin);
+	old_timer = SysTick->VAL;
+
+	// Measure every 15 sec as long as we are active
+	// NB: this means that every measurement is 15 seconds behind. (but does it matter?)
+	//if(SENSOR_STATUS_READY == sensor_status)
+	//	ctimer_set(&dht11_timer, (15*CLOCK_SECOND), dht11_start_measurement, NULL);
+}
+/*
+ * Error:
+{"Board":"PD956-01","Name":"Kontor","Seq #":1198,"Uptime (sec)":35946,"Internal temperature":31.894,"position":0,"Temperature":22.0,"humidity":50.0}
+{"Board":"PD956-01","Name":"Tester","Seq #":25,"Uptime (sec)":724,"Internal temperature":29.332,"position":0,"Temperature":N/A,"humidity":N/A}
+{"Board":"PD956-01","Name":"Kontor","Seq #":1199,"Uptime (sec)":35976,"Internal temperature":32.577,"position":0,"Temperature":22.0,"humidity":50.0}
+{"Board":"PD956-01","Name":"Tester","Seq #":26,"Uptime (sec)":754,"Internal temperature":29.844,"position":0,"Temperature":N/A,"humidity":N/A}
+{"Board":"PD956-01","Name":"Kontor","Seq #":1200,"Uptime (sec)":36006,"Internal temperature":31.894,"position":0,"Temperature":22.0,"humidity":50.0}
+{"Board":"PD956-01","Name":"Tester","Seq #":27,"Uptime (sec)":784,"Internal temperature":29.332,"position":0,"Temperature":N/A,"humidity":N/A}
+{"Board":"PD956-01","Name":"Kontor","Seq #":1201,"Uptime (sec)":36036,"Internal temperature":31.552,"position":0,"Temperature":22.0,"humidity":50.0}
+{"Board":"PD956-01","Name":"Tester","Seq #":28,"Uptime (sec)":814,"Internal temperature":28.990,"position":0,"Temperature":N/A,"humidity":N/A}
+{"Board":"PD956-01","Name":"Tester","Seq #":29,"Uptime (sec)":844,"Internal temperature":29.161,"position":0,"Temperature":N/A,"humidity":N/A}
+{"Board":"PD956-01","Name":"Tester","Seq #":30,"Uptime (sec)":874,"Internal temperature":28.478,"position":0,"Temperature":N/A,"humidity":N/A}
+{"Board":"PD956-01","Name":"Tester","Seq #":31,"Uptime (sec)":904,"Internal temperature":29.332,"position":0,"Temperature":N/A,"humidity":N/A}
+ * */
+
+/*---------------------------------------------------------------------------*/
+/**
+ * \brief Configuration function for the sensor.
+ *
+ * \param type Activate, enable or disable the sensor. See below
+ * \param enable
+ *
+ * When type == SENSORS_HW_INIT we turn on the hardware
+ * When type == SENSORS_ACTIVE and enable==1 we enable the sensor
+ * When type == SENSORS_ACTIVE and enable==0 we disable the sensor
+ */
+static int
+dht11_init(int type, int enable)
+{
+	switch(type) {
+
+		case SENSORS_HW_INIT:
+			pio_set_input(PIOB,data_pin,PIO_PULLUP);
+
+			pio_handler_set(PIOB, ID_PIOB, data_pin, PIO_IT_FALL_EDGE, dht11_data_pin_irq);
+			NVIC_SetPriority((IRQn_Type) ID_PIOB, 0);
+			NVIC_EnableIRQ((IRQn_Type)ID_PIOB);
+
+			sensor_status = SENSOR_STATUS_INITIALISED;
+
+			break;
+
+		case SENSORS_ACTIVE:
+			if(sensor_status == SENSOR_STATUS_DISABLED)
+				return SENSOR_STATUS_DISABLED;
+
+			 if(enable) {
+				 sensor_status = SENSOR_STATUS_NOT_READY;
+				 // Give the sensor some time to stabilize. 5 seconds should be sufficient.
+				 ctimer_set(&dht11_timer, CLOCK_SECOND * 5, dht11_start_measurement, NULL);
+			 } else {
+				 ctimer_stop(&dht11_timer);
+				 sensor_status = SENSOR_STATUS_INITIALISED;
+			 }
+			 break;
+	}
+
+	return sensor_status;
+}
+
+/*---------------------------------------------------------------------------*/
+/**
+ * \brief Returns the status of the sensor
+ * \param type SENSORS_ACTIVE or SENSORS_READY
+ * \return 1 if the sensor is enabled
+ */
+static int
+dht11_status(int type)
+{
+	return sensor_status;
+}
+
+/*---------------------------------------------------------------------------*/
+SENSORS_SENSOR(dht11_sensor, "DHT11", dht11_get_reading, dht11_init, dht11_status);
+/*---------------------------------------------------------------------------*/

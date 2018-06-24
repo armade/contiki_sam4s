@@ -1,0 +1,54 @@
+
+
+/*---------------------------------------------------------------------------*/
+#ifndef BOARD_PERIPHERALS_H_
+#define BOARD_PERIPHERALS_H_
+/*---------------------------------------------------------------------------*/
+#include "ADC_temp.h"
+#include "Soft_rgb.h"
+#include "Hard_rgb.h"
+#include "lm73.h"
+#include "button-sensor.h"
+#include "dht11.h"
+#include "step_motor.h"
+#include "4ch_relay.h"
+#include "bmp-280-sensor.h"
+#include "htu21d-sensor.h"
+
+
+//#define NODE_4_ch_relay
+//#define NODE_LIGHT
+//#define NODE_HARD_LIGHT
+//#define NODE_STEP_MOTOR
+//#define NODE_PRESSURE
+#define NODE_HTU21D
+
+
+
+#ifdef NODE_LIGHT
+#define SENSOR_STRING 		"Light"
+#endif
+
+#ifdef NODE_HARD_LIGHT
+#define SENSOR_STRING 		"Light (hard)"
+#endif
+
+#ifdef NODE_STEP_MOTOR
+#define SENSOR_STRING 		"Step motor"
+#endif
+
+#ifdef NODE_4_ch_relay
+#define SENSOR_STRING 		"4ch relay"
+#endif
+
+#ifdef NODE_PRESSURE
+#define SENSOR_STRING 		"Pressure"
+#endif
+
+#ifdef NODE_HTU21D
+#define SENSOR_STRING 		"NODE_HTU21D"
+#endif
+/*---------------------------------------------------------------------------*/
+#endif /* BOARD_PERIPHERALS_H_ */
+/*---------------------------------------------------------------------------*/
+

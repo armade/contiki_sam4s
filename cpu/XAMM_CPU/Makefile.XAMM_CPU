@@ -1,0 +1,113 @@
+CC      = arm-none-eabi-gcc
+CPP     = arm-none-eabi-cpp
+LD      = arm-none-eabi-gcc
+AR      = arm-none-eabi-ar
+OBJCOPY = arm-none-eabi-objcopy
+OBJDUMP = arm-none-eabi-objdump
+NM      = arm-none-eabi-nm
+
+ifndef SOURCE_LDSCRIPT
+SOURCE_LDSCRIPT = $(CONTIKI_CPU)/cc2538.lds
+endif
+LDSCRIPT = $(OBJECTDIR)/cc2538.ld
+
+CFLAGS += -mcpu=cortex-m0 -mthumb -mlittle-endian
+CFLAGS += -ffunction-sections -fdata-sections
+CFLAGS += -fshort-enums -fomit-frame-pointer -fno-strict-aliasing
+CFLAGS += -Wall 
+LDFLAGS += -mcpu=cortex-m0 -mthumb -nostartfiles
+LDFLAGS += -T $(LDSCRIPT)
+LDFLAGS += -Wl,--gc-sections,--sort-section=alignment
+LDFLAGS += -Wl,-Map=$(@:.elf=-$(TARGET).map),--cref,--no-warn-mismatch
+OBJCOPY_FLAGS += -O binary --gap-fill 0xff
+OBJDUMP_FLAGS += --disassemble --source --disassembler-options=force-thumb
+
+ifdef WERROR
+CFLAGS += -Werror
+endif
+
+### Are we building with code size optimisations?
+ifeq ($(SMALL),1)
+  CFLAGS += -Os
+else
+  CFLAGS += -O2
+endif
+
+### If the user-specified a Node ID, pass a define
+ifdef NODEID
+  CFLAGS += -DIEEE_ADDR_NODE_ID=$(NODEID)
+endif
+
+### CPU-dependent cleanup files
+CLEAN += symbols.c symbols.h *.d *.elf *.hex
+
+### CPU-dependent directories
+CONTIKI_CPU_DIRS = ../arm/common/CMSIS . dev usb
+
+
+
+### CPU-dependent source files
+CONTIKI_CPU_SOURCEFILES += clock.c rtimer-arch.c usart.c 
+CONTIKI_CPU_SOURCEFILES += gpio.c sercom.c spi.c 
+CONTIKI_CPU_SOURCEFILES += i2c.c 
+
+DEBUG_IO_SOURCEFILES += dbg-printf.c dbg-snprintf.c dbg-sprintf.c strformat.c
+
+USB_CORE_SOURCEFILES += usb-core.c cdc-acm.c
+USB_ARCH_SOURCEFILES += usb-arch.c usb-serial.c cdc-acm-descriptors.c
+
+ifneq ($(TARGET_START_SOURCEFILES),)
+  CPU_START_SOURCEFILES = TARGET_START_SOURCEFILES
+else
+  CPU_START_SOURCEFILES = startup_samr21.c system.c
+endif
+CPU_STARTFILES = ${addprefix $(OBJECTDIR)/,${call oname, $(CPU_START_SOURCEFILES)}}
+
+CONTIKI_SOURCEFILES += $(CONTIKI_CPU_SOURCEFILES) $(DEBUG_IO_SOURCEFILES)
+CONTIKI_SOURCEFILES += $(USB_CORE_SOURCEFILES) $(USB_ARCH_SOURCEFILES)
+
+MODULES += lib/newlib cpu/arm/common/sys
+
+.SECONDEXPANSION:
+
+### Don't treat the .elf as intermediate
+.PRECIOUS: %.elf %.hex %.bin
+
+### Always re-build ieee-addr.o in case the command line passes a new NODEID
+FORCE:
+
+$(OBJECTDIR)/ieee-addr.o: ieee-addr.c FORCE | $(OBJECTDIR)
+	$(TRACE_CC)
+	$(Q)$(CC) $(CFLAGS) -c $< -o $@
+
+### Compilation rules
+CUSTOM_RULE_LINK=1
+
+%.elf: $(CPU_STARTFILES) $$(CONTIKI_OBJECTFILES) %.co $(PROJECT_OBJECTFILES) $(PROJECT_LIBRARIES) $(LDSCRIPT)
+	$(TRACE_LD)
+	$(Q)$(LD) $(LDFLAGS) ${filter-out $(LDSCRIPT) %.a,$^} ${filter %.a,$^} $(TARGET_LIBFILES) -o $@
+
+%.hex: %.elf
+	$(OBJCOPY) -O ihex $< $@
+
+%.bin: %.elf
+	$(OBJCOPY) $(OBJCOPY_FLAGS) $< $@
+
+%.lst: %.elf
+	$(OBJDUMP) $(OBJDUMP_FLAGS) $< > $@
+
+### We don't really need the .hex and .bin for the .$(TARGET) but let's make
+### sure they get built
+%.$(TARGET): %.elf %.hex %.bin
+	cp $< $@
+
+### This rule is used to generate the correct linker script
+LDGENFLAGS += $(CFLAGS)
+LDGENFLAGS += -imacros "contiki-conf.h" -imacros "dev/cc2538-dev.h"
+LDGENFLAGS += -imacros "dev/flash.h" -imacros "cfs-coffee-arch.h"
+LDGENFLAGS += -x c -P -E
+
+# NB: Assumes LDSCRIPT was not overridden and is in $(OBJECTDIR)
+$(LDSCRIPT): $(SOURCE_LDSCRIPT) FORCE | $(OBJECTDIR)
+	$(TRACE_CC)
+	$(Q)$(CC) $(LDGENFLAGS) $< | grep -v '^\s*#\s*pragma\>' > $@

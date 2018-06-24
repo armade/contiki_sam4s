@@ -1,0 +1,130 @@
+##############################################################################################################
+# Make file for sam4sd32b
+# -- Version 1.0
+##############################################################################################################
+
+gcc_loc =/home/peter/GNUARM/gcc-arm-none-eabi-7-2017-q4-major-linux/gcc-arm-none-eabi-7-2017-q4-major/bin/arm-none-eabi
+
+CC      = $(gcc_loc)-gcc
+CPP     = $(gcc_loc)-cpp
+LD      = $(gcc_loc)-gcc
+AR      = $(gcc_loc)-ar
+OBJCOPY = $(gcc_loc)-objcopy
+OBJDUMP = $(gcc_loc)-objdump
+NM      = $(gcc_loc)-nm
+SIZE    = $(gcc_loc)-size
+
+LDSCRIPT = $(CONTIKI_CPU)/flash.ld
+
+CFLAGS += -mcpu=cortex-m4 -mthumb -mlittle-endian -O2
+CFLAGS += -ffunction-sections -fdata-sections
+CFLAGS += -fshort-enums -fomit-frame-pointer -fno-strict-aliasing
+CFLAGS += -Wall -g3 -D __SAM4SD32B__ -D SAM4S
+
+LDFLAGS += -mcpu=cortex-m4 -mthumb -nostartfiles -specs=nosys.specs
+LDFLAGS += -T $(LDSCRIPT) -g3
+LDFLAGS += -Wl,--gc-sections,--sort-section=alignment
+
+OBJCOPY_FLAGS += -O binary --gap-fill 0xff
+OBJDUMP_FLAGS += --disassemble --source --disassembler-options=force-thumb
+
+### CPU-dependent cleanup files
+CLEAN += symbols.c symbols.h *.d *.elf *.hex
+
+### CPU-dependent directories
+CONTIKI_CPU_DIRS += 	$(CONTIKI_CPU) \
+						$(CONTIKI)/cpu/arm/common/CMSIS \
+						$(CONTIKI_CPU)/include \
+						$(CONTIKI_CPU)/include/component \
+						$(CONTIKI_CPU)/include/instance \
+						$(CONTIKI_CPU)/include/pio \
+						$(CONTIKI_CPU)/drivers \
+						$(CONTIKI_CPU)/USB \
+						../common/dbg-io
+
+### CPU-dependent source files
+CONTIKI_CPU_SOURCEFILES += rtimer-arch.c  
+
+CPU_STARTFILES_SOURCE = startup_sam4s.c system_sam4s.c syscalls.c
+CPU_STARTFILES = ${addprefix $(OBJECTDIR)/,${call oname, $(CPU_STARTFILES_SOURCE)}}
+CONTIKI_SOURCEFILES += $(CONTIKI_CPU_SOURCEFILES) $(CPU_STARTFILES_SOURCE)
+
+PLATFORM_DRIVER = 	flash_efc.c \
+					efc.c \
+					interrupt_sam_nvic.c \
+					pmc.c \
+					adc.c \
+					usart_spi.c \
+					usart.c \
+					pio_handler.c \
+					wdt.c \
+					sysclk.c \
+					rtt.c \
+					sleepmgr.c \
+					sam_sleep.c \
+					pio.c \
+					debug-uart.c \
+					eeprom.c \
+					spi.c \
+					spi_master.c\
+					rtc.c
+					
+USB_DRIVERS =		udc.c \
+					udi_cdc_desc.c \
+					udi_cdc.c \
+					udp_device.c
+					
+TARGETLIBS = dbg-printf.c dbg-puts.c dbg-putchar.c dbg-sprintf.c dbg-snprintf.c strformat.c
+
+CONTIKI_SOURCEFILES += $(PLATFORM_DRIVER) $(USB_DRIVERS) $(TARGETLIBS)
+
+##############################################################################################################
+##############################################################################################################
+##############################################################################################################
+
+.SECONDEXPANSION:
+### Don't treat the .elf as intermediate
+.PRECIOUS: %.elf %.hex %.bin
+
+
+### Compilation rules
+CUSTOM_RULE_LINK=1
+
+%.elf: $(CPU_STARTFILES) $$(CONTIKI_OBJECTFILES) %.co $(PROJECT_OBJECTFILES) $(PROJECT_LIBRARIES) $(LDSCRIPT)
+	$(TRACE_LD)
+	$(Q)$(LD) $(LDFLAGS) ${filter-out $(LDSCRIPT) %.a,$^} ${filter %.a,$^} $(TARGET_LIBFILES) -o $@
+
+%.hex: %.elf
+	$(OBJCOPY) -O ihex $< $@
+
+%.bin: %.elf
+	$(OBJCOPY) $(OBJCOPY_FLAGS) $< $@
+
+%.lst: %.elf
+	$(OBJDUMP) $(OBJDUMP_FLAGS) $< > $@
+
+### We don't really need the .hex and .bin for the .$(TARGET) but let's make
+### sure they get built
+
+
+%.$(TARGET): %.elf %.hex %.bin
+	cp $< $@
+	@echo ""
+	@$(CC) --version
+	@echo ""
+	$(Q)$(SIZE) -Ax $<
+	@$(SIZE) -A $< | egrep "data|bss" | awk '{s+=$$2} END {s=s+$(STACK_SIZE); f=$(RAM_SIZE)-s; printf "\t[RAM]   used %6d, free %6d (%f%%)\n",s,f,s/f*100;}'
+	@$(SIZE) -A $< | egrep "text|isr_vector" | awk '{s+=$$2} END {f=$(FLASH_SIZE)-s; printf "\t[Flash] used %6d, free %6d (%f%%)\n",s,f,s/f*100;}'
+	@echo ""
+	@echo ""
+
+# a target that gives a user-friendly memory profile, taking into account the RAM
+# that is statically occupied by the stack as defined in the linker script
+# see $(LDSCRIPT)
+RAM_SIZE = 163840
+#0x28000
+FLASH_SIZE = 1048576
+STACK_SIZE = 0
+
+
+	

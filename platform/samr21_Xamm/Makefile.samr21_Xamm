@@ -1,0 +1,40 @@
+# cc2538dk platform makefile
+
+ifndef CONTIKI
+  $(error CONTIKI not defined! You must specify where CONTIKI resides!)
+endif
+
+CONTIKI_TARGET_DIRS = . dev
+
+CONTIKI_TARGET_SOURCEFILES += leds.c leds-arch.c
+CONTIKI_TARGET_SOURCEFILES += contiki-main.c
+CONTIKI_TARGET_SOURCEFILES += sensors.c 
+
+CFLAGS += -Inet/
+
+CONTIKI_SOURCEFILES += $(CONTIKI_TARGET_SOURCEFILES)
+
+CLEAN += *.samr21_Xamm
+
+### Unless the example dictates otherwise, build with code size optimisations
+ifndef SMALL
+  SMALL = 1
+endif
+
+
+### Define the CPU directory
+CONTIKI_CPU=$(CONTIKI)/cpu/arm/samr21
+include $(CONTIKI_CPU)/Makefile.samr21
+
+MODULES += core/net core/net/mac \
+           core/net/mac/contikimac \
+           core/net/llsec core/net/llsec/noncoresec
+
+PYTHON = python
+BSL_FLAGS += -e -w -v
+
+ifdef PORT
+  BSL_FLAGS += -p $(PORT)
+endif
+
+

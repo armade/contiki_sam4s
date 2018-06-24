@@ -1,0 +1,53 @@
+# PD956 platform makefile
+
+ifndef CONTIKI
+  $(error CONTIKI not defined! You must specify where CONTIKI resides!)
+endif
+
+CONTIKI_TARGET_DIRS += 	.	net sensors PD_FLASH io
+		
+PLATFORM_NET_DRIVER = rf233.c trx_access_USART.c clock.c
+PLATFORM_FLASH_DRIVER = hw_spiflash.c hl_spiflash.c FLASH_driver.c
+PLATFORM_SENSOR_DRIVER = 	ADC_temp.c \
+							Soft_rgb.c  \
+							lm73.c \
+							button-sensor.c \
+							leds-arch.c \
+							PD956_sensors.c \
+							dht11.c \
+							step_motor.c \
+							4ch_relay.c \
+							bmp-280-sensor.c \
+							Hard_rgb.c \
+							htu21d-sensor.c
+							
+PLATFORM_IO_DRIVER = i2csoft.c
+
+CONTIKI_TARGET_SOURCEFILES += 	contiki-main.c \
+								clock.c \
+								node-id.c \
+								slip_arch.c \
+								$(PLATFORM_NET_DRIVER) \
+								$(PLATFORM_FLASH_DRIVER) \
+								$(PLATFORM_SENSOR_DRIVER) \
+								$(PLATFORM_IO_DRIVER)
+
+CONTIKI_SOURCEFILES += $(CONTIKI_TARGET_SOURCEFILES)
+
+CLEAN += *.pd956
+
+CFLAGS += -D NETSTACK_CONF_WITH_IPV6=1
+
+### Define the CPU directory
+CONTIKI_CPU=$(CONTIKI)/cpu/arm/sam4s
+include $(CONTIKI_CPU)/Makefile.sam4s
+
+MODULES += 	core/net \
+			core/net/mac \
+           	core/net/mac/contikimac \
+           	core/net/ip \
+           	core/net/llsec \
+           	core/net/llsec/noncoresec \
+           	core/net/ip64
+
+
