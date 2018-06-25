@@ -321,6 +321,9 @@ static void htu21_error(void)
 	HTU21_temp = SENSOR_ERROR;
 	SoftI2CSync();
 	SoftI2C_cmd(HTU21_ADDR, HTU21_RESET_COMMAND,1);
+	// Apply default values
+	htu21_temperature_conversion_time = HTU21_TEMPERATURE_CONVERSION_TIME_T_14b_RH_12b;
+	htu21_humidity_conversion_time = HTU21_HUMIDITY_CONVERSION_TIME_T_14b_RH_12b;
 	sensor_state = SENSOR_STATUS_READY;
 	sensors_changed(&HTU21D_sensor);
 }

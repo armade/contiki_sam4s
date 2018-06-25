@@ -17,16 +17,16 @@
 #define CHIP_MX25L25645G	5
 #define CHIP_MT25QL256ABA   6
 
-unsigned sf_abit(int chipno);       //adressebit i en given chipselect
-unsigned sf_chipsize(int chipno);   //bytes i en given chipselect
-unsigned sf_totalsize(void);        //bytes i alle chipselect
-unsigned sf_map(unsigned a);        //returner adressen i den flash, hvor
-									// adresse a findes (saetter ogsaa chipsel)
+unsigned sf_abit(int chipno);
+unsigned sf_chipsize(int chipno);
+unsigned sf_totalsize(void);
+unsigned sf_map(unsigned a);
 
-void sf_sread_start(unsigned a);    //start/stop burst read
+
+void sf_sread_start(unsigned a);
 unsigned char sf_sread_end(void);
 
-unsigned char sf_sread(void); //kopi af erklaering i _hw, implementeret i _hw.
+unsigned char sf_sread(void);
 
 int sf_flashinit(void);
 

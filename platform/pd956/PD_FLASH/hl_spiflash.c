@@ -1,23 +1,14 @@
 
-/*
-  Denne holdes generisk, den maa ikke kigge paa platformen
-  den koerer paa.
-  Den inkluderer KUN hl_spiflash.h.
-*/
-
-
 #include "hl_spiflash.h"
 
 
-
-
 #define FLASHTRACE(s)
 #define FLASHTRACE1(s,v)
 
 #define FLASHTRACE(s)
 #define FLASHTRACE1(s,v)
 
-//tillad at man overtager allokeringen af sf_flashchip_info - tillader bootloader i E70 at køre uden statisk ram allokering
+
 #ifndef sf_flashchip_info
   unsigned char sf_flashchip_info[SF_MAXFLASHCHIPS];
 #endif
@@ -117,7 +108,7 @@ unsigned sf_map(unsigned a)
 
 
 
-//bitmask der, givet i pad-vaerdi, betyder 32-bit adressering
+
 #define IAP32 0x80
 
 void sf_iap_r(unsigned char ins, unsigned a, unsigned pad)
@@ -307,10 +298,10 @@ retry_recovery:
 		sf_select_write(i);
 		sf_flashchip_info[i]=CHIP_NOTPRESENT;
 
-		//recovery kode til hvis chippen er i powerdown.
+
 		switch(retrying) {
 			case 0:
-				break; //first pass, ingen retry
+				break;
 			case 1:
 				FLASHTRACE("resume pd");
 				sf_tlongdelay();
@@ -318,7 +309,7 @@ retry_recovery:
 				sf_tlongdelay();
 				break;
 			default:
-				continue; //skip denne
+				continue; //skip
 		}
 
 		//read id
@@ -347,14 +338,14 @@ rewait1:	sf_waitready();
 				m=0; //unreachable kode
 
 			if (m==CHIP_N25Q256) {
-				//lusk: MT25QL256 har samme idcode som N25Q256, men forskellig flash discovery version
-				if ((read_discovery_byte(4)!=0) || (read_discovery_byte(5)!=1)) { //ikke den gamle
+				//BAD: MT25QL256 has same idcode as N25Q256, but different flash discovery version
+				if ((read_discovery_byte(4)!=0) || (read_discovery_byte(5)!=1)) {
 					m=CHIP_MT25QL256ABA;
 				}
 			}
 			FLASHTRACE1("N25Q type ",m);
-			// MT25QL128ABA er identisk med CHIP_N25Q128
-			// MT25QL64ABA er identisk med CHIP_N25Q64
+			// MT25QL128ABA is identically with CHIP_N25Q128
+			// MT25QL64ABA is identically with CHIP_N25Q64
 
 			sf_flashchip_info[i]=m;
 rewait2:	sf_waitready();
@@ -380,7 +371,7 @@ rewait3:	sf_waitready();
 			sf_cmd0(0xE9); //EXIT 4 BYTE MODE
 		} else {
 			FLASHTRACE1("not found",retrying);
-			//kommer vi her fandt vi ikke noget.
+			//Nothing found
 			++retrying;
 			goto retry_recovery;
 		}
@@ -416,9 +407,9 @@ int sf_unprotect_sector(unsigned saddr)
 		case CHIP_N25Q64:
 			a=sf_status();
 			//unprotect if protected
-			if (a&0x5C) { //et eller flere bit i block protect er sat
+			if (a&0x5C) { //one or more block bits are set.
 				sf_cmd_s(0x01); //write status 1
-				sf_rw(a&0x20); //behold top/bottom bit
+				sf_rw(a&0x20); //Keep top/bottom bit
 				sf_waitready();
 			}
 			sf_iap_w(0xE8,saddr,0);
@@ -431,9 +422,9 @@ int sf_unprotect_sector(unsigned saddr)
 		case CHIP_MT25QL256ABA:
 			a=sf_status();
 			//unprotect if protected
-			if (a&0x5C) { //et eller flere bit i block protect er sat
+			if (a&0x5C) { //one or more block bits are set.
 				sf_cmd_s(0x01); //write status 1
-				sf_rw(a&0x20); //behold top/bottom bit
+				sf_rw(a&0x20); //keep top/bottom bit
 				sf_waitready();
 			}
 			sf_iap_w(0xE0,saddr,0 | IAP32);
@@ -444,7 +435,7 @@ int sf_unprotect_sector(unsigned saddr)
 			}
 			return 0;
 		case CHIP_MX25L25645G:
-			//ingen support for unlocking, det virker med factory defaults.
+			//no support for unlocking, it works with factory defaults.
 			return 0;
 		default:
 			return -1;

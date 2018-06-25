@@ -1,9 +1,3 @@
-/*
-  Denne er en smule platformsafhaengig.
-
-  Den definerer antal flashkredse, MRAM size, o
-*/
-
 
 
 #ifndef INCLUDED_HW_SPIFLASH_H
@@ -16,12 +10,9 @@
 #define MRAM_SIZE_IN_BYTES 32768
 
 
-//---- platform specific - maa IKKE anvendes af hl_xxx kode ------
-
-//---- platforms-uafhaengige funktioner -----
 
 void hw_spi_init(void);
-void sf_waiting(void); //called when waiting - i praksis watchdog service
+void sf_waiting(void); //called when waiting
 
 void sf_tlongdelay(void); //min 400us
 void sf_tshortdelay(void);
@@ -40,7 +31,6 @@ void sf_disable(void);
 unsigned char sf_rw(unsigned char data);
 unsigned char sf_r(void);
 void sf_startstreamread(void);
-//unsigned char sf_sread(void); implementeret her, header er i hl_spiflash.h
 unsigned char sf_endstreamread(void);
 
 void sm_enable(void);

@@ -216,8 +216,10 @@ load_config()
 			}
 		}
     }
-    else
+    else{
+    	flash_enter_deep_sleep();
     	return 1;
+    }
 
     flash_enter_deep_sleep();
     return 0;

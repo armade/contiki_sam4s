@@ -1871,7 +1871,7 @@ PROCESS_THREAD(httpd_simple_process, ev, data)
 {
   PROCESS_BEGIN();
 
-  printf("CC26XX Web Server\n");
+  printf("Web Server\n");
 
   httpd_simple_event_new_config = process_alloc_event();
 
@@ -1879,7 +1879,7 @@ PROCESS_THREAD(httpd_simple_process, ev, data)
 
   register_http_post_handlers();
 
-  snprintf(http_mqtt_a,sizeof("<li><a href=\"https://www.proces-data.com/\">PD Quickstart</a></li>"), "<li><a href=\"https://www.proces-data.com/\">PD Quickstart</a></li>");
+  snprintf(http_mqtt_a,sizeof("<li><a href=\"https://www.google.com/\">Google</a></li>"), "<li><a href=\"https://www.google.com/\">Google</a></li>");
 
   while(1) {
     PROCESS_WAIT_EVENT_UNTIL(ev == tcpip_event);

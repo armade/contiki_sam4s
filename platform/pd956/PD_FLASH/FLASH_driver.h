@@ -21,4 +21,4 @@ void flash_enter_deep_sleep(void);
 void flash_leave_deep_sleep(void);
 void flash_init_df(void);
 
-#endif /* COMMON_SERVICES_USB_CLASS_CDC_DEVICE_EXAMPLE_PD_FLASH_FLASH_DRIVER_H_ */
+#endif

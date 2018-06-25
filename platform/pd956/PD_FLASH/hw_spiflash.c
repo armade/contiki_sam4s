@@ -1,21 +1,4 @@
-/*
- * at25flash.c
- *
- *  Created on: 20/06/2012
- *      Author: kasper
- */
 
-/*
-#include <board.h>
-#include <board_memories.h>
-#include <pio/pio.h>
-#include <irq/irq.h>
-#include <cp15/cp15.h>
-#include <dbgu/dbgu.h>
-#include <utility/assert.h>
-#include <utility/trace.h>
-#include <string.h>
-*/
 #include <stdint.h>
 #include "hw_spiflash.h"
 #include "hl_spiflash.h"
@@ -26,19 +9,9 @@
 
 #define MAXFLASHCHIPS 1
 
-#define MMCK 120000000
 #define SPCK_F        60000000 /// SPI clock frequency, in Hz.
 
 
-
-//unsigned char f_select;
-
-////////////////////////////////////////////////////////////////////////
-//
-//  chip mapping
-//
-//
-//
 #if SF_MAXFLASHCHIPS!=1
 	unsigned char sf_select;
 #endif
@@ -54,7 +27,7 @@ void sf_waiting(void)
 
 
 
-static void tdelay(void) //min 250ns delay, og mindst 10 bittider ved laveste bitrate
+static void tdelay(void) //min 250ns delay, and at least 10 bit times with lowest bitrate
 {
 	volatile uint8_t i;
 	for(i=0;i<30;i++)
@@ -98,16 +71,13 @@ static void s_unselectChip(Spi *p_spi)
 }
 
 
-//#define SPI_MRAM BOARD_AT26_A_SPI_BASE
-//#define NUMCS_MRAM 0
-
 
 
 void sf_disable(void) //min 50ns = 8 bus cycles
 {
 	s_unselectChip(SPI);
 	tdelay();
-	SPI_FLASH->SPI_MR &= ~(SPI_MR_WDRBT); /*uden wdrbt flag*/; /*WDRBT flaget bruger vi som CS-indikator-variabel*/
+	SPI_FLASH->SPI_MR &= ~(SPI_MR_WDRBT);
 }
 
 void sf_enable(void)
@@ -116,9 +86,8 @@ void sf_enable(void)
 	if (SPI->SPI_MR & SPI_MR_WDRBT)
 		sf_disable();
 
-	SPI_FLASH->SPI_MR |= SPI_MR_WDRBT; /*WDRBT flaget bruger vi som CS-indikator-variabel*/
+	SPI_FLASH->SPI_MR |= SPI_MR_WDRBT;
 	s_selectChip(SPI,0);
-	//autoenabler ved 1. byte
 }
 
 
@@ -151,14 +120,13 @@ void sf_startstreamread(void)
 }
 
 
-unsigned char sf_sread/*_working*/(void) //temporary workaround version.
+unsigned char sf_sread(void)
 {
 
 	volatile Spi *p_spi=SPI_FLASH;
 	unsigned hold;
 
  	while ((p_spi->SPI_SR & (SPI_SR_TDRE|SPI_SR_RDRF)) != (SPI_SR_TDRE|SPI_SR_RDRF)) { }
-	//while (!(p_spi->SPI_SR & AT91C_SPI_TDRE)) ;
 	hold=p_spi->SPI_RDR;
 	p_spi->SPI_TDR = hold;
  	return hold;
