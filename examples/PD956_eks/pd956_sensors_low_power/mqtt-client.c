@@ -119,6 +119,7 @@ MQTT_config_ele_t MQTT_bm280_pressure_config;
 MQTT_config_ele_t MQTT_htu21_interneltmp_config;
 #endif
 static MQTT_sub_ele_t *subscribe_ele;
+MQTT_sub_ele_t MQTT_COMMON_NO_SLEEP_sub_cmd;
 /*---------------------------------------------------------------------------*/
 static struct mqtt_message *msg_ptr = 0;
 static struct etimer publish_periodic_timer;
@@ -136,6 +137,7 @@ const static cc26xx_web_demo_sensor_reading_t *reading;
 /*---------------------------------------------------------------------------*/
 mqtt_client_config_t *conf;
 process_event_t MQTT_publish_sensor_data_done_event;
+static volatile uint8_t no_sleep_allowed = 0;
 /*---------------------------------------------------------------------------*/
 PROCESS(mqtt_client_process, "CC26XX MQTT Client");
 /*---------------------------------------------------------------------------*/
@@ -228,6 +230,18 @@ static void mqtt_event(struct mqtt_connection *m, mqtt_event_t event,
 		if (msg_ptr->first_chunk)
 		{
 			msg_ptr->first_chunk = 0;
+			static MQTT_config_ele_t *sub_topic;
+			sub_topic = list_head(MQTT_subscribe_list);
+
+			while (sub_topic != NULL){
+				if(!memcpy(sub_topic->topic,msg_ptr->topic,strlen(msg_ptr->topic)))
+					if(!memcpy(msg_ptr->payload_chunk,"wake",4))
+						no_sleep_allowed = 1;
+					else if(!memcpy(msg_ptr->payload_chunk,"sleep",5))
+						no_sleep_allowed = 0;
+				sub_topic = subscribe_topic->next;
+			}
+
 			DBG("APP - Application received a publish on topic '%s'. Payload "
 					"size is %i bytes. Content:\n\n",
 					msg_ptr->topic, msg_ptr->payload_length);
@@ -407,6 +421,11 @@ static int construct_configs(void)
 
 static int construct_sub_topic(void)
 {
+	snprintf(MQTT_COMMON_NO_SLEEP_sub_cmd.topic,
+				sizeof(MQTT_COMMON_NO_SLEEP_sub_cmd.topic), "Hass/%s/%s/%s/set",
+				client_id, conf->Username, "Sleep");
+		list_add(MQTT_subscribe_list, &MQTT_COMMON_NO_SLEEP_sub_cmd);
+
 /*
 	snprintf(MQTT_step_motor_sub_cmd.topic,
 			sizeof(MQTT_step_motor_sub_cmd.topic), "Hass/%s/%s/%s/%s/set",
