@@ -30,25 +30,23 @@
  *
  */
 
-#ifndef _RF233_ARCH_H_
-#define _RF233_ARCH_H_
+#ifndef _RF231_H_
+#define _RF231_H_
 
 #include <stdlib.h>
 #include <stdint.h>
 #include <stdio.h>
-void wake_from_sleep(void);
-void goto_sleep(void);
-/*
-void     rf233_arch_init(void);
-void     rf233_arch_reset(void);
-uint8_t  rf233_arch_status(void);
+#include "dev/radio.h"
+/*---------------------------------------------------------------------------*/
 
-int      rf233_arch_spi_busy(void);
-uint8_t  rf233_arch_read_reg(uint8_t reg);
-int      rf233_arch_write_reg(uint8_t reg, uint8_t val);
-int      rf233_arch_read_frame(uint8_t *buf, uint8_t len);
-int      rf233_arch_write_frame(uint8_t *buf, uint8_t len);
-int      rf233_arch_burstread_sram(uint8_t *buf, uint8_t offset, uint8_t len);
-int      rf233_arch_burstwrite_sram(uint8_t *buf, uint8_t offset, uint8_t len);*/
-
-#endif  /* _RF233_ARCH_H_ */
+int RF231_interrupt_poll(void);
+int RF_get_channel(void);
+int rf_set_channel(uint8_t ch);
+int RF231_get_txp(void);
+int RF231_set_txp(uint8_t txp);
+uint8_t RF231_status(void);
+void SetIEEEAddr(uint8_t *ieee_addr);
+void SetPanId(uint16_t panId);
+void SetShortAddr(uint16_t addr);
+/*---------------------------------------------------------------------------*/
+#endif  /* _RF231_H_ */

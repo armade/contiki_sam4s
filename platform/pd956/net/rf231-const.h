@@ -30,11 +30,11 @@
  *
  */
 
-#ifndef _RF233_CONST_H_
-#define _RF233_CONST_H_
+#ifndef _RF231_CONST_H_
+#define _RF231_CONST_H_
 
-/* AT86RF233 register addresses and some bit fields */
-#define RF233_REG_TRX_STATUS      (0x01)
+/* AT86RF231 register addresses and some bit fields */
+#define RF231_REG_TRX_STATUS      (0x01)
   #define TRX_CCA_DONE            (1 << 7)
   #define TRX_CCA_STATUS          (1 << 6)
   #define TRX_STATUS              (0x1F)  /* radio status bit field */
@@ -52,7 +52,7 @@
     #define STATE_TX_ARET_ON        (0x19)
 	#define STATE_BUSY_RX_AACK_NOCLK        (0x1E)
     #define STATE_TRANSITION        (0x1F)
-	#define RF233_REG_TRX_STATE       (0x02)
+	#define RF231_REG_TRX_STATE       (0x02)
 	/** Access parameters for sub-register RX_PDT_DIS in register @ref RG_RX_SYN */
 	#define SR_RX_PDT_DIS   0x15, 0x80, 7
 	/** Constant RX_ENABLE for sub-register @ref SR_RX_PDT_DIS in register RX_SYN */
@@ -82,8 +82,8 @@
     //#define TRXCMD_PREP_DEEP_SLEEP    (0x10)
     #define TRXCMD_RX_AACK_ON         (0x16)
     #define TRXCMD_TX_ARET_ON         (0x19)
-#define RF233_REG_TRX_CTRL_0      (0x03)
-#define RF233_REG_TRX_CTRL_1      (0x04)
+#define RF231_REG_TRX_CTRL_0      (0x03)
+#define RF231_REG_TRX_CTRL_1      (0x04)
   #define TRX_CTRL_1_PA_EXT_EN            (1 << 7)  /* pin DIG3/DIG4 indicates tx/rx mode */
   #define TRX_CTRL_1_DIG34_RXTX_INDICATOR TRX_CTRL_1_PA_EXT_EN    /* synonym */
   #define TRX_CTRL_1_DIG2_TIMESTAMPING    (1 << 6)  /* pin DIG2 goes high ca 200us after SFD finished */
@@ -94,7 +94,7 @@
   #define TRX_CTRL_1_SPI_CMD_IRQ_STATUS   (3 << 2)
   #define TRX_CTRL_1_IRQ_MASK_MODE        (1 << 1)  /* irqs shown in IRQ_STATUS even if not in IRQ_MASK */
   #define TRX_CTRL_1_IRQ_POL_ACTIVE_LOW   (1 << 0)
-#define RF233_REG_PHY_TX_PWR      (0x05)
+#define RF231_REG_PHY_TX_PWR      (0x05)
   #define PHY_TX_PWR_TXP            (0x0F)
     #define TXP_3         (0x00)
     #define TXP_2P8       (0x01)
@@ -112,22 +112,22 @@
     #define TXP_9M        (0x0D)
     #define TXP_12M       (0x0E)
     #define TXP_17M       (0x0F)
-#define RF233_REG_PHY_RSSI        (0x06)
+#define RF231_REG_PHY_RSSI        (0x06)
   #define PHY_RSSI_CRC_VALID        (1 << 7)  /* FCS/CRC valid if set */
   #define PHY_RSSI_RNG              (0x60)    /* two-bit RNG */
   #define PHY_RSSI_RSSI             (0x1F)    /* RSSI measurement */
-#define RF233_REG_PHY_ED_LEVEL    (0x07)
-#define RF233_REG_PHY_CC_CCA      (0x08)
+#define RF231_REG_PHY_ED_LEVEL    (0x07)
+#define RF231_REG_PHY_CC_CCA      (0x08)
   #define PHY_CC_CCA_CHANNEL            (0x1F)
   #define PHY_CC_CCA_DO_CCA             (1 << 7)  /* starts manual CCA */
   #define PHY_CC_CCA_MODE_CS_OR_ED      (0 << 5)
   #define PHY_CC_CCA_MODE_ED            (1 << 5)
   #define PHY_CC_CCA_MODE_CS            (2 << 5)
   #define PHY_CC_CCA_MODE_CS_AND_ED     (3 << 5)
-#define RF233_REG_CCA_THRES       (0x09)
-#define RF233_REG_RX_CTRL         (0x0A)
-#define RF233_REG_SFD_VALUE       (0x0B)
-#define RF233_REG_TRX_CTRL_2      (0x0C)
+#define RF231_REG_CCA_THRES       (0x09)
+#define RF231_REG_RX_CTRL         (0x0A)
+#define RF231_REG_SFD_VALUE       (0x0B)
+#define RF231_REG_TRX_CTRL_2      (0x0C)
   #define TRX_CTRL_2_RX_SAFE_MODE   (1 << 7)  /* disallow rx buffer overwrites */
 #define SR_RX_SAFE_MODE              0x0c, 0x80, 7
   #define DATA_RATE_250             (0)
@@ -135,8 +135,8 @@
   #define DATA_RATE_1000            (2)
   #define DATA_RATE_2000            (3)
   #define DATA_RATE_2000_SCRAM_EN   (1 << 5) /* enable additional scrambling, mandatory for 2k data rate */
-#define RF233_REG_ANT_DIV         (0x0D)
-#define RF233_REG_IRQ_MASK        (0x0E)
+#define RF231_REG_ANT_DIV         (0x0D)
+#define RF231_REG_IRQ_MASK        (0x0E)
   #define IRQ_BAT_LOW                     (1 << 7)
   #define IRQ_TRX_UR                      (1 << 6)      /* frame buffer violation */
   #define IRQ_TRXBUF_ACCESS_VIOLATION     IRQ_TRX_UR    /* synonym */
@@ -149,50 +149,50 @@
   #define IRQ_FRAME_RX_START              IRQ_RX_START  /* synonym */
   #define IRQ_PLL_UNLOCK                  (1 << 1)
   #define IRQ_PLL_LOCK                    (1 << 0)
-#define RF233_REG_IRQ_STATUS      (0x0F)    /* reading this also clears it */
-#define RF233_REG_VREG_CTRL       (0x10)
-#define RF233_REG_BATMON          (0x11)
-#define RF233_REG_XOSC_CTRL       (0x12)
-#define RF233_REG_CC_CTRL_0       (0x13)
-#define RF233_REG_CC_CTRL_1       (0x14)
-#define RF233_REG_RX_SYN          (0x15)
-#define RF233_REG_TRX_RPC         (0x16)
-#define RF233_REG_XAH_CTRL_1      (0x17)
+#define RF231_REG_IRQ_STATUS      (0x0F)    /* reading this also clears it */
+#define RF231_REG_VREG_CTRL       (0x10)
+#define RF231_REG_BATMON          (0x11)
+#define RF231_REG_XOSC_CTRL       (0x12)
+#define RF231_REG_CC_CTRL_0       (0x13)
+#define RF231_REG_CC_CTRL_1       (0x14)
+#define RF231_REG_RX_SYN          (0x15)
+#define RF231_REG_TRX_RPC         (0x16)
+#define RF231_REG_XAH_CTRL_1      (0x17)
   #define AACK_PROM_MODE            (1 << 1)
   #define SR_AACK_ACK_TIME             0x17, 0x04, 2
-#define RF233_REG_FTN_CTRL        (0x18)
-#define RF233_REG_XAH_CTRL_2      (0x19)
-#define RF233_REG_PLL_CF          (0x1A)
+#define RF231_REG_FTN_CTRL        (0x18)
+#define RF231_REG_XAH_CTRL_2      (0x19)
+#define RF231_REG_PLL_CF          (0x1A)
   #define PLL_CF_START_CAL          (1 << 7)  /* start manual calibration; reads one until done */
   #define PLL_CF_DO_MANUAL_CAL      (0xD7) /* to do manual calibration, write this value to the reg (includes defaults) */
-#define RF233_REG_PLL_DCU         (0x1B)
-#define RF233_REG_PART_NUM        (0x1C)
-#define RF233_REG_VERSION_NUM     (0x1D)
-#define RF233_REG_MAN_ID_0        (0x1E)
-#define RF233_REG_MAN_ID_1        (0x1F)
-#define RF233_REG_SHORT_ADDR_0    (0x20)
-#define RF233_REG_SHORT_ADDR_1    (0x21)
-#define RF233_REG_PAN_ID_0        (0x22)
-#define RF233_REG_PAN_ID_1        (0x23)
-#define RF233_REG_IEEE_ADDR_0     (0x24)
-#define RF233_REG_IEEE_ADDR_1     (0x25)
-#define RF233_REG_IEEE_ADDR_2     (0x26)
-#define RF233_REG_IEEE_ADDR_3     (0x27)
-#define RF233_REG_IEEE_ADDR_4     (0x28)
-#define RF233_REG_IEEE_ADDR_5     (0x29)
-#define RF233_REG_IEEE_ADDR_6     (0x2A)
-#define RF233_REG_IEEE_ADDR_7     (0x2B)
-#define RF233_REG_XAH_CTRL_0      (0x2C)
-#define RF233_REG_CSMA_SEED_0     (0x2D)
-#define RF233_REG_CSMA_SEED_1     (0x2E)
-#define RF233_REG_CSMA_BE         (0x2F)
-#define RF233_REG_TST_CTRL_DIGI   (0x36)
-#define RF233_REG_TST_AGC         (0x3C)
-#define RF233_REG_TST_SDM         (0x3D)
-#define RF233_REG_PHY_TX_TIME     (0x3B)
+#define RF231_REG_PLL_DCU         (0x1B)
+#define RF231_REG_PART_NUM        (0x1C)
+#define RF231_REG_VERSION_NUM     (0x1D)
+#define RF231_REG_MAN_ID_0        (0x1E)
+#define RF231_REG_MAN_ID_1        (0x1F)
+#define RF231_REG_SHORT_ADDR_0    (0x20)
+#define RF231_REG_SHORT_ADDR_1    (0x21)
+#define RF231_REG_PAN_ID_0        (0x22)
+#define RF231_REG_PAN_ID_1        (0x23)
+#define RF231_REG_IEEE_ADDR_0     (0x24)
+#define RF231_REG_IEEE_ADDR_1     (0x25)
+#define RF231_REG_IEEE_ADDR_2     (0x26)
+#define RF231_REG_IEEE_ADDR_3     (0x27)
+#define RF231_REG_IEEE_ADDR_4     (0x28)
+#define RF231_REG_IEEE_ADDR_5     (0x29)
+#define RF231_REG_IEEE_ADDR_6     (0x2A)
+#define RF231_REG_IEEE_ADDR_7     (0x2B)
+#define RF231_REG_XAH_CTRL_0      (0x2C)
+#define RF231_REG_CSMA_SEED_0     (0x2D)
+#define RF231_REG_CSMA_SEED_1     (0x2E)
+#define RF231_REG_CSMA_BE         (0x2F)
+#define RF231_REG_TST_CTRL_DIGI   (0x36)
+#define RF231_REG_TST_AGC         (0x3C)
+#define RF231_REG_TST_SDM         (0x3D)
+#define RF231_REG_PHY_TX_TIME     (0x3B)
 
-#define RF233_REG_ADDR_MIN        (0x00)  /* lowest register address */
-#define RF233_REG_ADDR_MAX        (0x3D)  /* highest register address */
+#define RF231_REG_ADDR_MIN        (0x00)  /* lowest register address */
+#define RF231_REG_ADDR_MAX        (0x3D)  /* highest register address */
 
 /* datasheet 6.3, SPI access and first SPI byte */
 /* 
@@ -230,4 +230,4 @@
  */
 #define TRX_BUFFER_LENGTH 128   /* bytes */
 
-#endif  /* _RF233_CONST_H_ */
+#endif  /* _RF231_CONST_H_ */

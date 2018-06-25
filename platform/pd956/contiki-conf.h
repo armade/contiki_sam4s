@@ -116,7 +116,7 @@ typedef unsigned short uip_stats_t;
 #define NULLRDC_CONF_802154_AUTOACK       1
 
 #ifndef NETSTACK_CONF_RADIO
-#define NETSTACK_CONF_RADIO   rf233_radio_driver
+#define NETSTACK_CONF_RADIO   RF231_radio_driver
 #endif /* NETSTACK_CONF_RADIO */
 
 #ifndef NETSTACK_CONF_FRAMER

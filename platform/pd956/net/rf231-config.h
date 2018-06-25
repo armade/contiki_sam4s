@@ -30,8 +30,8 @@
  *
  */
 
-#ifndef _RF233_CONFIG_H_
-#define _RF233_CONFIG_H_
+#ifndef _RF231_CONFIG_H_
+#define _RF231_CONFIG_H_
 /*---------------------------------------------------------------------------*/
 /* Set radio channel, default channel 26 as it is not overlapping with Wi-Fi */
 #ifdef RF_CHANNEL
@@ -44,7 +44,7 @@
 #endif  /* RF_CHANNEL */
 /*---------------------------------------------------------------------------*/
 /* 
- * Define whether to use hardware (RF233) CRC/FCS check. If >0, the radio FCS is
+ * Define whether to use hardware (RF231) CRC/FCS check. If >0, the radio FCS is
  * taken into account and the frame is dropped if not CRC/FCS passes.
  * If 0, the frame is passed to higher layers even if corrupt. This setting is
  * used if the radio is used with non-802.15.4-2006 frames, or if the FCS check
@@ -53,23 +53,23 @@
 #define USE_HW_FCS_CHECK                  1
 //#define HIGH_SPEED_EN 1
 /*---------------------------------------------------------------------------*/
-// #define RF233_REG_TRX_CTRL_0_CONF      ()
+// #define RF231_REG_TRX_CTRL_0_CONF      ()
 #if USE_HW_FCS_CHECK
-#define RF233_REG_TRX_CTRL_1_CONF      ( TRX_CTRL_1_AUTO_CRC)
+#define RF231_REG_TRX_CTRL_1_CONF      ( TRX_CTRL_1_AUTO_CRC)
 #else   /* USE_HW_FCS_CHECK */
-#define RF233_REG_TRX_CTRL_1_CONF      ( )
+#define RF231_REG_TRX_CTRL_1_CONF      ( )
 #endif  /* USE_HW_FCS_CHECK */
 
-#define RF233_REG_TRX_CTRL_0_CONF 		0b00000000
-#define RF233_REG_PHY_TX_PWR_CONF      (TXP_3)
-#define RF233_REG_PHY_CC_CCA_CONF      (PHY_CC_CCA_CONF)  /* see above */
-// #define RF233_REG_SFD_VALUE_CONF       ()
+#define RF231_REG_TRX_CTRL_0_CONF 		0b00000000
+#define RF231_REG_PHY_TX_PWR_CONF      (TXP_3)
+#define RF231_REG_PHY_CC_CCA_CONF      (PHY_CC_CCA_CONF)  /* see above */
+// #define RF231_REG_SFD_VALUE_CONF       ()
 #if HIGH_SPEED_EN
-#define RF233_REG_TRX_CTRL_2_CONF      (TRX_CTRL_2_RX_SAFE_MODE | DATA_RATE_500)  /* disallow overwriting rxfifo until prev has been read */
+#define RF231_REG_TRX_CTRL_2_CONF      (TRX_CTRL_2_RX_SAFE_MODE | DATA_RATE_500)  /* disallow overwriting rxfifo until prev has been read */
 #else
-#define RF233_REG_TRX_CTRL_2_CONF     (TRX_CTRL_2_RX_SAFE_MODE | DATA_RATE_250)  /* disallow overwriting rxfifo until prev has been read */
+#define RF231_REG_TRX_CTRL_2_CONF     (TRX_CTRL_2_RX_SAFE_MODE | DATA_RATE_250)  /* disallow overwriting rxfifo until prev has been read */
 #endif
-// #define RF233_REG_ANT_DIV_CONF         ()
-#define RF233_REG_IRQ_MASK_CONF        (IRQ_TRXBUF_ACCESS_VIOLATION | IRQ_TRX_DONE) // 
+// #define RF231_REG_ANT_DIV_CONF         ()
+#define RF231_REG_IRQ_MASK_CONF        (IRQ_TRXBUF_ACCESS_VIOLATION | IRQ_TRX_DONE) //
 
-#endif  /* _RF233_CONFIG_H_ */
+#endif  /* _RF231_CONFIG_H_ */

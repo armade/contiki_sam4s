@@ -13,7 +13,7 @@
 #include "sysclk.h"
 #include "gpio.h"
 #include "node-id.h"
-#include "rf233.h"
+#include "rf231.h"
 #include "dev/slip.h"
 #include "udc.h"
 #include "sleepmgr.h"
@@ -93,7 +93,7 @@ int main()
 			;
 		sleepmgr_enter_sleep();
 
-		/*if(rf233_sleep() !=-1){
+		/*if(RF231_sleep() !=-1){
 
 		 rtimer_arch_sleep(4*RTIMER_ARCH_SECOND); // 54uA in wait mode
 

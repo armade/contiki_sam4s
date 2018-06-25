@@ -266,9 +266,6 @@ struct radio_driver {
   /** Turn the radio off. */
   int (* off)(void);
 
-  /** Set the radio to deep sleep mode. */
-  int (* sleep)(void);
-
   /** Get a radio parameter value. */
   radio_result_t (* get_value)(radio_param_t param, radio_value_t *value);
 
@@ -288,6 +285,9 @@ struct radio_driver {
    */
   radio_result_t (* set_object)(radio_param_t param, const void *src,
                                 size_t size);
+
+  /** Set the radio to deep sleep mode. */
+  int (* sleep)(void);
 
 };
 

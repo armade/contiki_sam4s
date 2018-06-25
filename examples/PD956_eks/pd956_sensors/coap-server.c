@@ -114,7 +114,7 @@ PROCESS_THREAD(coap_server_process, ev, data)
 {
   PROCESS_BEGIN();
 
-  printf("CC26XX CoAP Server\n");
+  printf("CoAP Server\n");
 
   /* Initialize the REST engine. */
   rest_init_engine();
