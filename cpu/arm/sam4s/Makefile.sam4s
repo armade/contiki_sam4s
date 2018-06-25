@@ -2,17 +2,14 @@
 # Make file for sam4sd32b
 # -- Version 1.0
 ##############################################################################################################
-
-gcc_loc =/home/peter/GNUARM/gcc-arm-none-eabi-7-2017-q4-major-linux/gcc-arm-none-eabi-7-2017-q4-major/bin/arm-none-eabi
-
-CC      = $(gcc_loc)-gcc
-CPP     = $(gcc_loc)-cpp
-LD      = $(gcc_loc)-gcc
-AR      = $(gcc_loc)-ar
-OBJCOPY = $(gcc_loc)-objcopy
-OBJDUMP = $(gcc_loc)-objdump
-NM      = $(gcc_loc)-nm
-SIZE    = $(gcc_loc)-size
+CC      = arm-none-eabi-gcc
+CPP     = arm-none-eabi-cpp
+LD      = arm-none-eabi-gcc
+AR      = arm-none-eabi-ar
+OBJCOPY = arm-none-eabi-objcopy
+OBJDUMP = arm-none-eabi-objdump
+NM      = arm-none-eabi-nm
+SIZE    = arm-none-eabi-size
 
 LDSCRIPT = $(CONTIKI_CPU)/flash.ld
 
@@ -67,6 +64,7 @@ PLATFORM_DRIVER = 	flash_efc.c \
 					eeprom.c \
 					spi.c \
 					spi_master.c\
+					uart.c\
 					rtc.c
 					
 USB_DRIVERS =		udc.c \
@@ -113,17 +111,16 @@ CUSTOM_RULE_LINK=1
 	@$(CC) --version
 	@echo ""
 	$(Q)$(SIZE) -Ax $<
-	@$(SIZE) -A $< | egrep "data|bss" | awk '{s+=$$2} END {s=s+$(STACK_SIZE); f=$(RAM_SIZE)-s; printf "\t[RAM]   used %6d, free %6d (%f%%)\n",s,f,s/f*100;}'
-	@$(SIZE) -A $< | egrep "text|isr_vector" | awk '{s+=$$2} END {f=$(FLASH_SIZE)-s; printf "\t[Flash] used %6d, free %6d (%f%%)\n",s,f,s/f*100;}'
+	@$(SIZE) -A $< | egrep "data|bss" | awk '{s+=$$2} END {s=s+$(STACK_SIZE); f=$(RAM_SIZE)-s; printf "\t[RAM]   used %6d, free %6d (%f%)\n",s,f,s/f*100;}'
+	@$(SIZE) -A $< | egrep "text|isr_vector" | awk '{s+=$$2} END {f=$(FLASH_SIZE)-s; printf "\t[Flash] used %6d, free %6d (%f%)\n",s,f,s/f*100;}'
 	@echo ""
 	@echo ""
 
 # a target that gives a user-friendly memory profile, taking into account the RAM
 # that is statically occupied by the stack as defined in the linker script
 # see $(LDSCRIPT)
-RAM_SIZE = 163840
-#0x28000
-FLASH_SIZE = 1048576
+RAM_SIZE = 0x28000
+FLASH_SIZE = 0x100000
 STACK_SIZE = 0
 
 
