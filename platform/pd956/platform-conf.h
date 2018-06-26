@@ -30,6 +30,17 @@
 #define RngTimerID 		ID_TC1
 #define RngTimerIRQ		TC1_IRQn
 
+#define BOOTFLAGS		GPBR->SYS_GPBR[0]
+#define CLOCK_FLAGS		GPBR->SYS_GPBR[1]
+
+typedef struct {
+		uint8_t stranum;
+		uint8_t RTC_valid;
+		uint8_t Unused1;
+		uint8_t Unused2;
+}clock_gpbr_t;
+
+
 //PA6 	btn			-	step1	-	relay1
 //PA8 	RGB (r)		-	step2	- 	relay2
 //PA9 	RGB (g)		-	step3	-	relay3

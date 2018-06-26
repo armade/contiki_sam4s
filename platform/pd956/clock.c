@@ -11,6 +11,9 @@ static volatile clock_time_t offset = 0;
 clock_time_t sleepseconds;			// Holds whole seconds
 clock_time_t sleepticks = 0; 	// Holds ticks (less then 1 sec)
 
+
+static void Store_time_to_RTC(void *data);
+
 void SysTick_Handler(void)
 {
 	ticks++;
@@ -72,12 +75,15 @@ void clock_wait(clock_time_t i)
 // E X T R A :   U N I X   T I M E
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+clock_gpbr_t *clock_gpbr = (clock_gpbr_t *)&CLOCK_FLAGS;
+
 // Soft implementation of time.
 // Ticks is ms an represent time since reset.
 // Apply a time offset and we have a clock.
 void clock_set_unix_time(clock_time_t time)
 {
 	offset = time - clock_seconds();
+	Store_time_to_RTC(NULL);
 }
 
 clock_time_t clock_get_unix_time(void)
@@ -189,7 +195,7 @@ void UnixtoRTC(tm_t *tb, clock_time_t Unix_epoch)
 }
 
 struct ctimer rtc_timer;
-static void Store_time_to_RTC(void *data);
+struct ctimer stranum_timer;
 
 void Load_time_from_RTC(void)
 {
@@ -211,11 +217,13 @@ void Load_time_from_RTC(void)
 
 	// If the year is more then 2010 then the time has been set.
 	// TODO: This is only valid for 8 years.
-	if(timer.tm_year>=2018)
+	if(clock_gpbr->RTC_valid == 0xA7)
 		clock_quality(RTC_TIME);
+	else
+		clock_quality(15);
 
-	ctimer_set(&rtc_timer, 1UL * 60UL * 60UL * CLOCK_SECOND, Store_time_to_RTC,
-			NULL); // 1 hr interval
+	//ctimer_set(&rtc_timer, 1UL * 60UL * 60UL * CLOCK_SECOND, Store_time_to_RTC,
+	//		NULL); // 1 hr interval
 }
 
 #define const_bcd2bin(x)	(((x) & 0x0f) + ((x) >> 4) * 10)
@@ -267,18 +275,26 @@ static void Store_time_to_RTC(void *data)
 	//rtc_set_time(RTC, timer.tm_hour, timer.tm_min, timer.tm_sec);
 	//rtc_set_date(RTC, timer.tm_year, timer.tm_mon, timer.tm_mday,
 	//		timer.tm_wday);
-
+	clock_gpbr->RTC_valid = 0xA7;
 	// We are using the internal rc 32kHz. This is really bad so update it every 6 hour
 	// from the more accurate systimer.
 	// TODO: When we sleep we run on slow clock the most of the time making this pointless.
-	ctimer_set(&rtc_timer, 6 * 60 * 60 * CLOCK_SECOND, Store_time_to_RTC, NULL); // 6 hr interval
+	//ctimer_set(&rtc_timer, 6 * 60 * 60 * CLOCK_SECOND, Store_time_to_RTC, NULL); // 6 hr interval
 
 }
-volatile uint8_t stranum = 15;
+
+static void Decrement_stranum(void *data)
+{
+	if(clock_gpbr->stranum < 15)
+		clock_gpbr->stranum--;
+	ctimer_set(&stranum_timer, 1 * 60 * 60 * CLOCK_SECOND, Decrement_stranum, NULL); // 1 hr interval
+}
+
 int clock_quality(int stranum_new)
 {
 	if(stranum_new == -1)
-		return stranum;
-	stranum = stranum_new;
+		return clock_gpbr->stranum;
+	clock_gpbr->stranum = stranum_new;
+	ctimer_set(&stranum_timer, 1 * 60 * 60 * CLOCK_SECOND, Decrement_stranum, NULL); // 1 hr interval
 	return 1;
 }
