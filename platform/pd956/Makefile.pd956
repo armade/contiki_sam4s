@@ -32,6 +32,7 @@ CONTIKI_TARGET_SOURCEFILES += 	contiki-main.c \
 								clock.c \
 								node-id.c \
 								slip_arch.c \
+								gpsd_arch.c \
 								$(PLATFORM_NET_DRIVER) \
 								$(PLATFORM_FLASH_DRIVER) \
 								$(PLATFORM_SENSOR_DRIVER) \

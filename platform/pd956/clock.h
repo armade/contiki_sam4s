@@ -33,4 +33,11 @@ clock_set_unix_time(clock_time_t time);
 clock_time_t
 clock_get_unix_time(void);
 
+
+#define READ_STRANUM	-1
+#define GPS_TIME		1
+#define RTC_TIME		8
+
+int clock_quality(int stranum_new);
+
 #endif /* PLATFORM_PD956_CLOCK_H_ */

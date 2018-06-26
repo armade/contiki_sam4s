@@ -209,6 +209,11 @@ void Load_time_from_RTC(void)
 
 	clock_set_unix_time(Unix_time);
 
+	// If the year is more then 2010 then the time has been set.
+	// TODO: This is only valid for 8 years.
+	if(timer.tm_year>=2018)
+		clock_quality(RTC_TIME);
+
 	ctimer_set(&rtc_timer, 1UL * 60UL * 60UL * CLOCK_SECOND, Store_time_to_RTC,
 			NULL); // 1 hr interval
 }
@@ -268,4 +273,12 @@ static void Store_time_to_RTC(void *data)
 	// TODO: When we sleep we run on slow clock the most of the time making this pointless.
 	ctimer_set(&rtc_timer, 6 * 60 * 60 * CLOCK_SECOND, Store_time_to_RTC, NULL); // 6 hr interval
 
+}
+volatile uint8_t stranum = 15;
+int clock_quality(int stranum_new)
+{
+	if(stranum_new == -1)
+		return stranum;
+	stranum = stranum_new;
+	return 1;
 }

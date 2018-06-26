@@ -47,7 +47,6 @@ PROCESS(ntpd_process, "ntpd");
 
 static struct ctimer delay_timer;
 volatile uint8_t NTP_BUSY = 0;
-volatile uint8_t current_stranum = 15;
 
 static void
 notify_ready(void *not_used)
@@ -72,6 +71,7 @@ static void tcpip_handler(void)
 	ntp_packet_t * NTP = (ntp_packet_t *) uip_appdata;
 	ntp_packet_t NTP_server = { .li = 0, .ver = 3, .mode = 4, 0 };
 	clock_time_t time;
+	uint8_t current_stranum;
 
 	// Check port!!!!!!
 	if(uip_newdata() && (uip_datalen() == 48)){
@@ -79,12 +79,13 @@ static void tcpip_handler(void)
 		switch(NTP->mode)
 		{
 			case 4: // We got a reply for the request
-				if(current_stranum > NTP->stratum )
+				if(clock_quality(READ_STRANUM) > NTP->stratum )
 				{
 					CurrTime = uip_ntohl(NTP->tx_Time_s) - NTP_EPOCH; //UNIX time
 					clock_set_unix_time(CurrTime);
 					StartTime = clock_seconds();
 					current_stranum = (NTP->stratum + 1)>15?15:(NTP->stratum + 1);
+					clock_quality(current_stranum);
 				}
 				// We got response so NTP is happy
 				NTP_BUSY = 0;
@@ -93,7 +94,7 @@ static void tcpip_handler(void)
 			case 3: // Someone is asking us for the time
 				time = clock_get_unix_time();
 				if(time){
-					NTP_server.stratum = current_stranum;
+					NTP_server.stratum = clock_quality(READ_STRANUM);
 					NTP_server.tx_Time_s = uip_ntohl(time + NTP_EPOCH);
 
 					uip_ipaddr_copy(&ntp_conn->ripaddr, &UIP_IP_BUF->srcipaddr);
@@ -128,7 +129,7 @@ static void Send_NTP_time_to_parrent(void)
 	clock_time_t time;
 	time = clock_get_unix_time();
 	if(time){
-		NTP_server.stratum = current_stranum;
+		NTP_server.stratum = clock_quality(READ_STRANUM);
 		NTP_server.tx_Time_s = uip_ntohl(time + NTP_EPOCH);
 		uip_udp_packet_send(ntp_conn, &NTP_server, 48);
 		// Wait 50 ms so we have time to send packet

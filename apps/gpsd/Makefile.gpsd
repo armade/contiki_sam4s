@@ -1,0 +1,2 @@
+gpsd_src = gpsd.c
+gpsd_src += minmea.c
