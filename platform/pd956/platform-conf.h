@@ -26,6 +26,10 @@
 #define step_TIMER_ID 	ID_TC2
 #define step_TIMER_IRQ	TC2_IRQn
 
+#define RngTimer 		TC0->TC_CHANNEL[1]
+#define RngTimerID 		ID_TC1
+#define RngTimerIRQ		TC1_IRQn
+
 //PA6 	btn			-	step1	-	relay1
 //PA8 	RGB (r)		-	step2	- 	relay2
 //PA9 	RGB (g)		-	step3	-	relay3

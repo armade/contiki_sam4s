@@ -113,7 +113,7 @@ static unsigned short days[4][12] =
 clock_time_t RtctoUnix(tm_t *tb)
 {
 	clock_time_t tmptm1, tmptm2, tmptm3;
-	int month = tb->tm_mon - 1;
+	int month = tb->tm_mon - 1; // month in RTC is 1-12 and tm is 0-11
 	tmptm1 = tb->tm_year - 1900;
 
 	// Adjust month value so it is in the range 0 - 11.
@@ -184,7 +184,7 @@ void UnixtoRTC(tm_t *tb, clock_time_t Unix_epoch)
 	}
 
 	tb->tm_year = years + year + 1970;
-	tb->tm_mon = month + 1;
+	tb->tm_mon = month + 1; // month in RTC is 1-12 and tm is 0-11
 	tb->tm_mday = Unix_epoch - days[year][month] + 1;
 }
 
@@ -212,6 +212,42 @@ void Load_time_from_RTC(void)
 	ctimer_set(&rtc_timer, 1UL * 60UL * 60UL * CLOCK_SECOND, Store_time_to_RTC,
 			NULL); // 1 hr interval
 }
+
+#define const_bcd2bin(x)	(((x) & 0x0f) + ((x) >> 4) * 10)
+#define const_bin2bcd(x)	((((x) / 10) << 4) + (x) % 10)
+// In order to prevent rollover when setting the time, we set both at the same time.
+// This is not supported in the framework.
+int test_rtc_settime(Rtc* pRtc, tm_t *tm)
+{
+	if((pRtc->RTC_SR & RTC_SR_SEC) != RTC_SR_SEC)
+		return -1;
+	/* Stop Time/Calendar from counting */
+
+	pRtc->RTC_CR |= RTC_CR_UPDCAL | RTC_CR_UPDTIM;
+
+	while ((pRtc->RTC_SR & RTC_SR_ACKUPD) != RTC_SR_ACKUPD);
+	pRtc->RTC_SCCR = RTC_SCCR_ACKCLR;
+
+	pRtc->RTC_TIMR =  const_bin2bcd(tm->tm_sec) << 0
+					| const_bin2bcd(tm->tm_min) << 8
+					| const_bin2bcd(tm->tm_hour) << 16;
+
+
+	pRtc->RTC_CALR =
+			  const_bin2bcd((tm->tm_year ) / 100)	/* century */
+			| const_bin2bcd(tm->tm_year % 100) << 8	/* year */
+			| const_bin2bcd(tm->tm_mon + 1) << 16		/* tm_mon starts at zero */
+			| const_bin2bcd(tm->tm_wday) << 21	/* day of the week [0-6], Sunday=0 */
+			| const_bin2bcd(tm->tm_mday) << 24;
+
+	/* Restart Time/Calendar */
+	pRtc->RTC_SCCR |= RTC_SCCR_SECCLR;
+	pRtc->RTC_CR &= (uint32_t)(~(RTC_CR_UPDCAL|RTC_CR_UPDTIM)) ;
+	pRtc->RTC_SCCR |= RTC_SCCR_SECCLR; /* clear SECENV in SCCR */
+
+	return 0;
+}
+
 static void Store_time_to_RTC(void *data)
 {
 	clock_time_t Unix_time = clock_get_unix_time();
@@ -221,36 +257,15 @@ static void Store_time_to_RTC(void *data)
 		return;
 
 	UnixtoRTC(&timer, Unix_time);
-	// wait 3 sec, and try again.
-	// This is a problem if vi are setting the time doing a day change.
-	// Then we face the possibility of missing a day.(and so on)
-	if (timer.tm_sec > 57)
-	{
-		ctimer_set(&rtc_timer, 3 * CLOCK_SECOND, Store_time_to_RTC, NULL); // 3s
-		return;
-	}
 
-	Unix_time = Unix_time - clock_get_unix_time();
-	if (Unix_time)
-	{
-		timer.tm_sec += Unix_time;
-		// The next code should never be run. If it does then UnixtoRTC() is more then 3 sec in execution.
-		if (timer.tm_sec > 59)
-		{
-			while (timer.tm_sec > 59)
-			{
-				timer.tm_min++;
-				timer.tm_sec -= 59;
-			}
-		}
-	}
-
-	rtc_set_time(RTC, timer.tm_hour, timer.tm_min, timer.tm_sec);
-	rtc_set_date(RTC, timer.tm_year, timer.tm_mon, timer.tm_mday,
-			timer.tm_wday);
+	test_rtc_settime(RTC,&timer);
+	//rtc_set_time(RTC, timer.tm_hour, timer.tm_min, timer.tm_sec);
+	//rtc_set_date(RTC, timer.tm_year, timer.tm_mon, timer.tm_mday,
+	//		timer.tm_wday);
 
 	// We are using the internal rc 32kHz. This is really bad so update it every 6 hour
 	// from the more accurate systimer.
+	// TODO: When we sleep we run on slow clock the most of the time making this pointless.
 	ctimer_set(&rtc_timer, 6 * 60 * 60 * CLOCK_SECOND, Store_time_to_RTC, NULL); // 6 hr interval
 
 }

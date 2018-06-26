@@ -217,6 +217,7 @@ load_config()
 		}
     }
     else{
+    	printf("Error bad header in config\n");
     	flash_enter_deep_sleep();
     	return 1;
     }

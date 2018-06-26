@@ -43,18 +43,13 @@ void sf_writeenable(void)
 
 void sf_deepsleep_enter(void)
 {
-	switch (chiptype())	{
-		case CHIP_AT25DF641:	sf_cmd0(0xB9);		break;
-		default:									break;
-	}
+	sf_cmd0(0xB9);
 }
 
 void sf_deepsleep_leave(void)
 {
-	switch (chiptype()){
-		case CHIP_AT25DF641:	sf_cmd0(0xAB);	sf_tshortdelay();	break;
-		default:													break;
-	}
+	sf_cmd0(0xAB);
+	sf_tshortdelay();
 }
 
 void sf_writeprotect(void)

@@ -170,29 +170,22 @@ static void pub_handler(const char *topic, uint16_t topic_len,
 			chunk_len);
 
 	/* If we don't like the length, ignore */
-	if (topic_len != 23 || chunk_len != 1)
+	if (chunk_len != 4 || chunk_len != 5)
 	{
 		printf("Incorrect topic or chunk len. Ignored\n");
 		return;
 	}
 
-	/* If the format != json, ignore */
-	if (strncmp(&topic[topic_len - 4], "json", 4) != 0)
-	{
-		printf("Incorrect format\n");
-	}
+	static MQTT_config_ele_t *sub_topic;
+	sub_topic = list_head(MQTT_subscribe_list);
 
-	if (strncmp(&topic[10], "leds", 4) == 0)
-	{
-		if (chunk[0] == '1')
-		{
-			leds_on(LEDS_RED);
-		}
-		else if (chunk[0] == '0')
-		{
-			leds_off(LEDS_RED);
-		}
-		return;
+	while (sub_topic != NULL){
+		if(!memcpy(sub_topic->topic,topic,topic_len))
+			if(!memcpy(chunk,"wake",4))
+				no_sleep_allowed = 1;
+			else if(!memcpy(chunk,"sleep",5))
+				no_sleep_allowed = 0;
+		sub_topic = sub_topic->next;
 	}
 
 }
@@ -230,17 +223,6 @@ static void mqtt_event(struct mqtt_connection *m, mqtt_event_t event,
 		if (msg_ptr->first_chunk)
 		{
 			msg_ptr->first_chunk = 0;
-			static MQTT_config_ele_t *sub_topic;
-			sub_topic = list_head(MQTT_subscribe_list);
-
-			while (sub_topic != NULL){
-				if(!memcpy(sub_topic->topic,msg_ptr->topic,strlen(msg_ptr->topic)))
-					if(!memcpy(msg_ptr->payload_chunk,"wake",4))
-						no_sleep_allowed = 1;
-					else if(!memcpy(msg_ptr->payload_chunk,"sleep",5))
-						no_sleep_allowed = 0;
-				sub_topic = subscribe_topic->next;
-			}
 
 			DBG("APP - Application received a publish on topic '%s'. Payload "
 					"size is %i bytes. Content:\n\n",
@@ -801,6 +783,7 @@ PROCESS_THREAD(mqtt_client_process, ev, data)
 {
 
 	PROCESS_BEGIN();
+	uint8_t sleep_counter = 1;
 
 		printf("MQTT Client Process\n");
 
@@ -823,6 +806,17 @@ PROCESS_THREAD(mqtt_client_process, ev, data)
 			if ((ev == MQTT_publish_sensor_data_done_event) || (ev == PROCESS_EVENT_TIMER && data == &sleep_retry_timer))
 			{
 
+				if(no_sleep_allowed || !sleep_counter)
+				{
+					if(sleep_counter){
+						sleep_counter = 0;
+						etimer_set(&sleep_retry_timer, conf->pub_interval/CLOCK_SECOND);
+					}else{
+						sleep_counter = 1;
+						process_post(PROCESS_BROADCAST, Trig_sensors, NULL);
+					}
+
+				}
 				if(NETSTACK_RADIO.sleep() !=-1){
 
 					rtimer_arch_sleep(conf->pub_interval/CLOCK_SECOND * RTIMER_ARCH_SECOND); // 54uA in wait mode

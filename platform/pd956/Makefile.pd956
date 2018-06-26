@@ -4,7 +4,7 @@ ifndef CONTIKI
   $(error CONTIKI not defined! You must specify where CONTIKI resides!)
 endif
 
-CONTIKI_TARGET_DIRS += 	.	net sensors PD_FLASH io
+CONTIKI_TARGET_DIRS += 	.	net sensors PD_FLASH io crypt crypt/uECC crypt/sha2
 		
 PLATFORM_NET_DRIVER = rf231.c trx_access_USART.c clock.c
 PLATFORM_FLASH_DRIVER = hw_spiflash.c hl_spiflash.c FLASH_driver.c
@@ -23,6 +23,11 @@ PLATFORM_SENSOR_DRIVER = 	ADC_temp.c \
 							
 PLATFORM_IO_DRIVER = i2csoft.c
 
+PLATFORM_CRYPT_DRIVER = sha256.c \
+						sha512.c \
+						uECC.c \
+						csprng.c
+
 CONTIKI_TARGET_SOURCEFILES += 	contiki-main.c \
 								clock.c \
 								node-id.c \
@@ -30,7 +35,8 @@ CONTIKI_TARGET_SOURCEFILES += 	contiki-main.c \
 								$(PLATFORM_NET_DRIVER) \
 								$(PLATFORM_FLASH_DRIVER) \
 								$(PLATFORM_SENSOR_DRIVER) \
-								$(PLATFORM_IO_DRIVER)
+								$(PLATFORM_IO_DRIVER) \
+								$(PLATFORM_CRYPT_DRIVER)
 
 CONTIKI_SOURCEFILES += $(CONTIKI_TARGET_SOURCEFILES)
 

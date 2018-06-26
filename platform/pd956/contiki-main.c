@@ -25,6 +25,7 @@
 #include "platform-conf.h"
 #include "compiler.h"
 #include "flash_efc.h"
+#include "csprng.h"
 //extern rtimer_arch_sleep(rtimer_clock_t howlong);
 
 void board_init(void);
@@ -63,6 +64,7 @@ int main()
 	clock_init();
 	rtimer_init();
 	ctimer_init();
+	csprng_start();
 
 	process_init();
 	process_start(&etimer_process, NULL);
@@ -85,20 +87,12 @@ int main()
 	autostart_start(autostart_processes);
 	printf("Processes running\n");
 
-	/* Set wakeup source to rtt_alarm */
+	// Power down between tasks, when cpu is in idle
 	sleepmgr_init();
 	sleepmgr_lock_mode(SLEEPMGR_SLEEP_WFI);
 	while(1){
-		while(process_run())
-			;
+		while(process_run());
 		sleepmgr_enter_sleep();
-
-		/*if(RF231_sleep() !=-1){
-
-		 rtimer_arch_sleep(4*RTIMER_ARCH_SECOND); // 54uA in wait mode
-
-		 NETSTACK_RADIO.on();
-		 }*/
 	}
 	return 0;
 }
@@ -176,19 +170,31 @@ void board_init(void)
 {
 	/* Disable the watchdog */
 	WDT->WDT_MR = WDT_MR_WDDIS;
+
+	// I'm currently operating on two cpu's. One with cache and one without.
+	if((CHIPID->CHIPID_CIDR &0xFFFFFFFE) == 0x29970EE0){
+		printf("I - Found cache. Enabling it.\n\r");
+		// Enable the CMCC module. (cache)
+
+		CMCC->CMCC_MCFG = 2;//CMCC_DHIT_COUNT_MODE;
+		CMCC->CMCC_MEN |= CMCC_MEN_MENABLE;
+
+		CMCC->CMCC_CTRL |= CMCC_CTRL_CEN;
+	}
 	//wdt_init(WDT, WDT_MR_WDRSTEN|WDT_MR_WDDBGHLT|WDT_MR_WDIDLEHLT, 0xfff, 0xfff);
 	ioport_init();
 
 	/* Configure all unused PIOs as outputs and low to save power */
 	pio_set_output(PIOA,
-			(1 << 0) | (1 << 2) | (1 << 3) | (1 << 4) | (1 << 5) | (1 << 6)
-					| (1 << 7) | (1 << 8) | (1 << 9) | (1 << 10) | (1 << 16)
+			(1 << 0) | (1 << 2) | (1 << 3)  | (1 << 4)  | (1 << 5)  | (1 << 6)
+					| (1 << 7)  | (1 << 8)  | (1 << 9)  | (1 << 10) | (1 << 16)
 					| (1 << 17) | (1 << 18) | (1 << 19) | (1 << 20) | (1 << 26)
 					| (1 << 27) | (1 << 28) | (1 << 29) | (1 << 30) | (1 << 31),
 			0, 0, 0);
 	pio_set_output(PIOB,
-			(1 << 0) | (1 << 1) | (1 << 2) | (1 << 3) | (1 << 4) | (1 << 5)
-					| (1 << 13) | (1 << 14), 1, 0, 1);
+			(1 << 0) | (1 << 1) | (1 << 2)  | (1 << 3)  | (1 << 4)  | (1 << 5)
+					| (1 << 13) | (1 << 14),
+			1, 0, 1);
 
 #ifdef CONF_BOARD_UART_CONSOLE
 	/* Configure UART pins */
