@@ -124,6 +124,7 @@ MQTT_sub_ele_t MQTT_COMMON_NO_SLEEP_sub_cmd;
 static struct mqtt_message *msg_ptr = 0;
 static struct etimer publish_periodic_timer;
 static struct etimer sleep_retry_timer;
+static struct etimer timeout_timer;
 static struct ctimer ct;
 static char *buf_ptr;
 static uint16_t seq_nr_value = 0;
@@ -783,7 +784,7 @@ PROCESS_THREAD(mqtt_client_process, ev, data)
 {
 
 	PROCESS_BEGIN();
-	uint8_t sleep_counter = 1;
+	static uint8_t sleep_counter = 1;
 
 		printf("MQTT Client Process\n");
 
@@ -803,9 +804,11 @@ PROCESS_THREAD(mqtt_client_process, ev, data)
 
 			PROCESS_YIELD();
 
-			if ((ev == MQTT_publish_sensor_data_done_event) || (ev == PROCESS_EVENT_TIMER && data == &sleep_retry_timer))
+			if ((ev == MQTT_publish_sensor_data_done_event) || (ev == PROCESS_EVENT_TIMER && data == &sleep_retry_timer) || (ev == PROCESS_EVENT_TIMER && data == &timeout_timer))
 			{
-
+				// If for some reason the chain breaks we need to just sleep on it.
+				// Timeout_timer makes sure we get here 1s after wake up.
+				etimer_stop(&timeout_timer);
 				if(no_sleep_allowed || !sleep_counter)
 				{
 					if(sleep_counter){
@@ -813,6 +816,7 @@ PROCESS_THREAD(mqtt_client_process, ev, data)
 						etimer_set(&sleep_retry_timer, conf->pub_interval/CLOCK_SECOND);
 					}else{
 						sleep_counter = 1;
+						etimer_set(&timeout_timer, CLOCK_SECOND);
 						process_post(PROCESS_BROADCAST, Trig_sensors, NULL);
 					}
 
@@ -823,6 +827,7 @@ PROCESS_THREAD(mqtt_client_process, ev, data)
 					// if sleeptime is 60 sec, and we are awake 100ms we can live on a battery with 2700mAh for
 					// 60/60.1*54uA+0.1/60.1*22mA = 90.5uA avg  2700mA/90.5uA = 29829hr ~ 3.4 years
 
+					etimer_set(&timeout_timer, CLOCK_SECOND);
 					process_post(PROCESS_BROADCAST, Trig_sensors, NULL);
 				}
 				else
