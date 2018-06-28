@@ -64,7 +64,7 @@ int main()
 	clock_init();
 	rtimer_init();
 	ctimer_init();
-	csprng_start();
+	//csprng_start();
 
 	process_init();
 	process_start(&etimer_process, NULL);
@@ -172,7 +172,7 @@ void board_init(void)
 	WDT->WDT_MR = WDT_MR_WDDIS;
 
 	// I'm currently operating on two cpu's. One with cache and one without.
-	if((CHIPID->CHIPID_CIDR &0xFFFFFFFE) == 0x29970EE0){
+	/*if((CHIPID->CHIPID_CIDR &0xFFFFFFFE) == 0x29970EE0){
 		printf("I - Found cache. Enabling it.\n\r");
 		// Enable the CMCC module. (cache)
 
@@ -180,7 +180,7 @@ void board_init(void)
 		CMCC->CMCC_MEN |= CMCC_MEN_MENABLE;
 
 		CMCC->CMCC_CTRL |= CMCC_CTRL_CEN;
-	}
+	}*/
 	//wdt_init(WDT, WDT_MR_WDRSTEN|WDT_MR_WDDBGHLT|WDT_MR_WDIDLEHLT, 0xfff, 0xfff);
 	ioport_init();
 

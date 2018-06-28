@@ -125,7 +125,6 @@ static struct mqtt_message *msg_ptr = 0;
 static struct etimer publish_periodic_timer;
 static struct etimer sleep_retry_timer;
 static struct etimer timeout_timer;
-static struct ctimer ct;
 static char *buf_ptr;
 static uint16_t seq_nr_value = 0;
 /*---------------------------------------------------------------------------*/
@@ -181,11 +180,12 @@ static void pub_handler(const char *topic, uint16_t topic_len,
 	sub_topic = list_head(MQTT_subscribe_list);
 
 	while (sub_topic != NULL){
-		if(!memcpy(sub_topic->topic,topic,topic_len))
+		if(!memcpy((void *)sub_topic->topic,(void *)topic,topic_len)){
 			if(!memcpy(chunk,"wake",4))
 				no_sleep_allowed = 1;
-			else if(!memcpy(chunk,"sleep",5))
+			else if(!memcpy((void *)chunk,"sleep",5))
 				no_sleep_allowed = 0;
+		}
 		sub_topic = sub_topic->next;
 	}
 
