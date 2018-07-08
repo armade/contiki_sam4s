@@ -169,8 +169,12 @@ static void pub_handler(const char *topic, uint16_t topic_len,
 	DBG("Pub Handler: topic='%s' (len=%u), chunk_len=%u\n", topic, topic_len,
 			chunk_len);
 
+	volatile uint16_t chunk_len_local = chunk_len;
+
+	asm volatile("NOP");
+
 	/* If we don't like the length, ignore */
-	if (chunk_len != 4 || chunk_len != 5)
+	if (chunk_len < 4 || chunk_len > 5)
 	{
 		printf("Incorrect topic or chunk len. Ignored\n");
 		return;
@@ -180,10 +184,10 @@ static void pub_handler(const char *topic, uint16_t topic_len,
 	sub_topic = list_head(MQTT_subscribe_list);
 
 	while (sub_topic != NULL){
-		if(!memcpy((void *)sub_topic->topic,(void *)topic,topic_len)){
-			if(!memcpy(chunk,"wake",4))
+		if(!memcmp((void *)sub_topic->topic,(void *)topic,topic_len)){
+			if(!memcmp(chunk,"wake",4))
 				no_sleep_allowed = 1;
-			else if(!memcpy((void *)chunk,"sleep",5))
+			else if(!memcmp((void *)chunk,"sleep",5))
 				no_sleep_allowed = 0;
 		}
 		sub_topic = sub_topic->next;
@@ -785,6 +789,7 @@ PROCESS_THREAD(mqtt_client_process, ev, data)
 
 	PROCESS_BEGIN();
 	static uint8_t sleep_counter = 1;
+	static volatile process_event_t ev_local;
 
 		printf("MQTT Client Process\n");
 
@@ -803,36 +808,39 @@ PROCESS_THREAD(mqtt_client_process, ev, data)
 		{
 
 			PROCESS_YIELD();
+			ev_local = ev;
 
 			if ((ev == MQTT_publish_sensor_data_done_event) || (ev == PROCESS_EVENT_TIMER && data == &sleep_retry_timer) || (ev == PROCESS_EVENT_TIMER && data == &timeout_timer))
 			{
 				// If for some reason the chain breaks we need to just sleep on it.
 				// Timeout_timer makes sure we get here 1s after wake up.
 				etimer_stop(&timeout_timer);
-				if(no_sleep_allowed || !sleep_counter)
+				if(no_sleep_allowed || !sleep_counter || (ev == PROCESS_EVENT_TIMER && data == &timeout_timer))
 				{
 					if(sleep_counter){
 						sleep_counter = 0;
-						etimer_set(&sleep_retry_timer, conf->pub_interval/CLOCK_SECOND);
+						etimer_set(&sleep_retry_timer, conf->pub_interval*CLOCK_SECOND);
 					}else{
 						sleep_counter = 1;
 						etimer_set(&timeout_timer, CLOCK_SECOND);
 						process_post(PROCESS_BROADCAST, Trig_sensors, NULL);
 					}
 
-				}
-				if(NETSTACK_RADIO.sleep() !=-1){
-
-					rtimer_arch_sleep(conf->pub_interval/CLOCK_SECOND * RTIMER_ARCH_SECOND); // 54uA in wait mode
-					// if sleeptime is 60 sec, and we are awake 100ms we can live on a battery with 2700mAh for
-					// 60/60.1*54uA+0.1/60.1*22mA = 90.5uA avg  2700mA/90.5uA = 29829hr ~ 3.4 years
-
-					etimer_set(&timeout_timer, CLOCK_SECOND);
-					process_post(PROCESS_BROADCAST, Trig_sensors, NULL);
-				}
-				else
+				}else
 				{
-					etimer_set(&sleep_retry_timer, CLOCK_SECOND>>6);
+					if(NETSTACK_RADIO.sleep() !=-1){
+
+						rtimer_arch_sleep(conf->pub_interval/CLOCK_SECOND * RTIMER_ARCH_SECOND); // 54uA in wait mode
+						// if sleeptime is 60 sec, and we are awake 100ms we can live on a battery with 2700mAh for
+						// 60/60.1*54uA+0.1/60.1*22mA = 90.5uA avg  2700mA/90.5uA = 29829hr ~ 3.4 years
+
+						etimer_set(&timeout_timer, CLOCK_SECOND);
+						process_post(PROCESS_BROADCAST, Trig_sensors, NULL);
+					}
+					else
+					{
+						etimer_set(&sleep_retry_timer, CLOCK_SECOND>>6);
+					}
 				}
 			}
 
