@@ -181,7 +181,7 @@ const struct radio_driver RF231_radio_driver =
 
 #define BUSYWAIT_UNTIL(cond, max_time)                                  \
   do {                                                                  \
-    rtimer_clock_t t0;                                                  \
+    static rtimer_clock_t t0;                                                  \
     t0 = RTIMER_NOW();                                                  \
     while(!(cond) && RTIMER_CLOCK_LT(RTIMER_NOW(), t0 + (max_time)));   \
   } while(0)
