@@ -296,11 +296,11 @@ cc26xx_web_demo_restore_defaults(void)
 
 /*---------------------------------------------------------------------------*/
 
-static void
+/*static void
 init_temp_reading(void *not_used)
 {
   SENSORS_ACTIVATE(SAM4S_ADC_TS_sensor);
-}
+}*/
 
 static void
 get_temp_reading(void)
@@ -308,7 +308,7 @@ get_temp_reading(void)
 	int value;
 	int low,high;
 	char *buf;
-	clock_time_t next = web_demo_config.mqtt_config.pub_interval;
+	//clock_time_t next = web_demo_config.mqtt_config.pub_interval;
 
 	if(temp_reading.publish) {
 		value = SAM4S_ADC_TS_sensor.value(ADC_TS_SENSOR_TYPE_TEMP);
@@ -328,7 +328,7 @@ get_temp_reading(void)
 	}
 
 	SENSORS_DEACTIVATE(SAM4S_ADC_TS_sensor);
-	ctimer_set(&Internal_ADC_timer, next, init_temp_reading, NULL);
+	//ctimer_set(&Internal_ADC_timer, next, init_temp_reading, NULL);
 }
 
 #ifdef NODE_LIGHT
@@ -391,17 +391,17 @@ get_step_reading(void)
 #endif
 
 #if defined(NODE_STEP_MOTOR) || defined(NODE_4_ch_relay)
-static void
+/*static void
 init_dht11_temperature_reading(void *not_used)
 {
   SENSORS_ACTIVATE(dht11_sensor);
-}
+}*/
 static void
 get_dht11_temperature_reading(void)
 {
 	int value;
 	char *buf;
-	clock_time_t next =  web_demo_config.mqtt_config.pub_interval;
+	//clock_time_t next =  web_demo_config.mqtt_config.pub_interval;
 
 	if(dht11_temperature_reading.publish) {
 
@@ -438,23 +438,23 @@ get_dht11_temperature_reading(void)
 		}
 	}
 	SENSORS_DEACTIVATE(dht11_sensor);
-	ctimer_set(&dht11_temperature_timer, next, init_dht11_temperature_reading, NULL);
+	//ctimer_set(&dht11_temperature_timer, next, init_dht11_temperature_reading, NULL);
 }
 #endif
 /*---------------------------------------------------------------------------*/
 #ifdef NODE_PRESSURE
-static void
+/*static void
 init_bmp_reading(void *not_used)
 {
   SENSORS_ACTIVATE(bmp_280_sensor);
-}
+}*/
 
 static void
 get_bmp_reading()
 {
   int value;
   int low,high;
-  clock_time_t next =  web_demo_config.mqtt_config.pub_interval;
+  //clock_time_t next =  web_demo_config.mqtt_config.pub_interval;
   char *buf;
 
   if(bmp_280_sensor_press_reading.publish) {
@@ -495,23 +495,23 @@ get_bmp_reading()
 
   SENSORS_DEACTIVATE(bmp_280_sensor);
 
-  ctimer_set(&bmp_timer, next, init_bmp_reading, NULL);
+  //ctimer_set(&bmp_timer, next, init_bmp_reading, NULL);
 }
 #endif
 
 #ifdef NODE_HTU21D
-static void
+/*static void
 init_HTU21D_reading(void *not_used)
 {
   SENSORS_ACTIVATE(HTU21D_sensor);
-}
+}*/
 
 static void
 get_HTU21D_reading()
 {
   int value;
   int low,high;
-  clock_time_t next =  web_demo_config.mqtt_config.pub_interval;
+  //clock_time_t next =  web_demo_config.mqtt_config.pub_interval;
   char *buf;
 
   if(HTU21D_sensor_humid_reading.publish) {
@@ -552,7 +552,7 @@ get_HTU21D_reading()
 
   SENSORS_DEACTIVATE(HTU21D_sensor);
 
-  ctimer_set(&HTU21D_timer, next, init_HTU21D_reading, NULL);
+  //ctimer_set(&HTU21D_timer, next, init_HTU21D_reading, NULL);
 }
 #endif
 /*---------------------------------------------------------------------------*/
@@ -656,24 +656,23 @@ uint32_t sensor_busy;
 PROCESS_THREAD(cc26xx_web_demo_process, ev, data)
 {
 	uint8_t ret;
-  PROCESS_BEGIN();
+	PROCESS_BEGIN();
 
-  printf("CC26XX Web Demo Process\n");
+	printf("CC26XX Web Demo Process\n");
 
-  init_sensors();
+	init_sensors();
 
-  MQTT_publish_sensor_data_event = process_alloc_event();
-  cc26xx_web_demo_config_loaded_event = process_alloc_event();
-  cc26xx_web_demo_load_config_defaults = process_alloc_event();
-  Trig_sensors = process_alloc_event();
+	MQTT_publish_sensor_data_event = process_alloc_event();
+	cc26xx_web_demo_config_loaded_event = process_alloc_event();
+	cc26xx_web_demo_load_config_defaults = process_alloc_event();
+	Trig_sensors = process_alloc_event();
 
-  /* Start all other (enabled) processes first */
-  process_start(&httpd_simple_process, NULL);
-  register_http_post_handlers();
+	/* Start all other (enabled) processes first */
+	process_start(&httpd_simple_process, NULL);
+	register_http_post_handlers();
 
 #if CC26XX_WEB_DEMO_MQTT_CLIENT
-  MQTT_init_config();
-  //process_start(&mqtt_client_process, NULL);
+	MQTT_init_config();
 #endif
 
   process_start(&ntpd_process, NULL);
@@ -694,26 +693,12 @@ PROCESS_THREAD(cc26xx_web_demo_process, ev, data)
    */
   process_post(PROCESS_BROADCAST, cc26xx_web_demo_config_loaded_event, NULL);
 
-
-
   sensor_busy = web_demo_config.sensors_bitmap;
   if(!ret)
 	  trigger_sensors();
-  /*
-   * Update all sensor readings on a configurable sensors_event
-   * (e.g a button press / or reed trigger)
-   */
+
   while(1) {
 
-/*
-    if(uip_ds6_get_global(ADDR_PREFERRED) != NULL){
-    	if(MQTT_ready()){
-    		if(!sensor_busy){
-
-    		}
-
-    	}
-    }*/
 
 	  if(ev == Trig_sensors){
 		  trigger_sensors();

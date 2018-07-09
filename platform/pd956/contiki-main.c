@@ -64,7 +64,7 @@ int main()
 	clock_init();
 	rtimer_init();
 	ctimer_init();
-	//csprng_start();
+	csprng_start();
 
 	process_init();
 	process_start(&etimer_process, NULL);

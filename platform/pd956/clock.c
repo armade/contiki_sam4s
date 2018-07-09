@@ -215,10 +215,9 @@ void Load_time_from_RTC(void)
 
 	clock_set_unix_time(Unix_time);
 
-	// If the year is more then 2010 then the time has been set.
-	// TODO: This is only valid for 8 years.
+
 	if(clock_gpbr->RTC_valid == 0xA7)
-		clock_quality(RTC_TIME);
+		clock_quality(clock_gpbr->stranum);
 	else
 		clock_quality(15);
 
@@ -294,6 +293,7 @@ int clock_quality(int stranum_new)
 {
 	if(stranum_new == -1)
 		return clock_gpbr->stranum;
+
 	clock_gpbr->stranum = stranum_new;
 	ctimer_set(&stranum_timer, 1 * 60 * 60 * CLOCK_SECOND, Decrement_stranum, NULL); // 1 hr interval
 	return 1;

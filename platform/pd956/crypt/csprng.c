@@ -9,6 +9,10 @@
 #include "contiki-conf.h"
 #include "platform-conf.h"
 #include "compiler.h"
+#include "sys/ctimer.h"
+#include "rtimer-arch.h"
+#include "platform-conf.h"
+#include "stdint.h"
 
 #include "csprng.h"
 #include "sha256.h"
@@ -23,6 +27,10 @@ const unsigned short ramtable[16] = { RAMS(48), RAMS(192), RAMS(384), RAMS(6),
 		RAMS(24), RAMS(4), RAMS(80), RAMS(160), RAMS(8), RAMS(16), RAMS(32),
 		RAMS(64), RAMS(128), RAMS(256), RAMS(96), RAMS(512) };
 
+
+
+static struct ctimer rng_timer;
+
 static inline void csprng_feed(unsigned d)
 {
 	int fix = csprng_feedix;
@@ -35,7 +43,7 @@ static inline void csprng_feed(unsigned d)
 	csprng_feedix = fix;
 }
 
-void RngTimerIRQHandel(void)
+/*void RngTimerIRQHandel(void)
 {
 	volatile unsigned status = RngTimer.TC_SR;
 	UNUSED(status);
@@ -46,9 +54,17 @@ void RngTimerIRQHandel(void)
 		RngTimer.TC_RC = 32;//32 is approximately 1000Hz, 3 is approximately 10kHz. After 2000 interrupts the feed rate is reduced from 10kHz to 1kHz feed rate.
 		csprng_ready = 1;
 	}
+}*/
+// This function is called with normal clock,
+// and adding the rtimer as feed.
+static void
+RNG_handler(void *not_used)
+{
+	csprng_feed(rtimer_arch_now());
+	ctimer_reset(&rng_timer);
 }
 
-static int RNG_Function(uint8_t *dest, unsigned size)
+int RNG_Function(uint8_t *dest, unsigned size)
 {
 	return csprng_get(dest, size);
 }
@@ -78,18 +94,15 @@ void csprng_start(void)
 	top[-1]++; //increment last word in ram - paranoia (reset tricks)
 
 	csprng_feed(h);
+
+	for(i=0;i<8;i++){
+		get_eeprom(eepromMacAddress[i], h);
+		csprng_feed(h);
+	}
 	csprng_feedix = 0;
 	csprng_ready = 0;
 
-	///// enable irq on RTC clock
-	pmc_enable_periph_clk(RngTimerID);
-	RngTimer.TC_CMR = 4 + (2<<13); //4=slowclock   2<<13=up rc compare
-	RngTimer.TC_RC = 3; //32 is approximately 1000Hz, 3 is approximately 10kHz - start off with 10kHz for 0.5s.
-	RngTimer.TC_CCR = 1;
-	RngTimer.TC_CCR = 4;
-	RngTimer.TC_IER = 1<<4;
-	NVIC_ClearPendingIRQ(RngTimerIRQ);
-	NVIC_EnableIRQ(RngTimerIRQ);
+	ctimer_set(&rng_timer, 20, RNG_handler, NULL);
 
 	uECC_set_rng(RNG_Function);
 }
@@ -111,6 +124,7 @@ int csprng_get(unsigned char *dst, int bytes)
 		a.u[1] = (unsigned) &a;								//current stack frame
 		a.u[2] = SysTick->VAL;								//tick
 		a.u[3] = __sync_add_and_fetch(&csprng_count, 1);	//generator counter
+		a.u[4] = rtimer_arch_now();							//slow clock
 		sha2_sha256_init(&ctx);
 		sha2_sha256_update(&ctx, a.b, 16);
 		sha2_sha256_update(&ctx, (unsigned char*) csprng_state,

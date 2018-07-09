@@ -69,7 +69,7 @@ static uint8_t state;
 #define BUFFER_SIZE 64
 static char client_id[BUFFER_SIZE];
 static char pub_topic[BUFFER_SIZE];
-static char sub_topic[BUFFER_SIZE];
+//static char sub_topic[BUFFER_SIZE];
 /*---------------------------------------------------------------------------*/
 /*
  * The main MQTT buffers.
@@ -82,7 +82,7 @@ static char app_buffer[APP_BUFFER_SIZE];
 #define QUICKSTART "PD"
 
 LIST(MQTT_subscribe_list);
-LIST(MQTT_publish_list);
+//LIST(MQTT_publish_list);
 LIST(MQTT_config_list);
 
 typedef struct MQTT_config_ele
@@ -130,16 +130,13 @@ static uint16_t seq_nr_value = 0;
 /*---------------------------------------------------------------------------*/
 static uip_ip6addr_t def_route;
 /*---------------------------------------------------------------------------*/
-/* Parent RSSI functionality */
-extern int def_rt_rssi;
-/*---------------------------------------------------------------------------*/
 const static cc26xx_web_demo_sensor_reading_t *reading;
 /*---------------------------------------------------------------------------*/
 mqtt_client_config_t *conf;
 process_event_t MQTT_publish_sensor_data_done_event;
 static volatile uint8_t no_sleep_allowed = 0;
 /*---------------------------------------------------------------------------*/
-PROCESS(mqtt_client_process, "CC26XX MQTT Client");
+PROCESS(mqtt_client_process, "PD956 MQTT Client");
 /*---------------------------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/
 void new_net_config(void)
@@ -169,11 +166,7 @@ static void pub_handler(const char *topic, uint16_t topic_len,
 	DBG("Pub Handler: topic='%s' (len=%u), chunk_len=%u\n", topic, topic_len,
 			chunk_len);
 
-	volatile uint16_t chunk_len_local = chunk_len;
-
-	asm volatile("NOP");
-
-	/* If we don't like the length, ignore */
+	// If we don't like the length, ignore
 	if (chunk_len < 4 || chunk_len > 5)
 	{
 		printf("Incorrect topic or chunk len. Ignored\n");
@@ -200,64 +193,58 @@ static void mqtt_event(struct mqtt_connection *m, mqtt_event_t event,
 {
 	switch (event)
 	{
-	case MQTT_EVENT_CONNECTED:
-	{
-		DBG("APP - Application has a MQTT connection\n");
-		timer_set(&connection_life, CONNECTION_STABLE_TIME);
-		state = MQTT_CLIENT_STATE_CONNECTED;
-		process_poll(&mqtt_client_process);
-		break;
-	}
-	case MQTT_EVENT_DISCONNECTED:
-	{
-		DBG("APP - MQTT Disconnect. Reason %u\n", *((mqtt_event_t *)data));
-
-		/* Do nothing if the disconnect was the result of an incoming config */
-		if (state != MQTT_CLIENT_STATE_NEWCONFIG)
-		{
-			state = MQTT_CLIENT_STATE_DISCONNECTED;
+		case MQTT_EVENT_CONNECTED:
+			DBG("APP - Application has a MQTT connection\n");
+			timer_set(&connection_life, CONNECTION_STABLE_TIME);
+			state = MQTT_CLIENT_STATE_CONNECTED;
 			process_poll(&mqtt_client_process);
-		}
-		break;
-	}
-	case MQTT_EVENT_PUBLISH:
-	{
-		msg_ptr = data;
+			break;
 
-		/* Implement first_flag in publish message? */
-		if (msg_ptr->first_chunk)
-		{
-			msg_ptr->first_chunk = 0;
+		case MQTT_EVENT_DISCONNECTED:
+			DBG("APP - MQTT Disconnect. Reason %u\n", *((mqtt_event_t *)data));
 
-			DBG("APP - Application received a publish on topic '%s'. Payload "
-					"size is %i bytes. Content:\n\n",
-					msg_ptr->topic, msg_ptr->payload_length);
-		}
+			/* Do nothing if the disconnect was the result of an incoming config */
+			if (state != MQTT_CLIENT_STATE_NEWCONFIG)
+			{
+				state = MQTT_CLIENT_STATE_DISCONNECTED;
+				process_poll(&mqtt_client_process);
+			}
+			break;
 
-		pub_handler(msg_ptr->topic, strlen(msg_ptr->topic),
-				msg_ptr->payload_chunk, msg_ptr->payload_length);
-		break;
-	}
-	case MQTT_EVENT_SUBACK:
-	{
-		DBG("APP - Application is subscribed to topic successfully\n");
-		break;
-	}
-	case MQTT_EVENT_UNSUBACK:
-	{
-		DBG("APP - Application is unsubscribed to topic successfully\n");
-		break;
-	}
-	case MQTT_EVENT_PUBACK:
-	{
-		state = MQTT_CLIENT_STATE_PUBLISHING_DONE;
-		process_post(PROCESS_BROADCAST, MQTT_publish_sensor_data_done_event, NULL);
-		DBG("APP - Publishing complete.\n");
-		break;
-	}
-	default:
-		DBG("APP - Application got a unhandled MQTT event: %i\n", event);
-		break;
+		case MQTT_EVENT_PUBLISH:
+			msg_ptr = data;
+
+			/* Implement first_flag in publish message? */
+			if (msg_ptr->first_chunk)
+			{
+				msg_ptr->first_chunk = 0;
+
+				DBG("APP - Application received a publish on topic '%s'. Payload "
+						"size is %i bytes. Content:\n\n",
+						msg_ptr->topic, msg_ptr->payload_length);
+			}
+
+			pub_handler(msg_ptr->topic, strlen(msg_ptr->topic),
+					msg_ptr->payload_chunk, msg_ptr->payload_length);
+			break;
+
+		case MQTT_EVENT_SUBACK:
+			DBG("APP - Application is subscribed to topic successfully\n");
+			break;
+
+		case MQTT_EVENT_UNSUBACK:
+			DBG("APP - Application is unsubscribed to topic successfully\n");
+			break;
+
+		case MQTT_EVENT_PUBACK:
+			state = MQTT_CLIENT_STATE_PUBLISHING_DONE;
+			process_post(PROCESS_BROADCAST, MQTT_publish_sensor_data_done_event, NULL);
+			DBG("APP - Publishing complete.\n");
+			break;
+
+		default:
+			DBG("APP - Application got a unhandled MQTT event: %i\n", event);
+			break;
 	}
 }
 /*---------------------------------------------------------------------------*/
@@ -411,7 +398,7 @@ static int construct_sub_topic(void)
 	snprintf(MQTT_COMMON_NO_SLEEP_sub_cmd.topic,
 				sizeof(MQTT_COMMON_NO_SLEEP_sub_cmd.topic), "Hass/%s/%s/%s/set",
 				client_id, conf->Username, "Sleep");
-		list_add(MQTT_subscribe_list, &MQTT_COMMON_NO_SLEEP_sub_cmd);
+	list_add(MQTT_subscribe_list, &MQTT_COMMON_NO_SLEEP_sub_cmd);
 
 /*
 	snprintf(MQTT_step_motor_sub_cmd.topic,
@@ -789,92 +776,94 @@ PROCESS_THREAD(mqtt_client_process, ev, data)
 
 	PROCESS_BEGIN();
 	static uint8_t sleep_counter = 1;
-	static volatile process_event_t ev_local;
 
-		printf("MQTT Client Process\n");
+	printf("MQTT Client Process\n");
 
-		MQTT_publish_sensor_data_done_event = process_alloc_event();
+	MQTT_publish_sensor_data_done_event = process_alloc_event();
 
-		/*conf = &web_demo_config.mqtt_config;
-		if (init_config() != 1)
+	/*conf = &web_demo_config.mqtt_config;
+	if (init_config() != 1)
+	{
+		PROCESS_EXIT();
+	}*/
+
+	update_config();
+
+	/* Main loop */
+	while (1)
+	{
+
+		PROCESS_YIELD();
+
+		if ((ev == MQTT_publish_sensor_data_done_event) || (ev == PROCESS_EVENT_TIMER && data == &sleep_retry_timer) || (ev == PROCESS_EVENT_TIMER && data == &timeout_timer))
 		{
-			PROCESS_EXIT();
-		}*/
-
-		update_config();
-
-		/* Main loop */
-		while (1)
-		{
-
-			PROCESS_YIELD();
-			ev_local = ev;
-
-			if ((ev == MQTT_publish_sensor_data_done_event) || (ev == PROCESS_EVENT_TIMER && data == &sleep_retry_timer) || (ev == PROCESS_EVENT_TIMER && data == &timeout_timer))
+			// If for some reason the chain breaks we need to just sleep on it.
+			// Timeout_timer makes sure we get here 1s after wake up.
+			etimer_stop(&timeout_timer);
+			if(no_sleep_allowed || !sleep_counter || (ev == PROCESS_EVENT_TIMER && data == &timeout_timer))
 			{
-				// If for some reason the chain breaks we need to just sleep on it.
-				// Timeout_timer makes sure we get here 1s after wake up.
-				etimer_stop(&timeout_timer);
-				if(no_sleep_allowed || !sleep_counter || (ev == PROCESS_EVENT_TIMER && data == &timeout_timer))
+				if(sleep_counter){
+					sleep_counter = 0;
+					etimer_set(&sleep_retry_timer, conf->pub_interval*CLOCK_SECOND);
+				}else{
+					sleep_counter = 1;
+					etimer_set(&timeout_timer, CLOCK_SECOND);
+					process_post(PROCESS_BROADCAST, Trig_sensors, NULL);
+				}
+
+			}else
+			{
+				if(NETSTACK_RADIO.sleep() !=-1){
+
+					rtimer_arch_sleep(conf->pub_interval/CLOCK_SECOND * RTIMER_ARCH_SECOND); // 54uA in wait mode
+					// if sleeptime is 60 sec, and we are awake 100ms we can live on a battery with 2700mAh for
+					// 60/60.1*54uA+0.1/60.1*22mA = 90.5uA avg  2700mA/90.5uA = 29829hr ~ 3.4 years
+
+					// TODO: Need timing to indicate how long the radio is on. the radio is now not active doing
+					// sensor measurements. a ping is about 47ms in avg. so if we assume 50ms on-time we get:
+					// 60/60.1*54uA + 0.05/60.1*22mA + 0.05/60.1*10mA = 70.5uA avg  2700mA/90.5uA = 29829hr ~ 4.3 years
+
+					etimer_set(&timeout_timer, 3*CLOCK_SECOND); // We have 3 sec to complete sensor measurement and publish result. Otherwise we will treat it as nosleep.
+					process_post(PROCESS_BROADCAST, Trig_sensors, NULL);
+				}
+				else
 				{
-					if(sleep_counter){
-						sleep_counter = 0;
-						etimer_set(&sleep_retry_timer, conf->pub_interval*CLOCK_SECOND);
-					}else{
-						sleep_counter = 1;
-						etimer_set(&timeout_timer, CLOCK_SECOND);
-						process_post(PROCESS_BROADCAST, Trig_sensors, NULL);
-					}
-
-				}else
-				{
-					if(NETSTACK_RADIO.sleep() !=-1){
-
-						rtimer_arch_sleep(conf->pub_interval/CLOCK_SECOND * RTIMER_ARCH_SECOND); // 54uA in wait mode
-						// if sleeptime is 60 sec, and we are awake 100ms we can live on a battery with 2700mAh for
-						// 60/60.1*54uA+0.1/60.1*22mA = 90.5uA avg  2700mA/90.5uA = 29829hr ~ 3.4 years
-
-						etimer_set(&timeout_timer, CLOCK_SECOND);
-						process_post(PROCESS_BROADCAST, Trig_sensors, NULL);
-					}
-					else
-					{
-						etimer_set(&sleep_retry_timer, CLOCK_SECOND>>6);
-					}
+					etimer_set(&sleep_retry_timer, CLOCK_SECOND>>6); // retry in 15 ms
 				}
 			}
-
-			if (state == MQTT_CLIENT_STATE_ERROR)
-			{
-				connect_attempt = 1;
-				state = MQTT_CLIENT_STATE_REGISTERED;
-			}
-
-			if ((ev == PROCESS_EVENT_TIMER && data == &publish_periodic_timer)
-					|| ev == PROCESS_EVENT_POLL
-					|| ev == MQTT_publish_sensor_data_event /*||
-					 (ev == sensors_event)*/)
-			{
-				state_machine();
-			}
-
-			if (ev == httpd_simple_event_new_config)
-			{
-				/*
-				 * Schedule next pass in a while. When HTTPD sends us this event, it is
-				 * also in the process of sending the config page. Wait a little before
-				 * reconnecting, so as to not cause congestion.
-				 */
-				etimer_set(&publish_periodic_timer, NEW_CONFIG_WAIT_INTERVAL);
-			}
-
-			if (ev == cc26xx_web_demo_load_config_defaults)
-			{
-				init_config();
-				connect_to_broker();
-			}
-
 		}
+
+		if (state == MQTT_CLIENT_STATE_ERROR)
+		{
+			connect_attempt = 1;
+			state = MQTT_CLIENT_STATE_REGISTERED;
+		}
+
+		if ((ev == PROCESS_EVENT_TIMER && data == &publish_periodic_timer)
+				|| ev == PROCESS_EVENT_POLL
+				|| ev == MQTT_publish_sensor_data_event /*||
+				 (ev == sensors_event)*/)
+		{
+			state_machine();
+		}
+
+		if (ev == httpd_simple_event_new_config)
+		{
+			/*
+			 * Schedule next pass in a while. When HTTPD sends us this event, it is
+			 * also in the process of sending the config page. Wait a little before
+			 * reconnecting, so as to not cause congestion.
+			 */
+			etimer_set(&publish_periodic_timer, NEW_CONFIG_WAIT_INTERVAL);
+		}
+
+		if (ev == cc26xx_web_demo_load_config_defaults)
+		{
+			init_config();
+			connect_to_broker();
+		}
+
+	}
 
 	PROCESS_END();
 }

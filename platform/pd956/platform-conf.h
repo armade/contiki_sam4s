@@ -26,9 +26,9 @@
 #define step_TIMER_ID 	ID_TC2
 #define step_TIMER_IRQ	TC2_IRQn
 
-#define RngTimer 		TC0->TC_CHANNEL[1]
+/*#define RngTimer 		TC0->TC_CHANNEL[1]
 #define RngTimerID 		ID_TC1
-#define RngTimerIRQ		TC1_IRQn
+#define RngTimerIRQ		TC1_IRQn*/
 
 #define BOOTFLAGS		GPBR->SYS_GPBR[0]
 #define CLOCK_FLAGS		GPBR->SYS_GPBR[1]
