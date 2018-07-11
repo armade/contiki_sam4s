@@ -34,19 +34,18 @@ static int current_type = 0;
     while(!(cond) && RTIMER_CLOCK_LT(RTIMER_NOW(), t0 + (max_time)));   \
   } while(0)
 /*---------------------------------------------------------------------------*/
-static
-uint8_t SoftI2Cread_char_register(uint8_t Addr, uint8_t reg)
+static uint8_t SoftI2Cread_char_register(uint8_t Addr, uint8_t reg)
 {
 	uint8_t lsb;
 
-    SoftI2CStart();
-	SoftI2CWriteByte((Addr<<1)&0xFE); //clr LSB for write
+	SoftI2CStart();
+	SoftI2CWriteByte((Addr << 1) & 0xFE); //clr LSB for write
 	SoftI2CWriteByte(reg);
 
 	SoftI2CStart();
-	SoftI2CWriteByte((Addr<<1)|1); //set LSB for read
+	SoftI2CWriteByte((Addr << 1) | 1); //set LSB for read
 
-	lsb=SoftI2CReadByte(0);
+	lsb = SoftI2CReadByte(0);
 
 	SoftI2CStop();
 
@@ -55,8 +54,8 @@ uint8_t SoftI2Cread_char_register(uint8_t Addr, uint8_t reg)
 static
 void SoftI2Cwrite_char_register(uint8_t Addr, uint8_t reg, uint8_t data)
 {
-    SoftI2CStart();
-	SoftI2CWriteByte((Addr<<1)&0xFE); //clr LSB for write
+	SoftI2CStart();
+	SoftI2CWriteByte((Addr << 1) & 0xFE); //clr LSB for write
 	SoftI2CWriteByte(reg);
 	SoftI2CWriteByte(data);
 
@@ -77,11 +76,11 @@ void lm73_set_resolution(uint16_t res)
 	uint16_t CR_register;
 	unsigned char new_res = res - 11;
 
-	if(new_res < 4) {
+	if(new_res < 4){
 		CR_register = SoftI2Cread_char_register(LM73_ADDRESS, 0x04);
-		CR_register &= ~(0b11<<5);
-		CR_register |= (new_res<<5);
-		SoftI2Cwrite_char_register(LM73_ADDRESS, 0x04,CR_register);
+		CR_register &= ~(0b11 << 5);
+		CR_register |= (new_res << 5);
+		SoftI2Cwrite_char_register(LM73_ADDRESS, 0x04, CR_register);
 	}
 }
 
@@ -90,10 +89,10 @@ uint16_t lm73_get_resolution(void)
 	uint16_t CR_register;
 
 	CR_register = SoftI2Cread_char_register(LM73_ADDRESS, 0x04);
-	CR_register &= (0b11<<5);
+	CR_register &= (0b11 << 5);
 	CR_register >>= 5;
 
-	return CR_register+11;
+	return CR_register + 11;
 }
 /*---------------------------------------------------------------------------*/
 void lm73_set_mode_power_down(void)
@@ -101,8 +100,8 @@ void lm73_set_mode_power_down(void)
 	uint16_t CR_register;
 
 	CR_register = SoftI2Cread_char_register(LM73_ADDRESS, 0x01);
-	CR_register |= (1<<7);
-	SoftI2Cwrite_char_register(LM73_ADDRESS, 0x01,CR_register);
+	CR_register |= (1 << 7);
+	SoftI2Cwrite_char_register(LM73_ADDRESS, 0x01, CR_register);
 }
 
 void lm73_clr_mode_power_down(void)
@@ -110,8 +109,8 @@ void lm73_clr_mode_power_down(void)
 	uint16_t CR_register;
 
 	CR_register = SoftI2Cread_char_register(LM73_ADDRESS, 0x01);
-	CR_register &= (1<<7);
-	SoftI2Cwrite_char_register(LM73_ADDRESS, 0x01,CR_register);
+	CR_register &= (1 << 7);
+	SoftI2Cwrite_char_register(LM73_ADDRESS, 0x01, CR_register);
 }
 /*---------------------------------------------------------------------------*/
 void lm73_oneshot(void) // 14-112ms depending on resolution
@@ -119,14 +118,14 @@ void lm73_oneshot(void) // 14-112ms depending on resolution
 	uint16_t CR_register;
 
 	CR_register = SoftI2Cread_char_register(LM73_ADDRESS, 0x01);
-	CR_register |= (1<<2);
-	SoftI2Cwrite_char_register(LM73_ADDRESS, 0x01,CR_register);
+	CR_register |= (1 << 2);
+	SoftI2Cwrite_char_register(LM73_ADDRESS, 0x01, CR_register);
 }
 /*---------------------------------------------------------------------------*/
 void lm73_T_high_set(uint16_t temp)
 {
-	uint16_t TH_register = temp<<7;
-	SoftI2Cwrite_char_register(LM73_ADDRESS, 0x02,TH_register);
+	uint16_t TH_register = temp << 7;
+	SoftI2Cwrite_char_register(LM73_ADDRESS, 0x02, TH_register);
 }
 
 uint16_t lm73_T_high_get(void)
@@ -134,13 +133,13 @@ uint16_t lm73_T_high_get(void)
 	uint16_t TH_register;
 	TH_register = SoftI2Cread_char_register(LM73_ADDRESS, 0x02);
 
-	return TH_register>>7;
+	return TH_register >> 7;
 }
 /*---------------------------------------------------------------------------*/
 void lm73_T_low_set(uint16_t temp)
 {
-	uint16_t TL_register = temp<<7;
-	SoftI2Cwrite_char_register(LM73_ADDRESS, 0x03,TL_register);
+	uint16_t TL_register = temp << 7;
+	SoftI2Cwrite_char_register(LM73_ADDRESS, 0x03, TL_register);
 }
 
 uint16_t lm73_T_low_get(void)
@@ -148,7 +147,7 @@ uint16_t lm73_T_low_get(void)
 	uint16_t TL_register;
 	TL_register = SoftI2Cread_char_register(LM73_ADDRESS, 0x03);
 
-	return TL_register>>7;
+	return TL_register >> 7;
 }
 /*---------------------------------------------------------------------------*/
 uint16_t lm73_Identification_Register(void)
@@ -177,8 +176,7 @@ float lm73_get_temperature(void)
  * \brief Returns a reading from the sensor
  * \return Temperature (ºC * 1000).
  */
-static int
-lm73_get_temperature(int type)
+static int lm73_get_temperature(int type)
 {
 	int16_t dat;
 	int32_t tmp;
@@ -189,15 +187,14 @@ lm73_get_temperature(int type)
 	// after a oneshot request. When the measurement is done the
 	// register will be updated with the correct value.
 
-	BUSYWAIT_UNTIL(
-			(dat=SoftI2Cread_int_register(LM73_ADDRESS, 0x00)) != 0x8000,
+	BUSYWAIT_UNTIL((dat=SoftI2Cread_int_register(LM73_ADDRESS, 0x00)) != 0x8000,
 			114 * RTIMER_SECOND / 1000); // 14-112ms depending on resolution. Here 114ms
 
 	if(dat == 0xffff)
 		return SENSOR_ERROR;
 
-	tmp = dat*1000; // preserve some decimals
-	dat = tmp>>7; // Divide by 128 to get ºC
+	tmp = dat * 1000; // preserve some decimals
+	dat = tmp >> 7; // Divide by 128 to get ºC
 	return dat;
 }
 
@@ -212,10 +209,10 @@ lm73_get_temperature(int type)
  * When type == SENSORS_ACTIVE and enable==1 we enable the sensor
  * When type == SENSORS_ACTIVE and enable==0 we disable the sensor
  */
-static int
-lm73_init(int type, int enable)
+static int lm73_init(int type, int enable)
 {
-	switch(type) {
+	switch(type)
+	{
 
 		case SENSORS_HW_INIT:
 			if(lm73_Identification_Register() != 0x0190)
@@ -233,14 +230,14 @@ lm73_init(int type, int enable)
 			if(sensor_status == SENSOR_STATUS_DISABLED)
 				return SENSOR_STATUS_DISABLED;
 
-			 if(enable) {
-				 //lm73_clr_mode_power_down();
-				 sensor_status = SENSOR_STATUS_READY;
-			 } else {
-				 //lm73_set_mode_power_down();
-				 sensor_status = SENSOR_STATUS_NOT_READY;
-			 }
-			 break;
+			if(enable){
+				//lm73_clr_mode_power_down();
+				sensor_status = SENSOR_STATUS_READY;
+			} else{
+				//lm73_set_mode_power_down();
+				sensor_status = SENSOR_STATUS_NOT_READY;
+			}
+			break;
 
 		case LM73_SENSOR_TYPE_POWERDOWN:
 			lm73_set_mode_power_down();
@@ -260,8 +257,9 @@ lm73_init(int type, int enable)
 			current_type = LM73_SENSOR_TYPE_CONTINUESLY;
 
 			// NO don't use !!!!!ioport_set_pin_dir(alarm_pin,IOPORT_DIR_INPUT);
-			pio_handler_set(PIOA, ID_PIOA, alarm_pin, PIO_IT_HIGH_LEVEL, lm73_alarm_irq);
-			NVIC_EnableIRQ((IRQn_Type)ID_PIOA);
+			pio_handler_set(PIOA, ID_PIOA, alarm_pin, PIO_IT_HIGH_LEVEL,
+					lm73_alarm_irq);
+			NVIC_EnableIRQ((IRQn_Type) ID_PIOA);
 			pio_enable_interrupt(PIOA, alarm_pin);
 			pio_enable_pin_interrupt(alarm_pin);
 			break;
@@ -276,12 +274,12 @@ lm73_init(int type, int enable)
  * \param type SENSORS_ACTIVE or SENSORS_READY
  * \return 1 if the sensor is enabled
  */
-static int
-lm73_status(int type)
+static int lm73_status(int type)
 {
 	return sensor_status;
 }
 
 /*---------------------------------------------------------------------------*/
-SENSORS_SENSOR(LM73_sensor, "LM73", lm73_get_temperature, lm73_init, lm73_status);
+SENSORS_SENSOR(LM73_sensor, "LM73", lm73_get_temperature, lm73_init,
+		lm73_status);
 /*---------------------------------------------------------------------------*/

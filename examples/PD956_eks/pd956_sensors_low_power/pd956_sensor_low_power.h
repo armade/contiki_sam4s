@@ -155,7 +155,7 @@ extern process_event_t cc26xx_web_demo_load_config_defaults;
 extern process_event_t Trig_sensors;
 /*---------------------------------------------------------------------------*/
 #define CC26XX_WEB_DEMO_UNIT_TEMP     "C"
-#define CC26XX_WEB_DEMO_UNIT_VOLT     "mV"
+#define CC26XX_WEB_DEMO_UNIT_VOLT     "V"
 #define CC26XX_WEB_DEMO_UNIT_PRES     "hPa"
 #define CC26XX_WEB_DEMO_UNIT_HUMIDITY "%RH"
 #define CC26XX_WEB_DEMO_UNIT_LIGHT    "lux"

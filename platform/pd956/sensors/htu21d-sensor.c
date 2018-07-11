@@ -1,11 +1,9 @@
-
 #include "contiki-conf.h"
 #include "lib/sensors.h"
 #include "htu21d-sensor.h"
 #include "sys/ctimer.h"
 #include "lib/sensors.h"
 #include "i2csoft.h"
-
 
 #include <stdint.h>
 #include <string.h>
@@ -70,7 +68,8 @@
 																|	HTU21_USER_REG_END_OF_BATTERY_MASK		\
 																|	HTU21_USER_REG_ENABLE_ONCHIP_HEATER_MASK	\
 																|	HTU21_USER_REG_DISABLE_OTP_RELOAD_MASK ))
-enum htu21_resolution {
+enum htu21_resolution
+{
 	htu21_resolution_t_14b_rh_12b = 0,
 	htu21_resolution_t_12b_rh_8b,
 	htu21_resolution_t_13b_rh_10b,
@@ -90,8 +89,10 @@ enum htu21_resolution {
 #define HTU21_USER_REG_ONCHIP_HEATER_ENABLE					0x04
 #define HTU21_USER_REG_OTP_RELOAD_DISABLE					0x02
 
-static uint32_t htu21_temperature_conversion_time = HTU21_TEMPERATURE_CONVERSION_TIME_T_14b_RH_12b;
-static uint32_t htu21_humidity_conversion_time = HTU21_HUMIDITY_CONVERSION_TIME_T_14b_RH_12b;
+static uint32_t htu21_temperature_conversion_time =
+		HTU21_TEMPERATURE_CONVERSION_TIME_T_14b_RH_12b;
+static uint32_t htu21_humidity_conversion_time =
+		HTU21_HUMIDITY_CONVERSION_TIME_T_14b_RH_12b;
 /*---------------------------------------------------------------------------*/
 #define SENSOR_STATUS_DISABLED     0
 #define SENSOR_STATUS_INITIALISED  1
@@ -114,20 +115,20 @@ int32_t HTU21_temp = 0;
 int32_t HTU21_humid = 0;
 
 /*---------------------------------------------------------------------------*/
-static inline
-uint16_t SoftI2Cread_register(uint8_t Addr,  uint8_t *Data, uint8_t len)
+static inline uint16_t SoftI2Cread_register(uint8_t Addr, uint8_t *Data,
+		uint8_t len)
 {
-	uint8_t i,ack;
+	uint8_t i, ack;
 
-    SoftI2CStart();
-	ack = SoftI2CWriteByte((Addr<<1)|1); //set LSB for read
+	SoftI2CStart();
+	ack = SoftI2CWriteByte((Addr << 1) | 1); //set LSB for read
 	if(!ack)
 		return 0;
 
-	for(i=0;i<(len-1);i++)
-		*Data++=SoftI2CReadByte(1);
+	for (i = 0; i < (len - 1) ; i++)
+		*Data++ = SoftI2CReadByte(1);
 
-	*Data++=SoftI2CReadByte(0);
+	*Data++ = SoftI2CReadByte(0);
 
 	SoftI2CStop();
 
@@ -140,7 +141,7 @@ static
 void SoftI2C_cmd(uint8_t Addr, uint8_t cmd, uint8_t stopbit)
 {
 	SoftI2CStart();
-	SoftI2CWriteByte((Addr<<1)&0xFE); //clr LSB for write
+	SoftI2CWriteByte((Addr << 1) & 0xFE); //clr LSB for write
 	SoftI2CWriteByte(cmd);
 	if(stopbit)
 		SoftI2CStop();
@@ -148,15 +149,14 @@ void SoftI2C_cmd(uint8_t Addr, uint8_t cmd, uint8_t stopbit)
 
 /*---------------------------------------------------------------------------*/
 
-int
-htu21_read_user_register(uint8_t Addr, uint8_t *reg_value)
+int htu21_read_user_register(uint8_t Addr, uint8_t *reg_value)
 {
 	SoftI2CStart();
-	SoftI2CWriteByte((Addr<<1)&0xFE); //clr LSB for write
+	SoftI2CWriteByte((Addr << 1) & 0xFE); //clr LSB for write
 	SoftI2CWriteByte(HTU21_READ_USER_REG_COMMAND);
 
 	SoftI2CStart();
-	SoftI2CWriteByte((Addr<<1)|1); //set LSB for read
+	SoftI2CWriteByte((Addr << 1) | 1); //set LSB for read
 	*reg_value = SoftI2CReadByte(0);
 
 	return 1;
@@ -167,7 +167,7 @@ htu21_read_user_register(uint8_t Addr, uint8_t *reg_value)
 int htu21_write_user_register(uint8_t Addr, uint8_t reg_value)
 {
 	SoftI2CStart();
-	SoftI2CWriteByte((Addr<<1)&0xFE); //clr LSB for write
+	SoftI2CWriteByte((Addr << 1) & 0xFE); //clr LSB for write
 	SoftI2CWriteByte(HTU21_WRITE_USER_REG_COMMAND);
 	SoftI2CWriteByte(reg_value);
 	SoftI2CStop();
@@ -178,49 +178,48 @@ int htu21_write_user_register(uint8_t Addr, uint8_t reg_value)
 /*---------------------------------------------------------------------------*/
 
 static
-int htu21_crc_check( uint16_t value, uint8_t crc)
+int htu21_crc_check(uint16_t value, uint8_t crc)
 {
 	uint32_t polynom = 0x988000; // x^8 + x^5 + x^4 + 1
-	uint32_t msb     = 0x800000;
-	uint32_t mask    = 0xFF8000;
-	uint32_t result  = (uint32_t)value<<8; // Pad with zeros as specified in spec
+	uint32_t msb = 0x800000;
+	uint32_t mask = 0xFF8000;
+	uint32_t result = (uint32_t) value << 8; // Pad with zeros as specified in spec
 
-	while( msb != 0x80 ) {
+	while(msb != 0x80){
 
 		// Check if msb of current value is 1 and apply XOR mask
-		if( result & msb )
-			result = ((result ^ polynom) & mask) | ( result & ~mask);
+		if(result & msb)
+			result = ((result ^ polynom) & mask) | (result & ~mask);
 
 		// Shift by one
 		msb >>= 1;
 		mask >>= 1;
-		polynom >>=1;
+		polynom >>= 1;
 	}
-	if( result == crc )
-		return 	1;
+	if(result == crc)
+		return 1;
 	else
 		return 0;
 }
 
 /*---------------------------------------------------------------------------*/
 
-static int
-htu21_read_serial_number(uint64_t * serial_number)
+static int htu21_read_serial_number(uint64_t * serial_number)
 {
 	uint8_t Last[6];
 	uint8_t First[8];
 
 	SoftI2CStart();
-	SoftI2CWriteByte((HTU21_ADDR<<1)&0xFE); //clr LSB for write
-	SoftI2CWriteByte(HTU21_READ_SERIAL_FIRST_8BYTES_COMMAND>>8);
-	SoftI2CWriteByte(HTU21_READ_SERIAL_FIRST_8BYTES_COMMAND&0xff);
-	SoftI2Cread_register(HTU21_ADDR,First,8); //SNB_3, crc, SNB2, crc, SNB1, crc, SNB_0, crc
+	SoftI2CWriteByte((HTU21_ADDR << 1) & 0xFE); //clr LSB for write
+	SoftI2CWriteByte(HTU21_READ_SERIAL_FIRST_8BYTES_COMMAND >> 8);
+	SoftI2CWriteByte(HTU21_READ_SERIAL_FIRST_8BYTES_COMMAND & 0xff);
+	SoftI2Cread_register(HTU21_ADDR, First, 8); //SNB_3, crc, SNB2, crc, SNB1, crc, SNB_0, crc
 
 	SoftI2CStart();
-	SoftI2CWriteByte((HTU21_ADDR<<1)&0xFE); //clr LSB for write
-	SoftI2CWriteByte(HTU21_READ_SERIAL_LAST_6BYTES_COMMAND>>8);
-	SoftI2CWriteByte(HTU21_READ_SERIAL_LAST_6BYTES_COMMAND&0xff);
-	SoftI2Cread_register(HTU21_ADDR,Last,6); // SNC_1, SNC_0, crc, SNA_1, SNA_0, crc
+	SoftI2CWriteByte((HTU21_ADDR << 1) & 0xFE); //clr LSB for write
+	SoftI2CWriteByte(HTU21_READ_SERIAL_LAST_6BYTES_COMMAND >> 8);
+	SoftI2CWriteByte(HTU21_READ_SERIAL_LAST_6BYTES_COMMAND & 0xff);
+	SoftI2Cread_register(HTU21_ADDR, Last, 6); // SNC_1, SNC_0, crc, SNA_1, SNA_0, crc
 
 	// Arranged: SNA_1 SNA_0 SNB_3 SNB_2 SNB_1 SNB_0 SNC_1 SNC_0
 	// FIXED VALUES
@@ -228,8 +227,10 @@ htu21_read_serial_number(uint64_t * serial_number)
 	//	SNA_0 = 0x54 ,
 	//	SNB_3 = 0x00 ,
 	//	SNC_1 = 0x32
-	*serial_number =	((uint64_t)Last[3]<<56) | ((uint64_t)Last[4]<<48) | ((uint64_t)First[0]<<40) | ((uint64_t)First[2]<<32)
-						|	((uint64_t)First[4]<<24) | ((uint64_t)First[6]<<16) | ((uint64_t)Last[0]<<8) | ((uint64_t)Last[1]<<0);
+	*serial_number = ((uint64_t) Last[3] << 56) | ((uint64_t) Last[4] << 48)
+			| ((uint64_t) First[0] << 40) | ((uint64_t) First[2] << 32)
+			| ((uint64_t) First[4] << 24) | ((uint64_t) First[6] << 16)
+			| ((uint64_t) Last[0] << 8) | ((uint64_t) Last[1] << 0);
 
 	return 1;
 
@@ -240,27 +241,32 @@ htu21_read_serial_number(uint64_t * serial_number)
 static
 int htu21_set_resolution(enum htu21_resolution res)
 {
-	uint8_t reg_value, tmp=0;
+	uint8_t reg_value, tmp = 0;
 
-	if( res == htu21_resolution_t_14b_rh_12b) {
+	if(res == htu21_resolution_t_14b_rh_12b){
 		tmp = HTU21_USER_REG_RESOLUTION_T_14b_RH_12b;
-		htu21_temperature_conversion_time = HTU21_TEMPERATURE_CONVERSION_TIME_T_14b_RH_12b;
-		htu21_humidity_conversion_time = HTU21_HUMIDITY_CONVERSION_TIME_T_14b_RH_12b;
-	}
-	else if( res == htu21_resolution_t_13b_rh_10b) {
+		htu21_temperature_conversion_time =
+				HTU21_TEMPERATURE_CONVERSION_TIME_T_14b_RH_12b;
+		htu21_humidity_conversion_time =
+				HTU21_HUMIDITY_CONVERSION_TIME_T_14b_RH_12b;
+	} else if(res == htu21_resolution_t_13b_rh_10b){
 		tmp = HTU21_USER_REG_RESOLUTION_T_13b_RH_10b;
-		htu21_temperature_conversion_time = HTU21_TEMPERATURE_CONVERSION_TIME_T_13b_RH_10b;
-		htu21_humidity_conversion_time = HTU21_HUMIDITY_CONVERSION_TIME_T_13b_RH_10b;
-	}
-	else if( res == htu21_resolution_t_12b_rh_8b) {
+		htu21_temperature_conversion_time =
+				HTU21_TEMPERATURE_CONVERSION_TIME_T_13b_RH_10b;
+		htu21_humidity_conversion_time =
+				HTU21_HUMIDITY_CONVERSION_TIME_T_13b_RH_10b;
+	} else if(res == htu21_resolution_t_12b_rh_8b){
 		tmp = HTU21_USER_REG_RESOLUTION_T_12b_RH_8b;
-		htu21_temperature_conversion_time = HTU21_TEMPERATURE_CONVERSION_TIME_T_12b_RH_8b;
-		htu21_humidity_conversion_time = HTU21_HUMIDITY_CONVERSION_TIME_T_12b_RH_8b;
-	}
-	else if( res == htu21_resolution_t_11b_rh_11b) {
+		htu21_temperature_conversion_time =
+				HTU21_TEMPERATURE_CONVERSION_TIME_T_12b_RH_8b;
+		htu21_humidity_conversion_time =
+				HTU21_HUMIDITY_CONVERSION_TIME_T_12b_RH_8b;
+	} else if(res == htu21_resolution_t_11b_rh_11b){
 		tmp = HTU21_USER_REG_RESOLUTION_T_11b_RH_11b;
-		htu21_temperature_conversion_time = HTU21_TEMPERATURE_CONVERSION_TIME_T_11b_RH_11b;
-		htu21_humidity_conversion_time = HTU21_HUMIDITY_CONVERSION_TIME_T_11b_RH_11b;
+		htu21_temperature_conversion_time =
+				HTU21_TEMPERATURE_CONVERSION_TIME_T_11b_RH_11b;
+		htu21_humidity_conversion_time =
+				HTU21_HUMIDITY_CONVERSION_TIME_T_11b_RH_11b;
 	}
 
 	htu21_read_user_register(HTU21_ADDR, &reg_value);
@@ -282,33 +288,35 @@ char htu21_is_connected(void)
 	char i2c_status;
 	// Do the transfer
 	SoftI2CStart();
-	i2c_status = SoftI2CWriteByte((HTU21_ADDR<<1)&0xFE); //clr LSB for write
+	i2c_status = SoftI2CWriteByte((HTU21_ADDR << 1) & 0xFE); //clr LSB for write
 	SoftI2CStop();
 	return i2c_status;
 }
 
 /*---------------------------------------------------------------------------*/
-static
-int32_t htu21_compute_compensated_humidity(int32_t temperature,int32_t relative_humidity)
+static int32_t htu21_compute_compensated_humidity(int32_t temperature,
+		int32_t relative_humidity)
 {
-	return ( relative_humidity - (((25000 - temperature) * 78643)>>19)); // 78643/2^19 = 0.1499996
+	return (relative_humidity - (((25000 - temperature) * 78643) >> 19)); // 78643/2^19 = 0.1499996
 }
 
 static
-void htu21_convert_temperature_and_relative_humidity( int32_t *temperature, int32_t *humidity)
+void htu21_convert_temperature_and_relative_humidity(int32_t *temperature,
+		int32_t *humidity)
 {
 	int64_t adc = *temperature;
 
 	// Perform conversion function
 	if(*temperature != SENSOR_ERROR)
-		*temperature = (((int64_t)(adc) * TEMPERATURE_COEFF_MUL) >> 16) + TEMPERATURE_COEFF_ADD;
+		*temperature = (((int64_t)(adc) * TEMPERATURE_COEFF_MUL) >> 16)
+				+ TEMPERATURE_COEFF_ADD;
 
 	adc = *humidity;
-	if(*humidity != SENSOR_ERROR)
-	{
-		*humidity = (((int64_t)(adc) * HUMIDITY_COEFF_MUL) >> 16) * 10 + HUMIDITY_COEFF_ADD;
-		*humidity = htu21_compute_compensated_humidity(*temperature,*humidity);
-		if (*humidity >= 100000)
+	if(*humidity != SENSOR_ERROR){
+		*humidity = (((int64_t)(adc) * HUMIDITY_COEFF_MUL) >> 16)
+				* 10+ HUMIDITY_COEFF_ADD;
+		*humidity = htu21_compute_compensated_humidity(*temperature, *humidity);
+		if(*humidity >= 100000)
 			*humidity = 100000;
 	}
 
@@ -320,23 +328,23 @@ static void htu21_error(void)
 	HTU21_humid = SENSOR_ERROR;
 	HTU21_temp = SENSOR_ERROR;
 	SoftI2CSync();
-	SoftI2C_cmd(HTU21_ADDR, HTU21_RESET_COMMAND,1);
+	SoftI2C_cmd(HTU21_ADDR, HTU21_RESET_COMMAND, 1);
 	// Apply default values
-	htu21_temperature_conversion_time = HTU21_TEMPERATURE_CONVERSION_TIME_T_14b_RH_12b;
-	htu21_humidity_conversion_time = HTU21_HUMIDITY_CONVERSION_TIME_T_14b_RH_12b;
+	htu21_temperature_conversion_time =
+			HTU21_TEMPERATURE_CONVERSION_TIME_T_14b_RH_12b;
+	htu21_humidity_conversion_time =
+			HTU21_HUMIDITY_CONVERSION_TIME_T_14b_RH_12b;
 	sensor_state = SENSOR_STATUS_READY;
 	sensors_changed(&HTU21D_sensor);
 }
 
-static void
-htu21_notify_ready(void *not_used)
+static void htu21_notify_ready(void *not_used)
 {
-	uint8_t buffer[3] = {0};
+	uint8_t buffer[3] = { 0 };
 	uint16_t ret;
 
-	if(sensor_state == SENSOR_STATUS_TEMP_MEAS)
-	{
-		ret = SoftI2Cread_register(HTU21_ADDR,buffer,3);
+	if(sensor_state == SENSOR_STATUS_TEMP_MEAS){
+		ret = SoftI2Cread_register(HTU21_ADDR, buffer, 3);
 		/* If the internal processing is finished, the HTU21D(F)
 		 * sensor acknowledges the poll of the MCU and data can
 		 * be read by the MCU. If the measurement processing is
@@ -347,25 +355,26 @@ htu21_notify_ready(void *not_used)
 			if(retry_count++ > 5)
 				htu21_error();
 
-			ctimer_set(&startup_timer, 1*(1000/CLOCK_SECOND), htu21_notify_ready, NULL); // 1ms retry
+			ctimer_set(&startup_timer, 1 * (1000 / CLOCK_SECOND),
+					htu21_notify_ready, NULL); // 1ms retry
 		}
 
 		HTU21_temp = (buffer[0] << 8) | buffer[1];
-		if(!htu21_crc_check(HTU21_temp,buffer[2])){
+		if(!htu21_crc_check(HTU21_temp, buffer[2])){
 			HTU21_temp = SENSOR_ERROR;
-		}
-		PRINTF("HTU21_temp: %02x%02x%02x %02x%02x%02x\n",
+		} PRINTF("HTU21_temp: %02x%02x%02x %02x%02x%02x\n",
 				buffer[0], buffer[1], buffer[2]);
-		SoftI2C_cmd(HTU21_ADDR, HTU21_READ_HUMIDITY_NO_HOLD_COMMAND,0);
+		SoftI2C_cmd(HTU21_ADDR, HTU21_READ_HUMIDITY_NO_HOLD_COMMAND, 0);
 		sensor_state = SENSOR_STATUS_HUMID_MEAS;
-		ctimer_set(&startup_timer, htu21_humidity_conversion_time*(1000/CLOCK_SECOND), htu21_notify_ready, NULL);
+		ctimer_set(&startup_timer,
+				htu21_humidity_conversion_time * (1000 / CLOCK_SECOND),
+				htu21_notify_ready, NULL);
 		retry_count = 0;
 
 		return;
 	}
-	if(sensor_state == SENSOR_STATUS_HUMID_MEAS)
-	{
-		ret = SoftI2Cread_register(HTU21_ADDR,buffer,3);
+	if(sensor_state == SENSOR_STATUS_HUMID_MEAS){
+		ret = SoftI2Cread_register(HTU21_ADDR, buffer, 3);
 		/* If the internal processing is finished, the HTU21D(F)
 		 * sensor acknowledges the poll of the MCU and data can
 		 * be read by the MCU. If the measurement processing is
@@ -376,36 +385,37 @@ htu21_notify_ready(void *not_used)
 			if(retry_count++ > 5)
 				htu21_error();
 
-			ctimer_set(&startup_timer, 1*(1000/CLOCK_SECOND), htu21_notify_ready, NULL); // 1ms retry
+			ctimer_set(&startup_timer, 1 * (1000 / CLOCK_SECOND),
+					htu21_notify_ready, NULL); // 1ms retry
 		}
 
 		HTU21_humid = (buffer[0] << 8) | buffer[1];
-		if(!htu21_crc_check(HTU21_humid,buffer[2])){
+		if(!htu21_crc_check(HTU21_humid, buffer[2])){
 			HTU21_humid = SENSOR_ERROR;
 			return;
-		}
-		PRINTF("HTU21_humid: %02x%02x%02x %02x%02x%02x\n",
+		} PRINTF("HTU21_humid: %02x%02x%02x %02x%02x%02x\n",
 				buffer[0], buffer[1], buffer[2]);
 		// All done now convert and notify
-		htu21_convert_temperature_and_relative_humidity(&HTU21_temp, &HTU21_humid);
+		htu21_convert_temperature_and_relative_humidity(&HTU21_temp,
+				&HTU21_humid);
 		sensor_state = SENSOR_STATUS_READY;
 		sensors_changed(&HTU21D_sensor);
 	}
-
 
 }
 /*---------------------------------------------------------------------------*/
 /**
  * \brief Initalise the sensor
  */
-static void
-htu21_init(void)
+static void htu21_init(void)
 {
 	// Reset the sensor
-	SoftI2C_cmd(HTU21_ADDR, HTU21_RESET_COMMAND,1);
+	SoftI2C_cmd(HTU21_ADDR, HTU21_RESET_COMMAND, 1);
 	// Apply default values
-	htu21_temperature_conversion_time = HTU21_TEMPERATURE_CONVERSION_TIME_T_14b_RH_12b;
-	htu21_humidity_conversion_time = HTU21_HUMIDITY_CONVERSION_TIME_T_14b_RH_12b;
+	htu21_temperature_conversion_time =
+			HTU21_TEMPERATURE_CONVERSION_TIME_T_14b_RH_12b;
+	htu21_humidity_conversion_time =
+			HTU21_HUMIDITY_CONVERSION_TIME_T_14b_RH_12b;
 }
 /*---------------------------------------------------------------------------*/
 /**
@@ -414,12 +424,11 @@ htu21_init(void)
  *
  * @return      none
  */
-static void
-htu21_enable_sensor(bool enable)
+static void htu21_enable_sensor(bool enable)
 {
 	if(enable){
 		retry_count = 0;
-		SoftI2C_cmd(HTU21_ADDR, HTU21_READ_TEMPERATURE_HOLD_COMMAND,0);
+		SoftI2C_cmd(HTU21_ADDR, HTU21_READ_TEMPERATURE_HOLD_COMMAND, 0);
 	}
 }
 
@@ -429,25 +438,24 @@ htu21_enable_sensor(bool enable)
  * \param type HTU21D_SENSOR_TYPE_TEMP or HTU21D_SENSOR_TYPE_HUMID
  * \return Temperature (centi degrees C) or Humidity (centi %).
  */
-static int
-htu21_value(int type)
+static int htu21_value(int type)
 {
 	int rv;
 
-	if(sensor_state != SENSOR_STATUS_READY) {
+	if(sensor_state != SENSOR_STATUS_READY){
 		PRINTF("Sensor disabled or starting up (%d)\n", enabled);
 		return SENSOR_ERROR;
 	}
 
-	if((type != HTU21D_SENSOR_TYPE_TEMP) && type != HTU21D_SENSOR_TYPE_HUMID) {
+	if((type != HTU21D_SENSOR_TYPE_TEMP) && type != HTU21D_SENSOR_TYPE_HUMID){
 		PRINTF("Invalid type\n");
 		return SENSOR_ERROR;
-	} else {
+	} else{
 
-		if(type == HTU21D_SENSOR_TYPE_TEMP) {
-			rv = (int)HTU21_temp;
-		} else if(type == HTU21D_SENSOR_TYPE_HUMID) {
-			rv = (int)HTU21_humid;
+		if(type == HTU21D_SENSOR_TYPE_TEMP){
+			rv = (int) HTU21_temp;
+		} else if(type == HTU21D_SENSOR_TYPE_HUMID){
+			rv = (int) HTU21_humid;
 		}
 	}
 	return rv;
@@ -463,11 +471,11 @@ htu21_value(int type)
  * When type == SENSORS_ACTIVE and enable==1 we enable the sensor
  * When type == SENSORS_ACTIVE and enable==0 we disable the sensor
  */
-static int
-htu21_configure(int type, int enable)
+static int htu21_configure(int type, int enable)
 {
 
-	switch(type) {
+	switch(type)
+	{
 		case SENSORS_HW_INIT:
 			if(!htu21_is_connected())
 				return SENSOR_STATUS_DISABLED;
@@ -478,26 +486,29 @@ htu21_configure(int type, int enable)
 			break;
 		case SENSORS_ACTIVE:
 			/* Must be initialised first */
-			if(sensor_state == SENSOR_STATUS_DISABLED) {
+			if(sensor_state == SENSOR_STATUS_DISABLED){
 				sensors_changed(&HTU21D_sensor);
-			  return sensor_state;
+				return sensor_state;
 			}
-			if(enable) {
-			  htu21_enable_sensor(1);
-			  sensor_state = SENSOR_STATUS_TEMP_MEAS;
-			  ctimer_set(&startup_timer, htu21_temperature_conversion_time*(1000/CLOCK_SECOND), htu21_notify_ready, NULL);
+			if(enable){
+				htu21_enable_sensor(1);
+				sensor_state = SENSOR_STATUS_TEMP_MEAS;
+				ctimer_set(&startup_timer,
+						htu21_temperature_conversion_time
+								* (1000 / CLOCK_SECOND), htu21_notify_ready,
+						NULL);
 
-			} else {
-			  ctimer_stop(&startup_timer);
-			  htu21_enable_sensor(0);
-			  sensor_state = SENSOR_STATUS_INITIALISED;
+			} else{
+				ctimer_stop(&startup_timer);
+				htu21_enable_sensor(0);
+				sensor_state = SENSOR_STATUS_INITIALISED;
 			}
 			break;
 		default:
 			break;
 	}
 
-  return sensor_state;
+	return sensor_state;
 }
 /*---------------------------------------------------------------------------*/
 /**
@@ -505,10 +516,10 @@ htu21_configure(int type, int enable)
  * \param type SENSORS_ACTIVE or SENSORS_READY
  * \return 1 if the sensor is enabled
  */
-static int
-htu21_status(int type)
+static int htu21_status(int type)
 {
-	switch(type) {
+	switch(type)
+	{
 		case SENSORS_ACTIVE:
 		case SENSORS_READY:
 			return sensor_state;
@@ -518,7 +529,8 @@ htu21_status(int type)
 	}
 }
 /*---------------------------------------------------------------------------*/
-SENSORS_SENSOR(HTU21D_sensor, "HTU21D", htu21_value, htu21_configure, htu21_status);
+SENSORS_SENSOR(HTU21D_sensor, "HTU21D", htu21_value, htu21_configure,
+		htu21_status);
 /*---------------------------------------------------------------------------*/
 /** @} */
 

@@ -92,7 +92,6 @@ static int  off(void);
 static void radiocore_hard_recovery(void);
 #endif
 static void rf_generate_random_seed(void);
-//static void flush_buffer(void);
 static uint8_t flag_transmit = 0;
 #if NULLRDC_CONF_802154_AUTOACK_HW
 static uint8_t ack_status = 0;
@@ -583,17 +582,13 @@ RF231_transmit(unsigned short payload_len)
  * \param payload_len     length of data to copy
  * \return     Returns success/fail, refer to radio.h for explanation
  */
-int
-RF231_send(const void *payload, unsigned short payload_len)
+int RF231_send(const void *payload, unsigned short payload_len)
 {
-  PRINTF("RF231: send %u\n", payload_len);
-  if(RF231_prepare(payload, payload_len) == RADIO_TX_ERR) {
-  return RADIO_TX_ERR;
-  } 
-  return RF231_transmit(payload_len);
-
-  /* Add length of the FCS (2 bytes) */
-  //return hal_frame_write(payload,payload_len+2);
+	PRINTF("RF231: send %u\n", payload_len);
+	if(RF231_prepare(payload, payload_len) == RADIO_TX_ERR){
+		return RADIO_TX_ERR;
+	}
+	return RF231_transmit(payload_len);
 }
 
 
@@ -646,7 +641,6 @@ RF231_read(void *buf, unsigned short bufsize)
   if(len > bufsize) {
     /* too large frame for the buffer, drop */
     PRINTF("RF231: too large frame for buffer, dropping (%u > %u).\n", frame_len, bufsize);
-    //flush_buffer();
     return -3;
   }
   PRINTF("RF231 read %u B\n", frame_len);
@@ -675,9 +669,6 @@ RF231_read(void *buf, unsigned short bufsize)
   ed = trx_reg_read(RF231_REG_PHY_ED_LEVEL);
   rssi = (int) ed - RSSI_OFFSET;
   packetbuf_set_attr(PACKETBUF_ATTR_RSSI, rssi);
-  // If used here we overwrite the length byte in the next packet.
-  // This is handled by "rx safe" bit inside the radio
-  //flush_buffer();
 
 /*
 #if USE_HW_FCS_CHECK
@@ -687,7 +678,6 @@ RF231_read(void *buf, unsigned short bufsize)
     if(crc_ok == 0) {
       / * CRC/FCS fail, drop * /
       PRINTF("RF231: CRC/FCS fail, dropping.\n");
-      flush_buffer();
       return -4;
     }
   }
@@ -798,30 +788,21 @@ RF231_off(void)
 {
   PRINTF("RF231: off\n");
   return off();
-  //return 0;
 }
 void SetIEEEAddr(uint8_t *ieee_addr)
 {
 	uint8_t *ptr_to_reg = ieee_addr;
-	//for (uint8_t i = 0; i < 8; i++) {
-		trx_reg_write((0x2b), *ptr_to_reg);
-		ptr_to_reg++;
-		trx_reg_write((0x2a), *ptr_to_reg);
-		ptr_to_reg++;
-		trx_reg_write((0x29), *ptr_to_reg);
-		ptr_to_reg++;
-		trx_reg_write((0x28), *ptr_to_reg);
-		ptr_to_reg++;
-		trx_reg_write((0x27), *ptr_to_reg);
-		ptr_to_reg++;
-		trx_reg_write((0x26), *ptr_to_reg);
-		ptr_to_reg++;
-		trx_reg_write((0x25), *ptr_to_reg);
-		ptr_to_reg++;
-		trx_reg_write((0x24), *ptr_to_reg);
-		ptr_to_reg++;
-	//}
+
+	trx_reg_write((RF231_REG_IEEE_ADDR_7), *ptr_to_reg++);
+	trx_reg_write((RF231_REG_IEEE_ADDR_6), *ptr_to_reg++);
+	trx_reg_write((RF231_REG_IEEE_ADDR_5), *ptr_to_reg++);
+	trx_reg_write((RF231_REG_IEEE_ADDR_4), *ptr_to_reg++);
+	trx_reg_write((RF231_REG_IEEE_ADDR_3), *ptr_to_reg++);
+	trx_reg_write((RF231_REG_IEEE_ADDR_2), *ptr_to_reg++);
+	trx_reg_write((RF231_REG_IEEE_ADDR_1), *ptr_to_reg++);
+	trx_reg_write((RF231_REG_IEEE_ADDR_0), *ptr_to_reg);
 }
+
 void SetPanId(uint16_t panId)
 {
 	uint8_t *d = (uint8_t *)&panId;
@@ -829,6 +810,7 @@ void SetPanId(uint16_t panId)
 	trx_reg_write(0x22, d[0]);
 	trx_reg_write(0x23, d[1]);
 }
+
 void SetShortAddr(uint16_t addr)
 {
 	uint8_t *d = (uint8_t *)&addr;
@@ -1051,35 +1033,15 @@ radiocore_hard_recovery(void)
 #endif
 
 
-/*---------------------------------------------------------------------------*/
-/* 
- * Crude way of flushing the Tx/Rx FIFO: write the first byte as 0, indicating
- * a zero-length frame in the buffer. This is interpreted by the driver as an
- * empty buffer.
- */
-/*static void
-flush_buffer(void)
-{
-  // NB: tentative untested implementation
-  uint8_t temp = 0;
-  trx_frame_write(&temp, 1);
-}*/
 void
 goto_sleep(void)
 {
-	TRX_SLP_TR_HIGH();//port_pin_set_output_level(AT86RFX_SLP_PIN, true);
+	TRX_SLP_TR_HIGH();
 }
 void
 wake_from_sleep(void)
 {
-  /* 
-   * Triggers a radio state transition - assumes that the radio already is in
-   * state SLEEP or DEEP_SLEEP and SLP_TR pin is low. Refer to datasheet 6.6.
-   * 
-   * Note: this is the only thing that can get the radio from state SLEEP or 
-   * state DEEP_SLEEP!
-   */
-	TRX_SLP_TR_LOW();// port_pin_set_output_level(AT86RFX_SLP_PIN, false);
+	TRX_SLP_TR_LOW();
 }
 
 uint8_t RF231_status(void)
@@ -1087,3 +1049,31 @@ uint8_t RF231_status(void)
 	return (trx_reg_read(RF231_REG_TRX_STATUS) & TRX_STATUS);
 }
 /*---------------------------------------------------------------------------*/
+// Not from Pon and sleep mode
+uint16_t RF231_bat_volt(void)
+{
+	uint8_t reg;
+	uint8_t i;
+
+	reg = trx_reg_read(RF231_REG_BATMON);
+	reg |= 0xf; //BATMON_VTH = 2.45
+	trx_reg_write(RF231_REG_BATMON, reg);
+
+	for (i = 4; i > 0 ; i--){
+		reg = trx_reg_read(RF231_REG_BATMON);
+		if(reg & (1 << 5)) //The battery voltage is above the threshold
+			reg ^= (3 < (i - 1)); // set the bit again and clear the next
+		else//The battery voltage is below the threshold.
+			reg &= ~(1 << (i - 1)); // clear the next
+
+		trx_reg_write(RF231_REG_BATMON, reg);
+	}
+	reg = trx_reg_read(RF231_REG_BATMON);
+	if(reg & (1 << 5)) //The battery voltage is above the threshold
+		reg |= 1;
+
+	if(reg & (1 << 4))
+		return (reg & 0xf) * 75 + 2550;
+	else
+		return (reg & 0xf) * 50 + 1700;
+}
