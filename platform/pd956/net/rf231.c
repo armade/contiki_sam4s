@@ -276,6 +276,7 @@ unsigned char radioSetCSMASeed(void)
 
 	return 0;
 }
+volatile uint16_t batvoltage;
 /*---------------------------------------------------------------------------*/
 /**
  * \brief      Init the radio
@@ -298,6 +299,8 @@ RF231_init(void)
 
 	trx_reg_write(RF231_REG_TRX_STATE, TRXCMD_TRX_OFF);
 	BUSYWAIT_UNTIL(0, 1 * RTIMER_SECOND / 1000);
+
+	//batvoltage = RF231_bat_volt();
 
 	trx_irq_init((FUNC_PTR)RF231_interrupt_poll);
 	ENABLE_TRX_IRQ();
@@ -334,7 +337,7 @@ RF231_init(void)
 	trx_bit_write(SR_MAX_CSMA_RETRIES, 7);
 #endif  
 
-  
+
 	/* start the radio process */
 	process_start(&RF231_radio_process, NULL);
 	return 0;
@@ -1052,7 +1055,7 @@ uint8_t RF231_status(void)
 // Not from Pon and sleep mode
 uint16_t RF231_bat_volt(void)
 {
-	uint8_t reg;
+	volatile uint8_t reg;
 	uint8_t i;
 
 	reg = trx_reg_read(RF231_REG_BATMON);
@@ -1062,7 +1065,7 @@ uint16_t RF231_bat_volt(void)
 	for (i = 4; i > 0 ; i--){
 		reg = trx_reg_read(RF231_REG_BATMON);
 		if(reg & (1 << 5)) //The battery voltage is above the threshold
-			reg ^= (3 < (i - 1)); // set the bit again and clear the next
+			reg ^= (3 << (i - 1)); // set the bit again and clear the next
 		else//The battery voltage is below the threshold.
 			reg &= ~(1 << (i - 1)); // clear the next
 

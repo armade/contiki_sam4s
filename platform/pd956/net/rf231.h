@@ -48,5 +48,6 @@ uint8_t RF231_status(void);
 void SetIEEEAddr(uint8_t *ieee_addr);
 void SetPanId(uint16_t panId);
 void SetShortAddr(uint16_t addr);
+uint16_t RF231_bat_volt(void);
 /*---------------------------------------------------------------------------*/
 #endif  /* _RF231_H_ */

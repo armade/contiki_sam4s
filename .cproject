@@ -39,6 +39,12 @@
 	<storageModule moduleId="cdtBuildSystem" version="4.0.0">
 		<project id="contiki_sam4s.null.85581269" name="contiki_sam4s"/>
 	</storageModule>
+	<storageModule moduleId="org.eclipse.cdt.core.LanguageSettingsProviders"/>
+	<storageModule moduleId="refreshScope" versionNumber="2">
+		<configuration configurationName="Default">
+			<resource resourceType="PROJECT" workspacePath="/contiki_sam4s"/>
+		</configuration>
+	</storageModule>
 	<storageModule moduleId="scannerConfiguration">
 		<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
 		<scannerConfigBuildInfo instanceId="0.763389611">
@@ -62,11 +68,5 @@
 		<scannerConfigBuildInfo instanceId="0.736336669">
 			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
 		</scannerConfigBuildInfo>
-	</storageModule>
-	<storageModule moduleId="org.eclipse.cdt.core.LanguageSettingsProviders"/>
-	<storageModule moduleId="refreshScope" versionNumber="2">
-		<configuration configurationName="Default">
-			<resource resourceType="PROJECT" workspacePath="/contiki_sam4s"/>
-		</configuration>
 	</storageModule>
 </cproject>
