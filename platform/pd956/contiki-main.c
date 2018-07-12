@@ -26,6 +26,7 @@
 #include "compiler.h"
 #include "flash_efc.h"
 #include "csprng.h"
+#include "uECC.h"
 //extern rtimer_arch_sleep(rtimer_clock_t howlong);
 
 void board_init(void);
@@ -48,7 +49,7 @@ int main()
 	eeprom_init();
 
 	get_eeprom(version, version_var);
-	if(version_var != 0x44)
+	if(version_var != 0x45)
 		Setup_EEPROM();
 
 	flash_init_df();
@@ -100,24 +101,37 @@ int main()
 void Setup_EEPROM(void)
 {
 	tEepromContents EEPROM;
+	uint32_t Flash_unique_id[4];
+
 
 	eeprom_read(0, (void *) &EEPROM, sizeof(tEepromContents));
 
 	EEPROM.PANID = IEEE802154_CONF_PANID;
 	EEPROM.channel = 26;
-	EEPROM.version = 0x44;
+	EEPROM.version = 0x45;
 
-	uint32_t Flash_unique_id[4];
+	//uint32_t Flash_unique_id[4];
 	flash_read_unique_id(Flash_unique_id, 4);
 
-	EEPROM.eepromMacAddress[0] = ((Flash_unique_id[2]) >> 24) & 0xff;
+	memcpy(EEPROM.eepromMacAddress,&Flash_unique_id[2],8);
+
+/*	EEPROM.eepromMacAddress[0] = ((Flash_unique_id[2]) >> 24) & 0xff;
 	EEPROM.eepromMacAddress[1] = ((Flash_unique_id[2]) >> 16) & 0xff;
 	EEPROM.eepromMacAddress[2] = ((Flash_unique_id[2]) >> 8) & 0xff;
 	EEPROM.eepromMacAddress[3] = ((Flash_unique_id[2]) >> 0) & 0xff;
 	EEPROM.eepromMacAddress[4] = ((Flash_unique_id[3]) >> 24) & 0xff;
 	EEPROM.eepromMacAddress[5] = ((Flash_unique_id[3]) >> 16) & 0xff;
 	EEPROM.eepromMacAddress[6] = ((Flash_unique_id[3]) >> 8) & 0xff;
-	EEPROM.eepromMacAddress[7] = ((Flash_unique_id[3]) >> 0) & 0xff;
+	EEPROM.eepromMacAddress[7] = ((Flash_unique_id[3]) >> 0) & 0xff;*/
+
+	/*uECC_make_key(EEPROM.public_key, EEPROM.private_key, uECC_secp256r1());
+
+	sha2_sha256_init(&ctx);
+	sha2_sha256_update(&ctx,EEPROM.version,1);
+	sha2_sha256_update(&ctx,EEPROM.eepromMacAddress,8);
+	sha2_sha256_update(&ctx, EEPROM.public_key, sizeof(EEPROM.public_key));
+	sha2_sha256_update(&ctx, EEPROM.private_key, sizeof(EEPROM.private_key));
+	sha2_sha256_final(&ctx,EEPROM.hash);*/
 
 	eeprom_write(0, (void *) &EEPROM, sizeof(tEepromContents));
 }

@@ -83,6 +83,7 @@
 //#include "system_interrupt.h"
 #include "sam4s.h"
 #include "rf231.h"
+#include "csprng.h"
 //#define RF231_STATUS()                    RF231_status()
 /*---------------------------------------------------------------------------*/
 PROCESS(RF231_radio_process, "RF231 radio driver");
@@ -178,6 +179,15 @@ const struct radio_driver RF231_radio_driver =
 #define PRINTF(...)
 #endif
 
+uint8_t bat_state_index = 5;
+uint8_t bat_states[5] = {
+		0b11, 	// 1.85V
+		0b111,	// 2.05V
+		0b1111,	// 2.45V
+		0b10011,// 2.775V
+		0b10111 // 3.075V
+};
+
 #define BUSYWAIT_UNTIL(cond, max_time)                                  \
   do {                                                                  \
     static rtimer_clock_t t0;                                                  \
@@ -265,14 +275,12 @@ RF231_set_txp(uint8_t txp)
 
 unsigned char radioSetCSMASeed(void)
 {
-	uint8_t seed0;
-	uint8_t seed1;
+	uint8_t seed[2];
 
-	seed0 = rand();
-	seed1 = rand();
+	csprng_get(seed,2);
 
-	trx_reg_write(RF231_REG_CSMA_SEED_0,seed0);
-	trx_bit_write(RF231_REG_CSMA_SEED_1, 0x03, 0, seed1);
+	trx_reg_write(RF231_REG_CSMA_SEED_0,seed[0]);
+	trx_bit_write(RF231_REG_CSMA_SEED_1, 0x03, 0, seed[1]);
 
 	return 0;
 }
@@ -300,7 +308,15 @@ RF231_init(void)
 	trx_reg_write(RF231_REG_TRX_STATE, TRXCMD_TRX_OFF);
 	BUSYWAIT_UNTIL(0, 1 * RTIMER_SECOND / 1000);
 
-	//batvoltage = RF231_bat_volt();
+	batvoltage = RF231_bat_volt();
+	if(batvoltage>3075)	{ bat_state_index = 5;}else
+	if(batvoltage>2775)	{ bat_state_index = 4;}else
+	if(batvoltage>2450)	{ bat_state_index = 3;}else
+	if(batvoltage>2050)	{ bat_state_index = 2;}else
+	if(batvoltage>1850)	{ bat_state_index = 1;}else
+	 					{ bat_state_index = 0;}
+
+	trx_reg_write(RF231_REG_BATMON, bat_states[bat_state_index]);
 
 	trx_irq_init((FUNC_PTR)RF231_interrupt_poll);
 	ENABLE_TRX_IRQ();
@@ -939,6 +955,8 @@ PROCESS_THREAD(RF231_radio_process, ev, data)
   }
   PROCESS_END();
 }
+
+
 /*---------------------------------------------------------------------------*/
 /**
  * \brief      RF231 radio process poll function, to be called from the
@@ -983,6 +1001,15 @@ RF231_interrupt_poll(void)
 	//delay_cycles_ms(1);
     process_poll(&RF231_radio_process);
   }
+
+	 if(irq_source & IRQ_BAT_LOW) {
+	     /* Battery low */
+		 bat_state_index--;
+		 if(bat_state_index)
+			 trx_reg_write(RF231_REG_BATMON, bat_states[bat_state_index]);
+		 else
+			 trx_reg_write(RF231_REG_IRQ_MASK,RF231_REG_IRQ_MASK_NO_BAT_CONF);
+	   }
 
 #if 0
   /* Note, these are not currently in use but here for completeness. */
@@ -1052,31 +1079,45 @@ uint8_t RF231_status(void)
 	return (trx_reg_read(RF231_REG_TRX_STATUS) & TRX_STATUS);
 }
 /*---------------------------------------------------------------------------*/
-// Not from Pon and sleep mode
+// Don't call from Pon and sleep mode
+/*
+ * This function uses the comparator inside the chip.
+ * EKS: voltage is 3.3V
+ * we start by asking if the voltage is above or below 2.45V
+ * The voltage is above so we set BATMON_HR = 1 and BATMON_VTH=0b0111 (3.075V)
+ * We then ask if the voltage is above or below 3.075V
+ * The voltage is above so we set BATMON_HR = 1 and BATMON_VTH=0b1011 (3.375V)
+ * We then ask if the voltage is above or below 3.375V
+ * The voltage is now below so we keep the bit clear and setBATMON_HR = 1 and BATMON_VTH=0b1001 (3.225V)
+ * We then ask if the voltage is above or below 3.225V
+ * The voltage is above so we set BATMON_HR = 1 and BATMON_VTH=0b1010 (3.300V)
+ *
+ * The last bit is kept clear to floor the result and be pessimistic.
+ */
 uint16_t RF231_bat_volt(void)
 {
 	volatile uint8_t reg;
 	uint8_t i;
 
-	reg = trx_reg_read(RF231_REG_BATMON);
-	reg |= 0xf; //BATMON_VTH = 2.45
-	trx_reg_write(RF231_REG_BATMON, reg);
+	reg = 0xf; //BATMON_VTH = 2.45
 
 	for (i = 4; i > 0 ; i--){
+		trx_reg_write(RF231_REG_BATMON, reg);
 		reg = trx_reg_read(RF231_REG_BATMON);
 		if(reg & (1 << 5)) //The battery voltage is above the threshold
 			reg ^= (3 << (i - 1)); // set the bit again and clear the next
 		else//The battery voltage is below the threshold.
 			reg &= ~(1 << (i - 1)); // clear the next
-
-		trx_reg_write(RF231_REG_BATMON, reg);
 	}
-	reg = trx_reg_read(RF231_REG_BATMON);
-	if(reg & (1 << 5)) //The battery voltage is above the threshold
-		reg |= 1;
 
-	if(reg & (1 << 4))
+	if(reg & (1 << 4)) //BATMON_HR = 1
 		return (reg & 0xf) * 75 + 2550;
 	else
 		return (reg & 0xf) * 50 + 1700;
+}
+
+// More efficient then ask for exact voltage
+uint8_t RF231_bat_status(void)
+{
+	return bat_state_index;
 }

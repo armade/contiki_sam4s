@@ -62,6 +62,7 @@ RNG_handler(void *not_used)
 {
 	csprng_feed(rtimer_arch_now());
 	ctimer_reset(&rng_timer);
+	csprng_ready = 1;
 }
 
 int RNG_Function(uint8_t *dest, unsigned size)
@@ -117,7 +118,7 @@ int csprng_get(unsigned char *dst, int bytes)
 	SHA256_CTX ctx;
 	int i;
 
-	while(!csprng_ready);
+	//while(!csprng_ready);
 
 	while(bytes){
 		a.u[0] = csprng_feedix;								//feed counter

@@ -70,6 +70,7 @@
 #define RF231_REG_TRX_CTRL_2_CONF     (TRX_CTRL_2_RX_SAFE_MODE | DATA_RATE_250)  /* disallow overwriting rxfifo until prev has been read */
 #endif
 // #define RF231_REG_ANT_DIV_CONF         ()
-#define RF231_REG_IRQ_MASK_CONF        (IRQ_TRXBUF_ACCESS_VIOLATION | IRQ_TRX_DONE) //
+#define RF231_REG_IRQ_MASK_CONF        (IRQ_TRXBUF_ACCESS_VIOLATION | IRQ_TRX_DONE | IRQ_BAT_LOW) //
+#define RF231_REG_IRQ_MASK_NO_BAT_CONF        (IRQ_TRXBUF_ACCESS_VIOLATION | IRQ_TRX_DONE)
 
 #endif  /* _RF231_CONFIG_H_ */

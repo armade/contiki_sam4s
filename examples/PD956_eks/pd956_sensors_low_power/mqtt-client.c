@@ -12,6 +12,7 @@
 #include "dev/leds.h"
 #include "mqtt-client.h"
 #include "httpd-simple.h"
+#include "RF231.h"
 
 #include <string.h>
 #include <strings.h>
@@ -520,8 +521,9 @@ static void publish(void)
 			"\"Node\":\"%s\","
 			"\"Name\":\"%s\","
 			"\"Seq #\":%d,"
-			"\"Uptime [s]\":%lu",
-	BOARD_STRING, SENSOR_STRING, conf->Username, seq_nr_value, clock_seconds());
+			"\"Uptime [s]\":%lu,"
+			"\"Battery state\":%c",
+	BOARD_STRING, SENSOR_STRING, conf->Username, seq_nr_value, clock_seconds(),RF231_bat_status());
 
 	if (len < 0 || len >= remaining)
 	{
