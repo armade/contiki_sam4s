@@ -96,8 +96,8 @@ void csprng_start(void)
 
 	csprng_feed(h);
 
-	for(i=0;i<8;i++){
-		get_eeprom(eepromMacAddress[i], h);
+	for(i=0;i<4;i++){
+		get_eeprom(Flash_unique_id[i], h);
 		csprng_feed(h);
 	}
 	csprng_feedix = 0;
@@ -118,7 +118,7 @@ int csprng_get(unsigned char *dst, int bytes)
 	SHA256_CTX ctx;
 	int i;
 
-	//while(!csprng_ready);
+	while(!csprng_ready);
 
 	while(bytes){
 		a.u[0] = csprng_feedix;								//feed counter

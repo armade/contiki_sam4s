@@ -1,0 +1,7 @@
+http://www.raspberry-projects.com/pi/pi-operating-systems/raspbian/gui/auto-run-browser-on-startup
+
+http://www.alandmoore.com/blog/2011/11/05/creating-a-kiosk-with-linux-and-x11-2011-edition/
+
+https://github.com/elalemanyo/raspberry-pi-kiosk-screen
+
+http://www.matteomattei.com/web-kiosk-with-raspberry-pi-and-read-only-sd/

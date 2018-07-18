@@ -1,0 +1,50 @@
+Translated notes:
+
+Before you can use the cryptography library, you must initialize it.
+
+To create a public key from a private key, call EccPoint_compute_public_keyEccPoint_compute_public_key and specify which curve to use. 
+This public key should be shared with other applications to enable them to verify signed data. 
+Remember though that you should not share your private key, so calculating public keys in an application can be a risk.
+
+To sign data, first call HASH routine to calculate a hash of the data. Next, create a signature for the hash by calling uECC_sign with your private key and the curve that you want to use as input. 
+To verify the signature, the other application must first calculate the hash of the data and then call uECC_verify with the computed hash and your public key as input.
+
+To calculate a shared secret between two applications, each application must call uECC_shared_secret with their own private key and the other application's public key as input. 
+
+
+
+==========================================
+NB: Signers public key is stored inside
+	the device doing first programming.
+__________________________________________
+data is:
+	boot cmd
+	firmware
+	certificate
+		-> serial number 	[40bit HDC1080] [128bit samr21] [21]
+		-> version			[16]
+		-> company			[32]
+		-> signature 		[64]
+__________________________________________
+
+	uint8_t private[32] = {0};
+    uint8_t public[64] = {0};
+    uint8_t hash[32] = {0};
+    uint8_t sig[64] = {0};
+	
+if (!uECC_make_key(public, private, uECC_secp256r1())) {
+	printf("uECC_make_key() failed\n");
+	return 1;
+}
+
+hash = sha256(data);
+
+if (!uECC_sign(private, hash, sizeof(hash), sig, uECC_secp256r1())) {
+	printf("uECC_sign() failed\n");
+	return 1;
+}
+
+if (!uECC_verify(public, hash, sizeof(hash), sig, uECC_secp256r1())) {
+	printf("uECC_verify() failed\n");
+	return 1;
+}

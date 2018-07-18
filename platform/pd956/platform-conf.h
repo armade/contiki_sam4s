@@ -57,21 +57,26 @@ typedef struct{
 } tCalFactors;
 
 typedef struct {
-	 unsigned char private_key[32];
-	 struct {
-		  unsigned char public_key[64];
+		unsigned char public_key[64];
 		  union {
 			   struct {
 					uint16_t typeBE; // 00 01
 					uint8_t snlen;
 					unsigned char snr[20]; //P-NET definerer snr som string20
-					//der er 9 byte ekstra her
+					unsigned char modul[9];
 			   };
 			   unsigned char payloadfield_size_control[32];
 		  };
 		  unsigned char signature[64];
-	 } crt; //public cert
+}crt_t;
+
+typedef struct {
+	 unsigned char private_key[32];
+	 unsigned char masterpublic_key[64];
+	 crt_t crt; //public cert
 } devicecert_t;
+
+extern volatile devicecert_t device_certificate;
 
 typedef struct {
     uint8_t eepromMacAddress[8];//8      ///< The node's unique IEEE MAC address
@@ -79,7 +84,8 @@ typedef struct {
     uint16_t PANID; //40
     uint8_t channel; //48
     uint8_t version;	//56
-    devicecert_t devicecert; //248
+    crt_t devicecert; //216
+    uint32_t Flash_unique_id[4];
 } tEepromContents; // Max 512 bytes
 
 #define  get_eeprom(x,b)    	eeprom_read(offsetof(tEepromContents, x), \

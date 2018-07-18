@@ -27,6 +27,7 @@
 #include "flash_efc.h"
 #include "csprng.h"
 #include "uECC.h"
+#include "sha256.h"
 //extern rtimer_arch_sleep(rtimer_clock_t howlong);
 
 void board_init(void);
@@ -37,27 +38,62 @@ void Set_time(void);
 
 char cdc_serial_number[sizeof("99999998PD") - 1];
 
+volatile devicecert_t device_certificate = (devicecert_t) {
+	.private_key = "Replace point"
+};
+
 uint8_t sleepmgr_locks[SLEEPMGR_NR_OF_MODES];
+
+
 int main()
 {
 	uint8_t version_var;
+	crt_t eeprom_crt;
+	uint8_t hash[32] = {0};
+	uint32_t FLASH_id[4];
+	uint32_t FLASH_id_eeprom[4];
 
 	sysclk_init();
 	board_init();
 
-	SoftI2CInit();
+	SHA256_CTX CTX;
+
 	eeprom_init();
 
+
+	// Hotfix to program eeprom. Must be removed
 	get_eeprom(version, version_var);
 	if(version_var != 0x45)
 		Setup_EEPROM();
 
+	// Verify that the code is running on the processor it was programmed for.
+	flash_read_unique_id(FLASH_id, 4);
+	get_eeprom(Flash_unique_id, FLASH_id_eeprom);
+	if(memcmp(FLASH_id_eeprom,FLASH_id,sizeof(FLASH_id)))
+		while(1);
+	/*
+	 * we only start the firmware if the public signer key that has been
+	 * provided with this firmware, can be used to verify the devices
+	 * public certificate.
+	 */
+	get_eeprom(devicecert, eeprom_crt);
+
+	sha2_sha256_init(&CTX);
+	sha2_sha256_update(&CTX, (uint8_t *)&eeprom_crt.payloadfield_size_control, sizeof(eeprom_crt.payloadfield_size_control));
+	sha2_sha256_final(&CTX, hash);
+
+	if (!uECC_verify((void *)&device_certificate.masterpublic_key, hash, sizeof(hash), eeprom_crt.signature, uECC_secp256r1())) {
+		printf("uECC_verify() failed\n");
+		while(1);
+	}
+
+	// START
+	SoftI2CInit();
 	flash_init_df();
 
 	// Don't start USB on endnodes
 #if !LOW_CLOCK //120Mhz
-	memcpy(cdc_serial_number,"99999998PD",sizeof("99999998PD")-1);
-	//get_eeprom(PD_snr,cdc_serial_number);
+	memcpy(cdc_serial_number,eeprom_crt.snr,eeprom_crt.snlen);
 	udc_start();
 #endif
 	printf("Initialising\n");
@@ -65,7 +101,6 @@ int main()
 	clock_init();
 	rtimer_init();
 	ctimer_init();
-	csprng_start();
 
 	process_init();
 	process_start(&etimer_process, NULL);
@@ -78,6 +113,7 @@ int main()
 	netstack_init();
 	SetIEEEAddr(node_mac);
 
+	csprng_start();
 	Load_time_from_RTC();
 	process_start(&sensors_process, NULL);
 
@@ -101,8 +137,7 @@ int main()
 void Setup_EEPROM(void)
 {
 	tEepromContents EEPROM;
-	uint32_t Flash_unique_id[4];
-
+	uint32_t addr[2];
 
 	eeprom_read(0, (void *) &EEPROM, sizeof(tEepromContents));
 
@@ -110,28 +145,14 @@ void Setup_EEPROM(void)
 	EEPROM.channel = 26;
 	EEPROM.version = 0x45;
 
-	//uint32_t Flash_unique_id[4];
-	flash_read_unique_id(Flash_unique_id, 4);
+	flash_read_unique_id(EEPROM.Flash_unique_id, 4);
 
-	memcpy(EEPROM.eepromMacAddress,&Flash_unique_id[2],8);
+	addr[0] = __builtin_bswap32(EEPROM.Flash_unique_id[2]);
+	addr[1] = __builtin_bswap32(EEPROM.Flash_unique_id[3]);
 
-/*	EEPROM.eepromMacAddress[0] = ((Flash_unique_id[2]) >> 24) & 0xff;
-	EEPROM.eepromMacAddress[1] = ((Flash_unique_id[2]) >> 16) & 0xff;
-	EEPROM.eepromMacAddress[2] = ((Flash_unique_id[2]) >> 8) & 0xff;
-	EEPROM.eepromMacAddress[3] = ((Flash_unique_id[2]) >> 0) & 0xff;
-	EEPROM.eepromMacAddress[4] = ((Flash_unique_id[3]) >> 24) & 0xff;
-	EEPROM.eepromMacAddress[5] = ((Flash_unique_id[3]) >> 16) & 0xff;
-	EEPROM.eepromMacAddress[6] = ((Flash_unique_id[3]) >> 8) & 0xff;
-	EEPROM.eepromMacAddress[7] = ((Flash_unique_id[3]) >> 0) & 0xff;*/
+	memcpy(EEPROM.eepromMacAddress,addr,8);
 
-	/*uECC_make_key(EEPROM.public_key, EEPROM.private_key, uECC_secp256r1());
-
-	sha2_sha256_init(&ctx);
-	sha2_sha256_update(&ctx,EEPROM.version,1);
-	sha2_sha256_update(&ctx,EEPROM.eepromMacAddress,8);
-	sha2_sha256_update(&ctx, EEPROM.public_key, sizeof(EEPROM.public_key));
-	sha2_sha256_update(&ctx, EEPROM.private_key, sizeof(EEPROM.private_key));
-	sha2_sha256_final(&ctx,EEPROM.hash);*/
+	memcpy((void *)&EEPROM.devicecert,(void *)&device_certificate.crt,sizeof(device_certificate.crt));
 
 	eeprom_write(0, (void *) &EEPROM, sizeof(tEepromContents));
 }
