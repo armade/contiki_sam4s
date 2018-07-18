@@ -129,14 +129,17 @@ send(mac_callback_t sent, void *ptr)
 	uint8_t hotfix;
 	uint8_t buf[100] = {0};
 
-	hotfix = len & 7;
-	len -= hotfix;
+	if(uip_conn->lport == UIP_HTONS(1883))
+	{
+		hotfix = len & 7;
+		len -= hotfix;
 
-	memcpy(buf,data,len);
+		memcpy(buf,data,len);
 
-	encipher_payload_xtea(buf,(void *)crypt_key32, len,*(uint64_t *)IV_crypt);
-	memcpy(data,buf,len);
-	packetbuf_set_attr(PACKETBUF_ATTR_FRAME_TYPE, FRAME802154_DATAFRAME);
+		encipher_payload_xtea(buf,(void *)crypt_key32, len,*(uint64_t *)IV_crypt);
+		memcpy(data,buf,len);
+		packetbuf_set_attr(PACKETBUF_ATTR_FRAME_TYPE, FRAME802154_DATAFRAME);
+	}
 	NETSTACK_MAC.send(sent, ptr);
 }
 /*---------------------------------------------------------------------------*/
@@ -148,13 +151,16 @@ input(void)
 	uint8_t hotfix;
 	uint8_t buf[100] = {0};
 
-	hotfix = len & 7;
-	len -= hotfix;
+	if(uip_conn->lport == UIP_HTONS(1883))
+	{
+		hotfix = len & 7;
+		len -= hotfix;
 
-	memcpy(buf,data,len);
+		memcpy(buf,data,len);
 
-	decipher_payload_xtea(buf,(void *)crypt_key32, len,*(uint64_t *)IV_crypt);
-	memcpy(data,buf,len);
+		decipher_payload_xtea(buf,(void *)crypt_key32, len,*(uint64_t *)IV_crypt);
+		memcpy(data,buf,len);
+	}
 	NETSTACK_NETWORK.input();
 }
 /*---------------------------------------------------------------------------*/

@@ -118,7 +118,7 @@ int csprng_get(unsigned char *dst, int bytes)
 	SHA256_CTX ctx;
 	int i;
 
-	while(!csprng_ready);
+	//while(!csprng_ready);
 
 	while(bytes){
 		a.u[0] = csprng_feedix;								//feed counter

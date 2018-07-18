@@ -60,9 +60,9 @@ typedef struct {
 		unsigned char public_key[64];
 		  union {
 			   struct {
-					uint16_t typeBE; // 00 01
+					uint16_t typeBE;
 					uint8_t snlen;
-					unsigned char snr[20]; //P-NET definerer snr som string20
+					unsigned char snr[20];
 					unsigned char modul[9];
 			   };
 			   unsigned char payloadfield_size_control[32];

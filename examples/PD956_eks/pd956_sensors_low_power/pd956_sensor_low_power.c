@@ -670,7 +670,8 @@ PROCESS_THREAD(cc26xx_web_demo_process, ev, data)
 			CC26XX_WEB_DEMO_DEFAULT_RSSI_MEAS_INTERVAL;
 	ret = load_config();
 
-	process_start(&mqtt_client_process, NULL);
+	if(!ret)
+		process_start(&mqtt_client_process, NULL);
 
 	/*
 	 * Notify all other processes (basically the ones in this demo) that the
@@ -678,9 +679,14 @@ PROCESS_THREAD(cc26xx_web_demo_process, ev, data)
 	 */
 	process_post(PROCESS_BROADCAST, cc26xx_web_demo_config_loaded_event, NULL);
 
-	sensor_busy = web_demo_config.sensors_bitmap;
-	if(!ret)
+
+	if(!ret){
+		sensor_busy = web_demo_config.sensors_bitmap;
 		trigger_sensors();
+	}else{
+		sensor_busy = 0xffffffff;
+	}
+
 
 	while(1){
 
