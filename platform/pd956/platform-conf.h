@@ -1,7 +1,8 @@
 #ifndef __PLATFORM_CONF_H__
 #define __PLATFORM_CONF_H__
 #include "stdint.h"
-
+#include "sha256.h"
+#include "uECC.h"
 #ifndef LOW_CLOCK
 #define LOW_CLOCK 1
 #endif
@@ -84,8 +85,7 @@ typedef struct {
     uint16_t PANID; //40
     uint8_t channel; //48
     uint8_t version;	//56
-    crt_t devicecert; //216
-    uint32_t Flash_unique_id[4];
+    uint32_t Flash_unique_id[4];//72
 } tEepromContents; // Max 512 bytes
 
 #define  get_eeprom(x,b)    	eeprom_read(offsetof(tEepromContents, x), \

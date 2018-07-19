@@ -48,7 +48,6 @@ uint8_t sleepmgr_locks[SLEEPMGR_NR_OF_MODES];
 int main()
 {
 	uint8_t version_var;
-	crt_t eeprom_crt;
 	uint8_t hash[32] = {0};
 	uint32_t FLASH_id[4];
 	uint32_t FLASH_id_eeprom[4];
@@ -56,14 +55,11 @@ int main()
 	sysclk_init();
 	board_init();
 
-	SHA256_CTX CTX;
-
 	eeprom_init();
-
 
 	// Hotfix to program eeprom. Must be removed
 	get_eeprom(version, version_var);
-	if(version_var != 0x45)
+	if(version_var != 0x46)
 		Setup_EEPROM();
 
 	// Verify that the code is running on the processor it was programmed for.
@@ -76,13 +72,11 @@ int main()
 	 * provided with this firmware, can be used to verify the devices
 	 * public certificate.
 	 */
-	get_eeprom(devicecert, eeprom_crt);
+	//get_eeprom(devicecert, device_certificate.crt);
 
-	sha2_sha256_init(&CTX);
-	sha2_sha256_update(&CTX, (uint8_t *)&eeprom_crt.payloadfield_size_control, sizeof(eeprom_crt.payloadfield_size_control));
-	sha2_sha256_final(&CTX, hash);
+	sha2_sha256( (uint8_t *)&device_certificate.crt.payloadfield_size_control, sizeof(device_certificate.crt.payloadfield_size_control),hash);
 
-	if (!uECC_verify((void *)&device_certificate.masterpublic_key, hash, sizeof(hash), eeprom_crt.signature, uECC_secp256r1())) {
+	if (!uECC_verify((void *)&device_certificate.masterpublic_key, hash, sizeof(hash), (void *)&device_certificate.crt.signature, uECC_secp256r1())) {
 		printf("uECC_verify() failed\n");
 		while(1);
 	}
@@ -129,7 +123,7 @@ int main()
 	sleepmgr_lock_mode(SLEEPMGR_SLEEP_WFI);
 	while(1){
 		while(process_run());
-		sleepmgr_enter_sleep();
+		//sleepmgr_enter_sleep();
 	}
 	return 0;
 }
@@ -143,7 +137,7 @@ void Setup_EEPROM(void)
 
 	EEPROM.PANID = IEEE802154_CONF_PANID;
 	EEPROM.channel = 26;
-	EEPROM.version = 0x45;
+	EEPROM.version = 0x46;
 
 	flash_read_unique_id(EEPROM.Flash_unique_id, 4);
 
@@ -152,7 +146,7 @@ void Setup_EEPROM(void)
 
 	memcpy(EEPROM.eepromMacAddress,addr,8);
 
-	memcpy((void *)&EEPROM.devicecert,(void *)&device_certificate.crt,sizeof(device_certificate.crt));
+	//memcpy((void *)&EEPROM.devicecert,(void *)&device_certificate.crt,sizeof(device_certificate.crt));
 
 	eeprom_write(0, (void *) &EEPROM, sizeof(tEepromContents));
 }

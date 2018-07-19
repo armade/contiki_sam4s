@@ -67,6 +67,7 @@ NBR_TABLE_DECLARE(ds6_neighbors);
 /** \brief An entry in the nbr cache */
 typedef struct uip_ds6_nbr {
   uip_ipaddr_t ipaddr;
+  unsigned char nbr_session_key[64];
   uint8_t isrouter;
   uint8_t state;
 #if UIP_ND6_SEND_NS || UIP_ND6_SEND_RA

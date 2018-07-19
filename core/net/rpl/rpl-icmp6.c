@@ -59,6 +59,7 @@
 #include <limits.h>
 #include <string.h>
 
+#include "platform-conf.h"
 #define DEBUG DEBUG_NONE
 
 #include "net/ip/uip-debug.h"
@@ -209,6 +210,18 @@ dis_input(void)
 {
   rpl_instance_t *instance;
   rpl_instance_t *end;
+  unsigned char *buffer;
+  crt_t *certificate_ptr;
+  uint8_t hash[32] = {0};
+  uip_ds6_nbr_t *nbr;
+
+  buffer = UIP_ICMP_PAYLOAD;
+  certificate_ptr = (crt_t *)&buffer[2];
+  sha2_sha256( (uint8_t *)&certificate_ptr->payloadfield_size_control, sizeof(certificate_ptr->payloadfield_size_control),hash);
+  if (!uECC_verify((void *)&device_certificate.masterpublic_key, hash, sizeof(hash), certificate_ptr->signature, uECC_secp256r1())) {
+	  uip_clear_buf();
+	  return;
+  }
 
   /* DAG Information Solicitation */
   PRINTF("RPL: Received a DIS from ");
@@ -227,14 +240,16 @@ dis_input(void)
 #endif /* !RPL_LEAF_ONLY */
       } else {
         /* Check if this neighbor should be added according to the policy. */
-        if(rpl_icmp6_update_nbr_table(&UIP_IP_BUF->srcipaddr,
-                                      NBR_TABLE_REASON_RPL_DIS, NULL) == NULL) {
+    	  nbr = rpl_icmp6_update_nbr_table(&UIP_IP_BUF->srcipaddr,
+                  NBR_TABLE_REASON_RPL_DIS, NULL);
+        if(nbr== NULL) {
           PRINTF("RPL: Out of Memory, not sending unicast DIO, DIS from ");
           PRINT6ADDR(&UIP_IP_BUF->srcipaddr);
           PRINTF(", ");
           PRINTLLADDR((uip_lladdr_t *)packetbuf_addr(PACKETBUF_ADDR_SENDER));
           PRINTF("\n");
         } else {
+		  uECC_shared_secret(certificate_ptr->public_key, (void *)&device_certificate.private_key, nbr->nbr_session_key, uECC_secp256r1());
           PRINTF("RPL: Unicast DIS, reply to sender\n");
           dio_output(instance, &UIP_IP_BUF->srcipaddr);
         }
@@ -245,6 +260,7 @@ dis_input(void)
   uip_clear_buf();
 }
 /*---------------------------------------------------------------------------*/
+
 void
 dis_output(uip_ipaddr_t *addr)
 {
@@ -263,6 +279,8 @@ dis_output(uip_ipaddr_t *addr)
   buffer = UIP_ICMP_PAYLOAD;
   buffer[0] = buffer[1] = 0;
 
+  memcpy(&buffer[2], (void *)&device_certificate.crt,sizeof(device_certificate.crt));
+
   if(addr == NULL) {
     uip_create_linklocal_rplnodes_mcast(&tmpaddr);
     addr = &tmpaddr;
@@ -272,7 +290,7 @@ dis_output(uip_ipaddr_t *addr)
   PRINT6ADDR(addr);
   PRINTF("\n");
 
-  uip_icmp6_send(addr, ICMP6_RPL, RPL_CODE_DIS, 2);
+  uip_icmp6_send(addr, ICMP6_RPL, RPL_CODE_DIS, 2+sizeof(device_certificate.crt));
 }
 /*---------------------------------------------------------------------------*/
 static void

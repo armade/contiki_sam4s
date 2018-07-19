@@ -46,6 +46,7 @@
 #include "net/mac/frame802154.h"
 #include "net/netstack.h"
 #include "net/packetbuf.h"
+#include "net/ipv6/uip-ds6.h"
 
 void encipher(unsigned num_rounds, uint32_t *v, unsigned const key[4])
 {
@@ -124,14 +125,18 @@ init(void)
 static void
 send(mac_callback_t sent, void *ptr)
 {
+	uip_ds6_nbr_t *nbr;
 	uint32_t len = packetbuf_datalen();
 	uint8_t *data = packetbuf_dataptr();
+	uint32_t space_left = packetbuf_remaininglen();
 	uint8_t hotfix;
 	uint8_t buf[100] = {0};
 
 	if(uip_conn->lport == UIP_HTONS(1883))
 	{
+		//nbr = uip_ds6_nbr_lookup(UIP_IP_BUF->srcipaddr);
 		hotfix = len & 7;
+		if(hotfix && space_left > 8)
 		len -= hotfix;
 
 		memcpy(buf,data,len);

@@ -87,13 +87,13 @@ uint8_t sig_tmp[64];
 static inline void print_sig(uint8_t *sig)
 {
 	uint8_t i;
-	printf("%s",KGRN);
+	//printf("%s",KGRN);
 	for(i=0;i<64;i++){
 		printf("%2.2x", *sig++);
 		if(i==31)
 			printf("\n");
 	}
-	printf("%s",KNRM);
+	//printf("%s",KNRM);
 	printf("\n");// flush
 }
 
@@ -123,11 +123,11 @@ static inline void print_public(uint8_t *sig)
 static inline void print_hash(uint8_t *hash)
 {
 	uint8_t i;
-	printf("%s",KGRN);
+	//printf("%s",KGRN);
 	for(i=0;i<32;i++)
 		printf("%2.2x", *hash++);
 
-	printf("%s",KNRM);
+	//printf("%s",KNRM);
 	printf("\n");// flush
 }
 static inline void print_seperator(char g)
@@ -159,12 +159,6 @@ int load_keys(void)
 
 		decipher_payload_xtea(public,(uint32_t *)HASH_KEY_result, sizeof(public),*(uint64_t *)IV_crypt);
 		decipher_payload_xtea(private,(uint32_t *)HASH_KEY_result, sizeof(private),*(uint64_t *)IV_crypt);
-
-		print_seperator('#');
-		printf("%s%s keyes:%s\n",KCYN,__func__,KNRM);
-		print_sig(public);
-		print_hash(private);
-		print_seperator('#');
 
 		SHA_INIT(&KEY);
 		SHA_UPDATE(&KEY, public, sizeof(public));
@@ -235,10 +229,10 @@ int main(int argc, char **argv)
 	const char lok_find[32] = "Replace point";
 
 	char *UUID_nr = argv[1];
+	char *msg = argv[2];
 
-
-	if (argc != 2) { // Normal error handling
-        printf("usage: %s [UUID]  \n", argv[0]);
+	if (argc != 3) { // Normal error handling
+        printf("usage: %s [UUID] file \n", argv[0]);
         return 1;
     }
 	// Normal error handling
@@ -318,9 +312,9 @@ int main(int argc, char **argv)
 	print_seperator('=');
 
 
-	Firmware_fp=fopen("pd956_sensor_low_power.elf","r");
+	Firmware_fp=fopen(msg,"r");
 	rewind(Firmware_fp);
-	Firmware_out_fp = fopen("pd956_sensor_low_power2.elf","w");
+	Firmware_out_fp = fopen("temp.elf","w");
 	i=0;
 	while(1){
 		lok[i] = fgetc(Firmware_fp);
@@ -355,8 +349,8 @@ int main(int argc, char **argv)
 	fclose(Firmware_out_fp);
 	fclose(masterkeys_fp);
 	
-	remove( "pd956_sensor_low_power.elf" );
-	rename( "pd956_sensor_low_power2.elf", "pd956_sensor_low_power.elf" );
+	remove( msg);
+	rename( "temp.elf", msg );
 	
     return 0;
 }

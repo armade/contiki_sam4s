@@ -115,6 +115,7 @@ CUSTOM_RULE_LINK=1
 	@$(SIZE) -A $< | egrep "text|isr_vector" | awk '{s+=$$2} END {f=$(FLASH_SIZE)-s; printf "\t[Flash] used %6d, free %6d (%f%)\n",s,f,s/f*100;}'
 	@echo ""
 	@echo ""
+	../../../tools/certificate_creator/create_cert/make_certificate.exe 12345678PD $<
 
 # a target that gives a user-friendly memory profile, taking into account the RAM
 # that is statically occupied by the stack as defined in the linker script

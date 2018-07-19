@@ -522,8 +522,8 @@ static void publish(void)
 			"\"Name\":\"%s\","
 			"\"Seq #\":%d,"
 			"\"Uptime [s]\":%lu,"
-			"\"Battery state\":%c",
-	BOARD_STRING, SENSOR_STRING, conf->Username, seq_nr_value, clock_seconds(),RF231_bat_status());
+			"\"Battery state\":%c"
+	,BOARD_STRING, SENSOR_STRING, conf->Username, seq_nr_value, clock_seconds(),RF231_bat_status()+0x30);
 
 	if (len < 0 || len >= remaining)
 	{
