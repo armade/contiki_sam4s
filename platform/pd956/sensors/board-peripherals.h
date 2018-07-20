@@ -21,7 +21,7 @@
 //#define NODE_HARD_LIGHT
 //#define NODE_STEP_MOTOR
 //#define NODE_PRESSURE
-#define NODE_HTU21D
+//#define NODE_HTU21D
 
 
 

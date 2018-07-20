@@ -52,6 +52,8 @@
 #include "sys/pt.h"
 #include "sys/rtimer.h"
 
+extern void
+rtimer_arch_sleep(rtimer_clock_t howlong);
 
 #include <string.h>
 

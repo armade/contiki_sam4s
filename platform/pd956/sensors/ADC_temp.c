@@ -59,7 +59,7 @@ notify_ready(void *not_used)
 }
 /**
  * \brief Returns a reading from the sensor
- * \return Temperature (ï¿½C * 1000).
+ * \return Temperature (°C * 1000).
  */
 static int
 SAM4S_ADC_value(int type)

@@ -61,7 +61,7 @@
 //#include "ti-lib.h"
 /*---------------------------------------------------------------------------*/
 PROCESS_NAME(cetic_6lbr_client_process);
-PROCESS(cc26xx_web_demo_process, "CC26XX Web Demo");
+PROCESS(cc26xx_web_demo_process, "PD956 MQTT");
 /*---------------------------------------------------------------------------*/
 /*
  * Update sensor readings in a staggered fashion every SENSOR_READING_PERIOD

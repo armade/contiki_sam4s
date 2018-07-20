@@ -13,7 +13,7 @@ www.eXtremeElectronics.co.in
 #include "platform-conf.h"
 #include "gpio.h"
 #include "pio_handler.h"
-
+#if defined(NODE_HTU21D) || defined(NODE_PRESSURE) || defined(NODE_LM73)
 Pio *I2C_base = (Pio *)PIOB;
 
 #define NOP(NO, unused)      asm volatile("NOP");
@@ -271,6 +271,6 @@ uint16_t SoftI2Cread_register(uint8_t Addr, uint8_t reg, uint8_t *Data, uint8_t 
 }
 */
 
-
+#endif
 
 

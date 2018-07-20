@@ -6,7 +6,7 @@ CONTIKI=../../..
 #linker optimizations
 SMALL=1
 
-CFLAGS += -DPROJECT_CONF_H=\"project-conf.h\" -DLOW_CLOCK=0
+CFLAGS += -DPROJECT_CONF_H=\"project-conf.h\" -DLOW_CLOCK=0 -DNODE_ROUTER=1
 PROJECT_SOURCEFILES += slip-bridge.c
 APPS +=  gpsd
 

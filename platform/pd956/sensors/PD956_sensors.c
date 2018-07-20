@@ -52,3 +52,9 @@ SENSORS(
 		&HTU21D_sensor
 );
 #endif
+
+#ifdef NODE_ROUTER
+SENSORS(
+		&SAM4S_ADC_TS_sensor
+);
+#endif

@@ -1,3 +1,1 @@
-wpcapslip6.exe -s COM6 -b aaaa:: -a aaaa::1/64 80-26-89-1C-D0-0B
-pause
-::COM44
+wpcapslip6.exe -s COM16 -b aaaa:: -a aaaa::1/64 00-80-c8-3c-ae-59

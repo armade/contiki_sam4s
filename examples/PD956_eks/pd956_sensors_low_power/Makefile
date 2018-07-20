@@ -1,4 +1,5 @@
 DEFINES+=PROJECT_CONF_H=\"project-conf.h\"
+CFLAGS += -DNODE_HTU21D=1  -DLOW_CLOCK=0
 
 all: pd956_sensor_low_power
 

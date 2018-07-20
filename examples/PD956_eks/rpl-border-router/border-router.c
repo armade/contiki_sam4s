@@ -231,7 +231,7 @@ PT_THREAD(generate_routes(struct httpd_state *s))
 #if WEBSERVER_CONF_ROUTE_LINKS
     ADD("<a href=http://[");
     ipaddr_add(&r->ipaddr);
-    ADD("]/status.shtml>");
+    ADD("]/index.html>");
     ipaddr_add(&r->ipaddr);
     ADD("</a>");
 #else
@@ -241,7 +241,7 @@ PT_THREAD(generate_routes(struct httpd_state *s))
 #if WEBSERVER_CONF_ROUTE_LINKS
     ADD("<a href=http://[");
     ipaddr_add(&r->ipaddr);
-    ADD("]/status.shtml>");
+    ADD("]/index.html>");
     SEND_STRING(&s->sout, buf); //TODO: why tunslip6 needs an output here, wpcapslip does not
     blen = 0;
     ipaddr_add(&r->ipaddr);
@@ -286,7 +286,7 @@ PT_THREAD(generate_routes(struct httpd_state *s))
 #if WEBSERVER_CONF_ROUTE_LINKS
       ADD("<a href=http://[");
       ipaddr_add(&child_ipaddr);
-      ADD("]/status.shtml>");
+      ADD("]/index.html>");
       ipaddr_add(&child_ipaddr);
       ADD("</a>");
 #else
@@ -296,7 +296,7 @@ PT_THREAD(generate_routes(struct httpd_state *s))
 #if WEBSERVER_CONF_ROUTE_LINKS
       ADD("<a href=http://[");
       ipaddr_add(&child_ipaddr);
-      ADD("]/status.shtml>");
+      ADD("]/index.html>");
       SEND_STRING(&s->sout, buf); //TODO: why tunslip6 needs an output here, wpcapslip does not
       blen = 0;
       ipaddr_add(&child_ipaddr);
@@ -415,17 +415,7 @@ PROCESS_THREAD(border_router_process, ev, data)
   PROCESS_PAUSE();
 
 
-  //SENSORS_ACTIVATE(SAM4S_ADC_TS_sensor);
-
   PRINTF("RPL-Border router started\n");
-#if 0
-   /* The border router runs with a 100% duty cycle in order to ensure high
-     packet reception rates.
-     Note if the MAC RDC is not turned off now, aggressive power management of the
-     cpu will interfere with establishing the SLIP connection */
-  NETSTACK_MAC.off(1);
-#endif
-  //volatile int test = SAM4S_ADC_TS_sensor.value(ADC_TS_SENSOR_TYPE_TEMP);
   /* Request prefix until it has been received */
   while(!prefix_set) {
     etimer_set(&et, CLOCK_SECOND);
@@ -434,7 +424,7 @@ PROCESS_THREAD(border_router_process, ev, data)
   }
 
   /* Now turn the radio on, but disable radio duty cycling.
-   * Since we are the DAG root, reception delays would constrain mesh throughbut.
+   * Since we are the DAG root, reception delays would constrain mesh throughput.
    */
   NETSTACK_MAC.off(1);
 

@@ -60,7 +60,7 @@
 //#include "ti-lib.h"
 /*---------------------------------------------------------------------------*/
 
-PROCESS(cc26xx_web_demo_process, "CC26XX Web Demo");
+PROCESS(cc26xx_web_demo_process, "PD956 MQTT");
 /*---------------------------------------------------------------------------*/
 /*
  * Update sensor readings in a staggered fashion every SENSOR_READING_PERIOD
@@ -642,7 +642,7 @@ PROCESS_THREAD(cc26xx_web_demo_process, ev, data)
 	uint8_t ret;
 	PROCESS_BEGIN();
 
-	printf("CC26XX Web Demo Process\n");
+	printf("PD956 MQTT Process\n");
 
 	init_sensors();
 

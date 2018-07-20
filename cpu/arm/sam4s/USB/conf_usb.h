@@ -68,8 +68,8 @@
 //	(USB_CONFIG_ATTR_REMOTE_WAKEUP|USB_CONFIG_ATTR_BUS_POWERED)
 
 //! USB Device string definitions (Optional)
-#define  USB_DEVICE_MANUFACTURE_NAME      "PROCES-DATA A/S"
-#define  USB_DEVICE_PRODUCT_NAME          "PD956 - Hardware secure module"
+#define  USB_DEVICE_MANUFACTURE_NAME      "CONTIKI"
+#define  USB_DEVICE_PRODUCT_NAME          "SAM4S device"
 #define  USB_DEVICE_SERIAL_NAME
 #define  USB_DEVICE_GET_SERIAL_NAME_POINTER cdc_serial_number
 #define  USB_DEVICE_GET_SERIAL_NAME_LENGTH  10

@@ -60,7 +60,7 @@
 #include <string.h>
 
 #include "platform-conf.h"
-#define DEBUG DEBUG_NONE
+#define DEBUG DEBUG_PRINT
 
 #include "net/ip/uip-debug.h"
 
@@ -210,13 +210,13 @@ dis_input(void)
 {
   rpl_instance_t *instance;
   rpl_instance_t *end;
+  uip_ds6_nbr_t *nbr;
   unsigned char *buffer;
   crt_t *certificate_ptr;
-  uint8_t hash[32] = {0};
-  uip_ds6_nbr_t *nbr;
+  static uint8_t hash[32] = {0};
 
   buffer = UIP_ICMP_PAYLOAD;
-  certificate_ptr = (crt_t *)&buffer[2];
+  certificate_ptr = (crt_t *)&buffer[3];
   sha2_sha256( (uint8_t *)&certificate_ptr->payloadfield_size_control, sizeof(certificate_ptr->payloadfield_size_control),hash);
   if (!uECC_verify((void *)&device_certificate.masterpublic_key, hash, sizeof(hash), certificate_ptr->signature, uECC_secp256r1())) {
 	  uip_clear_buf();
@@ -249,7 +249,7 @@ dis_input(void)
           PRINTLLADDR((uip_lladdr_t *)packetbuf_addr(PACKETBUF_ADDR_SENDER));
           PRINTF("\n");
         } else {
-		  uECC_shared_secret(certificate_ptr->public_key, (void *)&device_certificate.private_key, nbr->nbr_session_key, uECC_secp256r1());
+		  //uECC_shared_secret(certificate_ptr->public_key, (void *)&device_certificate.private_key, nbr->nbr_session_key, uECC_secp256r1());
           PRINTF("RPL: Unicast DIS, reply to sender\n");
           dio_output(instance, &UIP_IP_BUF->srcipaddr);
         }
@@ -279,7 +279,7 @@ dis_output(uip_ipaddr_t *addr)
   buffer = UIP_ICMP_PAYLOAD;
   buffer[0] = buffer[1] = 0;
 
-  memcpy(&buffer[2], (void *)&device_certificate.crt,sizeof(device_certificate.crt));
+  memcpy(&buffer[3], (void *)&device_certificate.crt,sizeof(device_certificate.crt));
 
   if(addr == NULL) {
     uip_create_linklocal_rplnodes_mcast(&tmpaddr);
@@ -290,7 +290,7 @@ dis_output(uip_ipaddr_t *addr)
   PRINT6ADDR(addr);
   PRINTF("\n");
 
-  uip_icmp6_send(addr, ICMP6_RPL, RPL_CODE_DIS, 2+sizeof(device_certificate.crt));
+  uip_icmp6_send(addr, ICMP6_RPL, RPL_CODE_DIS, 3+sizeof(device_certificate.crt));
 }
 /*---------------------------------------------------------------------------*/
 static void
@@ -303,6 +303,9 @@ dio_input(void)
   int i;
   int len;
   uip_ipaddr_t from;
+  uint8_t valid_frame = 0;
+  crt_t *certificate_ptr;
+      	   static uint8_t hash[32] = {0};
 
   memset(&dio, 0, sizeof(dio));
 
@@ -467,12 +470,28 @@ dio_input(void)
         PRINTF("RPL: Copying prefix information\n");
         memcpy(&dio.prefix_info.prefix, &buffer[i + 16], 16);
         break;
+
+      case RPL_OPTION_CERTIFICATE:
+
+    	   buffer = UIP_ICMP_PAYLOAD;
+    	   certificate_ptr = (crt_t *)&buffer[2];
+    	   sha2_sha256( (uint8_t *)&certificate_ptr->payloadfield_size_control, sizeof(certificate_ptr->payloadfield_size_control),hash);
+    	   if (!uECC_verify((void *)&device_certificate.masterpublic_key, hash, sizeof(hash), certificate_ptr->signature, uECC_secp256r1())) {
+    		   PRINTF("RPL: Incorrect certificate - discarding\n");
+    		   goto discard;
+    	   }
+    	   valid_frame = 1;
+    	  break;
       default:
         PRINTF("RPL: Unsupported suboption type in DIO: %u\n",
                (unsigned)subopt_type);
     }
   }
 
+  if(!valid_frame){
+	  PRINTF("RPL: Unable to verify frame - discarding\n");
+	  goto discard;
+  }
 #ifdef RPL_DEBUG_DIO_INPUT
   RPL_DEBUG_DIO_INPUT(&from, &dio);
 #endif
@@ -610,7 +629,11 @@ dio_output(rpl_instance_t *instance, uip_ipaddr_t *uc_addr)
     PRINTF("RPL: No prefix to announce (len %d)\n",
            dag->prefix_info.length);
   }
-
+  // Apply certificate.
+  buffer[pos++] = RPL_OPTION_CERTIFICATE;
+  buffer[pos++] = sizeof(device_certificate.crt);
+  memcpy(&buffer[pos],(void *)&device_certificate.crt,sizeof(device_certificate.crt));
+  pos += sizeof(device_certificate.crt);
 #if RPL_LEAF_ONLY
 #if (DEBUG) & DEBUG_PRINT
   if(uc_addr == NULL) {

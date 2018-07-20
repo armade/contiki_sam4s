@@ -37,7 +37,6 @@
 
 #define BOARD_STRING 					"PD956-01"
 #define SENSOR_ERROR        			0x80000000
-//#define CC26XX_SENSOR_READING_ERROR     SENSOR_ERROR
 
 #define CC_CONF_REGISTER_ARGS          1
 #define CC_CONF_FUNCTION_POINTER_ARGS  1
@@ -48,6 +47,7 @@
 #define EEPROM_CONF_SIZE				512
 #endif
 
+#define CLOCK_CONF_SECOND 				1000UL
 
 #define IEEE802154_CONF_PANID           0xABCD
 #define RF_CHANNEL              		13
@@ -129,7 +129,6 @@ typedef unsigned short uip_stats_t;
 
 //#define NETSTACK_CONF_LLSEC XTEAsec_driver
 
-#define NETSTACK_CONF_LINUXRADIO_DEV "wpan0"
 
 #define UIP_CONF_ROUTER                 1
 
@@ -185,77 +184,6 @@ typedef unsigned short uip_stats_t;
 
 #include <ctype.h>
 #define ctk_arch_isprint isprint
-
-
-#define CH_ULCORNER	          -10
-#define CH_URCORNER	          -11
-#define CH_LLCORNER	          -12
-#define CH_LRCORNER	          -13
-#define CH_ENTER	          '\n'
-#define CH_DEL		          '\b'
-#define CH_CURS_UP  	          -1
-#define CH_CURS_LEFT	          -2
-#define CH_CURS_RIGHT	          -3
-#define CH_CURS_DOWN	          -4
-
-#define CTK_CONF_MENU_KEY         -5  /* F10 */
-#define CTK_CONF_WINDOWSWITCH_KEY -6  /* Ctrl-Tab */
-#define CTK_CONF_WIDGETUP_KEY     -7  /* Shift-Tab */
-#define CTK_CONF_WIDGETDOWN_KEY   '\t'
-#define CTK_CONF_WIDGET_FLAGS     0
-#define CTK_CONF_SCREENSAVER      1
-
-#ifdef PLATFORM_BUILD
-#define CTK_CONF_MOUSE_SUPPORT    1
-#define CTK_CONF_WINDOWS          1
-#define CTK_CONF_WINDOWMOVE       1
-#define CTK_CONF_WINDOWCLOSE      1
-#define CTK_CONF_ICONS            1
-#define CTK_CONF_ICON_BITMAPS     0
-#define CTK_CONF_ICON_TEXTMAPS    1
-#define CTK_CONF_MENUS            1
-#define CTK_CONF_MENUWIDTH        16
-#define CTK_CONF_MAXMENUITEMS     10
-#else /* PLATFORM_BUILD */
-#define CTK_CONF_MOUSE_SUPPORT    1
-#define CTK_CONF_WINDOWS          0
-#define CTK_CONF_WINDOWMOVE       0
-#define CTK_CONF_WINDOWCLOSE      0
-#define CTK_CONF_ICONS            0
-#define CTK_CONF_MENUS            0
-#endif /* PLATFORM_BUILD */
-
-/* CTK-specific color constants */
-#define CTK_COLOR_BLACK   0
-#define CTK_COLOR_RED     1
-#define CTK_COLOR_GREEN   2
-#define CTK_COLOR_YELLOW  3
-#define CTK_COLOR_BLUE    4
-#define CTK_COLOR_MAGENTA 5
-#define CTK_COLOR_CYAN    6
-#define CTK_COLOR_WHITE   7
-
-/* base background color for widgets */
-#define COLOR_BG CTK_COLOR_BLUE
-
-#define BORDERCOLOR         CTK_COLOR_BLACK
-#define SCREENCOLOR         CTK_COLOR_BLACK
-#define BACKGROUNDCOLOR     CTK_COLOR_BLACK
-#define WINDOWCOLOR_FOCUS   CTK_COLOR_WHITE  | COLOR_BG * 0x10
-#define WINDOWCOLOR         CTK_COLOR_CYAN   | COLOR_BG * 0x10
-#define DIALOGCOLOR         CTK_COLOR_WHITE  | COLOR_BG * 0x10
-#define WIDGETCOLOR_HLINK   CTK_COLOR_CYAN   | COLOR_BG * 0x10
-#define WIDGETCOLOR_FWIN    CTK_COLOR_WHITE  | COLOR_BG * 0x10
-#define WIDGETCOLOR         CTK_COLOR_CYAN   | COLOR_BG * 0x10
-#define WIDGETCOLOR_DIALOG  CTK_COLOR_WHITE  | COLOR_BG * 0x10
-#define WIDGETCOLOR_FOCUS   CTK_COLOR_YELLOW | COLOR_BG * 0x10
-#define MENUCOLOR           CTK_COLOR_WHITE  | COLOR_BG * 0x10
-#define OPENMENUCOLOR       CTK_COLOR_WHITE  | COLOR_BG * 0x10
-#define ACTIVEMENUITEMCOLOR CTK_COLOR_YELLOW | COLOR_BG * 0x10
-
-
-
-#define CLOCK_CONF_SECOND 1000UL
 
 #define LOG_CONF_ENABLED 1
 

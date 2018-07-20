@@ -731,7 +731,7 @@ PROCESS_THREAD(cc26xx_web_demo_process, ev, data)
 {
   PROCESS_BEGIN();
 
-  printf("CC26XX Web Demo Process\n");
+  printf("PD956 MQTT\n");
 
   init_sensors();
 
