@@ -473,8 +473,8 @@ dio_input(void)
 
       case RPL_OPTION_CERTIFICATE:
 
-    	   buffer = UIP_ICMP_PAYLOAD;
-    	   certificate_ptr = (crt_t *)&buffer[2];
+    	   //buffer = UIP_ICMP_PAYLOAD;
+    	   certificate_ptr = (crt_t *)&buffer[i + 2];
     	   sha2_sha256( (uint8_t *)&certificate_ptr->payloadfield_size_control, sizeof(certificate_ptr->payloadfield_size_control),hash);
     	   if (!uECC_verify((void *)&device_certificate.masterpublic_key, hash, sizeof(hash), certificate_ptr->signature, uECC_secp256r1())) {
     		   PRINTF("RPL: Incorrect certificate - discarding\n");

@@ -12,7 +12,7 @@
 #include "dev/leds.h"
 #include "mqtt-client.h"
 #include "httpd-simple.h"
-#include "RF231.h"
+#include "rf231.h"
 
 #include <string.h>
 #include <strings.h>

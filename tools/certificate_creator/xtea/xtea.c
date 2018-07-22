@@ -1,5 +1,6 @@
 #include <time.h>
 #include <stdlib.h>
+#include <stdint.h>
 #include "xtea.h"
 
 void encipher(unsigned num_rounds, uint32_t *v, unsigned const key[4])
