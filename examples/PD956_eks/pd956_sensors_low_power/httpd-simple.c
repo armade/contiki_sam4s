@@ -294,7 +294,7 @@ static page_t http_relay4_cfg_page = {
 };
 #endif
 
-#if CC26XX_WEB_DEMO_MQTT_CLIENT
+
 static char generate_mqtt_config(struct httpd_state *s);
 
 static page_t http_mqtt_cfg_page = {
@@ -303,7 +303,7 @@ static page_t http_mqtt_cfg_page = {
   "MQTT Config",
   generate_mqtt_config,
 };
-#endif
+
 /*---------------------------------------------------------------------------*/
 #define IBM_QUICKSTART_LINK_LEN 128
 static char http_mqtt_a[IBM_QUICKSTART_LINK_LEN];
@@ -324,7 +324,7 @@ struct httpd_state {
   struct psock sin, sout;
   int blen;
   const char **ptr;
-  const cc26xx_web_demo_sensor_reading_t *reading;
+  const MQTT_sensor_reading_t *reading;
   const page_t *page;
   uip_ds6_route_t *r;
   uip_ds6_nbr_t *nbr;
@@ -503,10 +503,10 @@ PT_THREAD(generate_top_matter(struct httpd_state *s, const char *title,
                                  s->page->filename, s->page->title));
   }
 
-#if CC26XX_WEB_DEMO_MQTT_CLIENT
+
   PT_WAIT_THREAD(&s->top_matter_pt,
                  enqueue_chunk(s, 0, " %s", http_mqtt_a));
-#endif
+
   PT_WAIT_THREAD(&s->top_matter_pt,
                  enqueue_chunk(s, 0, "</ul>" SECTION_CLOSE));
 
@@ -521,14 +521,11 @@ PT_THREAD(generate_index(struct httpd_state *s))
   PT_BEGIN(&s->generate_pt);
 
   /* Generate top matter (doctype, title, nav links etc) */
-  /* Generate top matter (doctype, title, nav links etc) */
    PT_WAIT_THREAD(&s->generate_pt,
                   generate_top_matter(s, http_dev_cfg_page.title,
                                       http_config_css2));
 //======================================================================================
   /* ND Cache */
-  /*PT_WAIT_THREAD(&s->generate_pt,
-                 enqueue_chunk(s, 0, SECTION_OPEN "Neighbors" CONTENT_OPEN));*/
    PT_WAIT_THREAD(&s->generate_pt,
                      enqueue_chunk(s, 0, "<h1>Connection status</h1>"));
   PT_WAIT_THREAD(&s->generate_pt,
@@ -543,7 +540,7 @@ PT_THREAD(generate_index(struct httpd_state *s))
     PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "\n"));
 
     memset(ipaddr_buf, 0, IPADDR_BUF_LEN);
-    cc26xx_web_demo_ipaddr_sprintf(ipaddr_buf, IPADDR_BUF_LEN, &s->nbr->ipaddr);
+    ipaddr_sprintf(ipaddr_buf, IPADDR_BUF_LEN, &s->nbr->ipaddr);
     PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "%s", ipaddr_buf));
 
     memset(ipaddr_buf, 0, IPADDR_BUF_LEN);
@@ -554,29 +551,20 @@ PT_THREAD(generate_index(struct httpd_state *s))
   PT_WAIT_THREAD(&s->generate_pt,
                        enqueue_chunk(s, 0, "</p>"));
 
-  /*PT_WAIT_THREAD(&s->generate_pt,
-                 enqueue_chunk(s, 0, CONTENT_CLOSE SECTION_CLOSE));*/
 //======================================================================================
   /* Default Route */
-  /*PT_WAIT_THREAD(&s->generate_pt,
-                 enqueue_chunk(s, 0,
-                               SECTION_OPEN "Default Route" CONTENT_OPEN));*/
   PT_WAIT_THREAD(&s->generate_pt,
                     enqueue_chunk(s, 0, "<h2>Default Route</h2>"));
   PT_WAIT_THREAD(&s->generate_pt,
                       enqueue_chunk(s, 0, "<p>"));
   memset(ipaddr_buf, 0, IPADDR_BUF_LEN);
-  cc26xx_web_demo_ipaddr_sprintf(ipaddr_buf, IPADDR_BUF_LEN,
+  ipaddr_sprintf(ipaddr_buf, IPADDR_BUF_LEN,
                                  uip_ds6_defrt_choose());
   PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "%s", ipaddr_buf));
   PT_WAIT_THREAD(&s->generate_pt,
                       enqueue_chunk(s, 0, "</p>"));
-  /*PT_WAIT_THREAD(&s->generate_pt,
-                 enqueue_chunk(s, 0, CONTENT_CLOSE SECTION_CLOSE));*/
 //======================================================================================
   /* Routes */
-  /*PT_WAIT_THREAD(&s->generate_pt,
-                 enqueue_chunk(s, 0, SECTION_OPEN "Routes" CONTENT_OPEN));*/
 
   PT_WAIT_THREAD(&s->generate_pt,
                       enqueue_chunk(s, 0, "<h2>Routes</h2>"));
@@ -589,14 +577,14 @@ PT_THREAD(generate_index(struct httpd_state *s))
     PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "\n"));
 
     memset(ipaddr_buf, 0, IPADDR_BUF_LEN);
-    cc26xx_web_demo_ipaddr_sprintf(ipaddr_buf, IPADDR_BUF_LEN, &s->r->ipaddr);
+    ipaddr_sprintf(ipaddr_buf, IPADDR_BUF_LEN, &s->r->ipaddr);
     PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "%s", ipaddr_buf));
 
     PT_WAIT_THREAD(&s->generate_pt,
                    enqueue_chunk(s, 0, " / %u via ", s->r->length));
 
     memset(ipaddr_buf, 0, IPADDR_BUF_LEN);
-    cc26xx_web_demo_ipaddr_sprintf(ipaddr_buf, IPADDR_BUF_LEN,
+    ipaddr_sprintf(ipaddr_buf, IPADDR_BUF_LEN,
                                    uip_ds6_route_nexthop(s->r));
     PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "%s", ipaddr_buf));
 
@@ -607,19 +595,15 @@ PT_THREAD(generate_index(struct httpd_state *s))
 
   PT_WAIT_THREAD(&s->generate_pt,
                       enqueue_chunk(s, 0, "</p>"));
-  /*PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0,
-                                                CONTENT_CLOSE SECTION_CLOSE));*/
 
 //======================================================================================
   /* Sensors */
-  /*PT_WAIT_THREAD(&s->generate_pt,
-                 enqueue_chunk(s, 0, SECTION_OPEN "Sensors" CONTENT_OPEN));*/
   PT_WAIT_THREAD(&s->generate_pt,
                        enqueue_chunk(s, 0, "<h1>Sensor readings</h1>"));
 
   PT_WAIT_THREAD(&s->generate_pt,
                       enqueue_chunk(s, 0, "<p>"));
-  for(s->reading = cc26xx_web_demo_sensor_first();
+  for(s->reading = MQTT_sensor_first();
       s->reading != NULL; s->reading = s->reading->next) {
     PT_WAIT_THREAD(&s->generate_pt,
                    enqueue_chunk(s, 0, "\n%s = %s %s<br>", s->reading->descr,
@@ -628,8 +612,6 @@ PT_THREAD(generate_index(struct httpd_state *s))
   }
   PT_WAIT_THREAD(&s->generate_pt,
                       enqueue_chunk(s, 0, "</p>"));
-  /*PT_WAIT_THREAD(&s->generate_pt,
-                 enqueue_chunk(s, 0, CONTENT_CLOSE SECTION_CLOSE));*/
 
   //======================================================================================
   /* Footer */
@@ -638,14 +620,12 @@ PT_THREAD(generate_index(struct httpd_state *s))
 
   PT_WAIT_THREAD(&s->generate_pt,
                       enqueue_chunk(s, 0, "<p>"));
-  //PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, SECTION_OPEN));
   PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "Page hits: %u<br>",
                                                 numtimes));
   PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "Uptime: %lu secs<br>",
                                                 clock_seconds()));
   PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "Current time: %lu secs<br>",
 		  	  	  	  	  	  	  	  	  	    clock_get_unix_time()));
-  //PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, SECTION_CLOSE));
 
   PT_WAIT_THREAD(&s->generate_pt,
                       enqueue_chunk(s, 0, "</p>"));
@@ -684,7 +664,7 @@ PT_THREAD(generate_config(struct httpd_state *s))
   PT_WAIT_THREAD(&s->generate_pt,
                  enqueue_chunk(s, 0, "accept-charset=\"UTF-8\">"));
 
-  for(s->reading = cc26xx_web_demo_sensor_first();
+  for(s->reading = MQTT_sensor_first();
        s->reading != NULL; s->reading = s->reading->next) {
      PT_WAIT_THREAD(&s->generate_pt,
                     enqueue_chunk(s, 0, "%s%s:%s%s", config_div_left,
@@ -752,7 +732,6 @@ PT_THREAD(generate_config(struct httpd_state *s))
   PT_END(&s->generate_pt);
 }
 /*---------------------------------------------------------------------------*/
-#if CC26XX_WEB_DEMO_MQTT_CLIENT
 static
 PT_THREAD(generate_mqtt_config(struct httpd_state *s))
 {
@@ -931,7 +910,6 @@ PT_THREAD(generate_mqtt_config(struct httpd_state *s))
 
   PT_END(&s->generate_pt);
 }
-#endif
 /*---------------------------------------------------------------------------*/
 #ifdef NODE_STEP_MOTOR
 static
@@ -1794,9 +1772,7 @@ init(void)
   list_add(pages_list, &http_relay4_cfg_page);
 #endif
 
-#if CC26XX_WEB_DEMO_MQTT_CLIENT
   list_add(pages_list, &http_mqtt_cfg_page);
-#endif
 }
 /*---------------------------------------------------------------------------*/
 PROCESS_THREAD(httpd_simple_process, ev, data)

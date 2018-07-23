@@ -97,7 +97,7 @@ CUSTOM_RULE_LINK=1
 
 %.bin: %.elf
 	$(OBJCOPY) $(OBJCOPY_FLAGS) $< $@
-	@../../../tools/certificate_creator/create_cert/make_certificate.exe 12345678PD $@ > /dev/null
+	../../../tools/certificate_creator/create_cert/make_certificate.exe 12345678PD $@ > /dev/null
 
 %.lst: %.elf
 	$(OBJDUMP) $(OBJDUMP_FLAGS) $< > $@

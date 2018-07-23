@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018, PROCES-DATA.
+ * Copyright (c) 2018
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -33,8 +33,9 @@
 /**
  * \file
  *         secure link layer security driver.
+ *         Special XTEA implementation using block chain.
  * \author
- *         Peter Mikkelsen <pm@proces-data.com.com>
+ *         Peter Mikkelsen
  */
 
 /**
@@ -51,7 +52,7 @@
 void encipher(unsigned num_rounds, uint32_t *v, unsigned const key[4])
 {
     unsigned i;
-    unsigned v0=v[0], v1=v[1], sum=0, delta=0x9E3779B9;
+    unsigned v0=v[0], v1=v[1], sum=0, delta=0x9E3779B9; //0x9E3779CD
     for (i=0; i < num_rounds; i++){
         v0 += (((v1 << 4) ^ (v1 >> 5)) + v1) ^ (sum + key[sum & 3]);
         sum += delta;
@@ -115,6 +116,28 @@ uint8_t IV_crypt[8] = {
 		0x44, 0xc3, 0xba, 0x43, 0x50, 0x82, 0x09, 0xf3
 };
 
+#define UIP_IP_BUF   ((struct uip_ip_hdr *)&uip_buf[UIP_LLH_LEN])
+
+
+void bufseqnr_put(uip_ds6_nbr_t *nbr, uint8_t seqnr)
+{
+	nbr->seqnr_buf[nbr->seqnr_idx_head] = seqnr;
+	nbr->seqnr_idx_head = (nbr->seqnr_idx_head+1)&15;
+	if(nbr->seqnr_idx_level<16)
+		nbr->seqnr_idx_level++;
+}
+
+uint8_t bufseqnr_check_dublicate(uip_ds6_nbr_t *nbr, uint8_t seqnr)
+{
+	uint8_t i;
+
+	for(i=0; i< nbr->seqnr_idx_level; i++){
+		if(nbr->seqnr_buf[i] == seqnr)
+			return 1;
+	}
+	return 0;
+}
+
 /*---------------------------------------------------------------------------*/
 static void
 init(void)
@@ -128,22 +151,30 @@ send(mac_callback_t sent, void *ptr)
 	uip_ds6_nbr_t *nbr;
 	uint32_t len = packetbuf_datalen();
 	uint8_t *data = packetbuf_dataptr();
-	uint32_t space_left = packetbuf_remaininglen();
+	//uint32_t space_left = packetbuf_remaininglen();
 	uint8_t hotfix;
+	//TODO: buffer is not needed but good for debugging
 	uint8_t buf[100] = {0};
 
-	if(uip_conn->lport == UIP_HTONS(1883))
+	nbr = uip_ds6_nbr_lookup(&UIP_IP_BUF->destipaddr);
+	if(nbr == NULL){
+		return;
+	}
+
+	if(nbr->enable_encryption)
 	{
-		//nbr = uip_ds6_nbr_lookup(UIP_IP_BUF->srcipaddr);
+		nbr = uip_ds6_nbr_lookup(&UIP_IP_BUF->srcipaddr);
 		hotfix = len & 7;
-		if(hotfix && space_left > 8)
+		// TODO: add padding to buffer if there is room.
+		//if(hotfix && space_left > 8)
 		len -= hotfix;
 
 		memcpy(buf,data,len);
 
-		encipher_payload_xtea(buf,(void *)crypt_key32, len,*(uint64_t *)IV_crypt);
+		encipher_payload_xtea(buf,(void *)nbr->nbr_session_key, len,*(uint64_t *)IV_crypt);
 		memcpy(data,buf,len);
 		packetbuf_set_attr(PACKETBUF_ATTR_FRAME_TYPE, FRAME802154_DATAFRAME);
+		packetbuf_set_attr(PACKETBUF_ATTR_SECURITY_LEVEL, SEC_LVL);
 	}
 	NETSTACK_MAC.send(sent, ptr);
 }
@@ -151,21 +182,32 @@ send(mac_callback_t sent, void *ptr)
 static void
 input(void)
 {
+	uip_ds6_nbr_t *nbr;
 	uint32_t len = packetbuf_datalen();
 	uint8_t *data = packetbuf_dataptr();
 	uint8_t hotfix;
 	uint8_t buf[100] = {0};
+	uint8_t seqnr = packetbuf_attr(PACKETBUF_ATTR_MAC_SEQNO);
 
-	if(uip_conn->lport == UIP_HTONS(1883))
+	nbr = uip_ds6_nbr_lookup(&UIP_IP_BUF->srcipaddr);
+	if(nbr == NULL || (bufseqnr_check_dublicate(nbr,seqnr)== 1)){
+		return;
+	}
+
+	if(nbr->enable_encryption)
 	{
+
 		hotfix = len & 7;
 		len -= hotfix;
 
 		memcpy(buf,data,len);
 
-		decipher_payload_xtea(buf,(void *)crypt_key32, len,*(uint64_t *)IV_crypt);
+		decipher_payload_xtea(buf,(void *)nbr->nbr_session_key, len,*(uint64_t *)IV_crypt);
 		memcpy(data,buf,len);
+
+		bufseqnr_put(nbr,seqnr);
 	}
+
 	NETSTACK_NETWORK.input();
 }
 /*---------------------------------------------------------------------------*/

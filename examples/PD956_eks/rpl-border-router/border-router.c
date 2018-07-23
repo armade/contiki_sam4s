@@ -204,7 +204,7 @@ PT_THREAD(generate_routes(struct httpd_state *s))
       ipaddr_add(&nbr->ipaddr);
 #endif
 
-      ADD("\n");
+
 #if BUF_USES_STACK
       if(bufptr > bufend - 45) {
         SEND_STRING(&s->sout, buf);
@@ -216,6 +216,15 @@ PT_THREAD(generate_routes(struct httpd_state *s))
         blen = 0;
       }
 #endif
+      ADD(" SESSION KEY: ");
+      for(j=0;j<sizeof(nbr->nbr_session_key);j++)
+    	  ADD("%x", nbr->nbr_session_key[j]);
+
+      SEND_STRING(&s->sout, buf);
+      ADD(" SNR: %s", nbr->nbr_UUID);
+      ADD("\n");
+      SEND_STRING(&s->sout, buf);
+
   }
   ADD("</pre>Routes<pre>\n");
   SEND_STRING(&s->sout, buf);

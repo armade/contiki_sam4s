@@ -249,7 +249,9 @@ dis_input(void)
           PRINTLLADDR((uip_lladdr_t *)packetbuf_addr(PACKETBUF_ADDR_SENDER));
           PRINTF("\n");
         } else {
-		  //uECC_shared_secret(certificate_ptr->public_key, (void *)&device_certificate.private_key, nbr->nbr_session_key, uECC_secp256r1());
+		  uECC_shared_secret(certificate_ptr->public_key, (void *)&device_certificate.private_key, nbr->nbr_session_key, uECC_secp256r1());
+		  memcpy(nbr->nbr_UUID,certificate_ptr->snr,certificate_ptr->snlen);
+		  nbr->nbr_UUID[certificate_ptr->snlen]=0;
           PRINTF("RPL: Unicast DIS, reply to sender\n");
           dio_output(instance, &UIP_IP_BUF->srcipaddr);
         }
@@ -305,7 +307,8 @@ dio_input(void)
   uip_ipaddr_t from;
   uint8_t valid_frame = 0;
   crt_t *certificate_ptr;
-      	   static uint8_t hash[32] = {0};
+  static uint8_t hash[32] = {0};
+  uip_ds6_nbr_t *nbr;
 
   memset(&dio, 0, sizeof(dio));
 
@@ -480,6 +483,14 @@ dio_input(void)
     		   PRINTF("RPL: Incorrect certificate - discarding\n");
     		   goto discard;
     	   }
+
+
+    	   if((nbr = uip_ds6_nbr_lookup(&from)) == NULL) {
+			 goto discard;
+    	   }
+    	   uECC_shared_secret(certificate_ptr->public_key, (void *)&device_certificate.private_key, nbr->nbr_session_key, uECC_secp256r1());
+    	   memcpy(nbr->nbr_UUID,certificate_ptr->snr,certificate_ptr->snlen);
+		   nbr->nbr_UUID[certificate_ptr->snlen]=0;
     	   valid_frame = 1;
     	  break;
       default:
@@ -676,6 +687,9 @@ dao_input_storing(void)
   uint8_t prefixlen;
   uint8_t flags;
   uint8_t subopt_type;
+  crt_t *certificate_ptr;
+  static uint8_t hash[32] = {0};
+  uint8_t valid_frame = 0;
   /*
     uint8_t pathcontrol;
     uint8_t pathsequence;
@@ -780,7 +794,27 @@ dao_input_storing(void)
         lifetime = buffer[i + 5];
         /* The parent address is also ignored. */
         break;
+
+      case RPL_OPTION_CERTIFICATE:
+
+	   certificate_ptr = (crt_t *)&buffer[i + 2];
+	   sha2_sha256( (uint8_t *)&certificate_ptr->payloadfield_size_control, sizeof(certificate_ptr->payloadfield_size_control),hash);
+	   if (!uECC_verify((void *)&device_certificate.masterpublic_key, hash, sizeof(hash), certificate_ptr->signature, uECC_secp256r1())) {
+		   PRINTF("RPL: Incorrect certificate - discarding\n");
+		   uip_clear_buf();
+		   return;
+	   }
+
+
+	   valid_frame = 1;
+	  break;
     }
+  }
+
+  if(!valid_frame){
+  	  PRINTF("RPL: Unable to verify frame - discarding\n");
+  	  uip_clear_buf();
+  	  return;
   }
 
   PRINTF("RPL: DAO lifetime: %u, prefix length: %u prefix: ",
@@ -865,6 +899,9 @@ dao_input_storing(void)
     }
     return;
   }
+  uECC_shared_secret(certificate_ptr->public_key, (void *)&device_certificate.private_key, nbr->nbr_session_key, uECC_secp256r1());
+  memcpy(nbr->nbr_UUID,certificate_ptr->snr,certificate_ptr->snlen);
+  nbr->nbr_UUID[certificate_ptr->snlen]=0;
 
   rep = rpl_add_route(dag, &prefix, prefixlen, &dao_sender_addr);
   if(rep == NULL) {
@@ -1272,6 +1309,12 @@ dao_output_target_seq(rpl_parent_t *parent, uip_ipaddr_t *prefix,
     /* Send DAO to root */
     dest_ipaddr = &parent->dag->dag_id;
   }
+
+  // Apply certificate.
+   buffer[pos++] = RPL_OPTION_CERTIFICATE;
+   buffer[pos++] = sizeof(device_certificate.crt);
+   memcpy(&buffer[pos],(void *)&device_certificate.crt,sizeof(device_certificate.crt));
+   pos += sizeof(device_certificate.crt);
 
   PRINTF("RPL: Sending a %sDAO with sequence number %u, lifetime %u, prefix ",
          lifetime == RPL_ZERO_LIFETIME ? "No-Path " : "", seq_no, lifetime);

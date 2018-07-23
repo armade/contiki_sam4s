@@ -23,6 +23,8 @@
 
 #include <string.h>
 #include <strings.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 #define ADDRESS_CONVERSION_OK       1
 #define ADDRESS_CONVERSION_ERROR    0
@@ -524,7 +526,7 @@ defaults_post_handler(char *key, int key_len, char *val, int val_len)
     return HTTPD_SIMPLE_POST_HANDLER_UNKNOWN;
   }
 
-  cc26xx_web_demo_restore_defaults();
+  Restore_defaults();
 
   return HTTPD_SIMPLE_POST_HANDLER_OK;
 }
@@ -534,10 +536,10 @@ defaults_post_handler(char *key, int key_len, char *val, int val_len)
 static int
 sensor_readings_handler(char *key, int key_len, char *val, int val_len)
 {
-  cc26xx_web_demo_sensor_reading_t *reading = NULL;
+  MQTT_sensor_reading_t *reading = NULL;
   int ret;
 
-  for(reading = cc26xx_web_demo_sensor_first();
+  for(reading = MQTT_sensor_first();
       reading != NULL;
       reading = list_item_next(reading)) {
     if(key_len == strlen(reading->form_field) &&

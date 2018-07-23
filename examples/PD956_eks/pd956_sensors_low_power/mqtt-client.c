@@ -131,7 +131,7 @@ static uint16_t seq_nr_value = 0;
 /*---------------------------------------------------------------------------*/
 static uip_ip6addr_t def_route;
 /*---------------------------------------------------------------------------*/
-const static cc26xx_web_demo_sensor_reading_t *reading;
+const static MQTT_sensor_reading_t *reading;
 /*---------------------------------------------------------------------------*/
 mqtt_client_config_t *conf;
 process_event_t MQTT_publish_sensor_data_done_event;
@@ -491,15 +491,15 @@ static int init_config()
 	/* Populate configuration with default values */
 	memset(conf, 0, sizeof(mqtt_client_config_t));
 
-	memcpy(conf->Company, CC26XX_WEB_DEMO_DEFAULT_ORG_ID,
-			sizeof(CC26XX_WEB_DEMO_DEFAULT_ORG_ID));
-	memcpy(conf->Modul_type, CC26XX_WEB_DEMO_DEFAULT_TYPE_ID,
-			sizeof(CC26XX_WEB_DEMO_DEFAULT_TYPE_ID));
-	memcpy(conf->Username, CC26XX_WEB_DEMO_DEFAULT_EVENT_TYPE_ID, 7);
+	memcpy(conf->Company, DEFAULT_ORG_ID,
+			sizeof(DEFAULT_ORG_ID));
+	memcpy(conf->Modul_type, DEFAULT_TYPE_ID,
+			sizeof(DEFAULT_TYPE_ID));
+	memcpy(conf->Username, DEFAULT_EVENT_TYPE_ID, 7);
 	memcpy(conf->broker_ip, broker_ip, strlen(broker_ip));
 
-	conf->broker_port = CC26XX_WEB_DEMO_DEFAULT_BROKER_PORT;
-	conf->pub_interval = CC26XX_WEB_DEMO_DEFAULT_PUBLISH_INTERVAL;
+	conf->broker_port = DEFAULT_BROKER_PORT;
+	conf->pub_interval = DEFAULT_PUBLISH_INTERVAL;
 
 	return 1;
 }
@@ -534,7 +534,7 @@ static void publish(void)
 	remaining -= len;
 	buf_ptr += len;
 
-	for (reading = cc26xx_web_demo_sensor_first(); reading != NULL; reading =
+	for (reading = MQTT_sensor_first(); reading != NULL; reading =
 			reading->next)
 	{
 		if (reading->publish && reading->raw != SENSOR_ERROR)
@@ -624,7 +624,7 @@ static void state_machine(void)
 			connect_to_broker();
 		}
 		etimer_set(&publish_periodic_timer,
-		CC26XX_WEB_DEMO_NET_CONNECT_PERIODIC);
+				NET_CONNECT_PERIODIC);
 		return;
 
 	case MQTT_CLIENT_STATE_CONNECTING:
@@ -859,7 +859,7 @@ PROCESS_THREAD(mqtt_client_process, ev, data)
 			etimer_set(&publish_periodic_timer, NEW_CONFIG_WAIT_INTERVAL);
 		}
 
-		if (ev == cc26xx_web_demo_load_config_defaults)
+		if (ev == load_config_defaults)
 		{
 			init_config();
 			connect_to_broker();
