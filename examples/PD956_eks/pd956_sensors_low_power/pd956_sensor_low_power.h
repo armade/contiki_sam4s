@@ -46,8 +46,8 @@
  *   Main header file for the CC26XX web demo.
  */
 /*---------------------------------------------------------------------------*/
-#ifndef CC26XX_WEB_DEMO_H_
-#define CC26XX_WEB_DEMO_H_
+#ifndef PD956_SENSOR_LOW_POWER_H
+#define PD956_SENSOR_LOW_POWER_H
 /*---------------------------------------------------------------------------*/
 #include "dev/leds.h"
 #include "sys/process.h"
@@ -113,8 +113,8 @@ extern process_event_t Trig_sensors;
 /* A data type for sensor readings, internally stored in a linked list */
 #define CC26XX_WEB_DEMO_CONVERTED_LEN        12
 
-typedef struct cc26xx_web_demo_sensor_reading {
-  struct cc26xx_web_demo_sensor_reading *next;
+typedef struct sensor_reading {
+  struct sensor_reading *next;
   int raw;
   int last;
   const char *descr;
@@ -137,7 +137,7 @@ typedef struct cc26xx_web_demo_sensor_reading {
 } MQTT_sensor_reading_t;
 /*---------------------------------------------------------------------------*/
 /* Global configuration */
-typedef struct cc26xx_web_demo_config_s {
+typedef struct web_config_s {
   uint32_t magic;
   int len;
   uint32_t sensors_bitmap;
@@ -172,7 +172,7 @@ int ipaddr_sprintf(char *buf, uint8_t buf_len,
  */
 void Restore_defaults(void);
 /*---------------------------------------------------------------------------*/
-#endif /* CC26XX_WEB_DEMO_H_ */
+#endif /* PD956_SENSOR_LOW_POWER_H */
 /*---------------------------------------------------------------------------*/
 /**
  * @}

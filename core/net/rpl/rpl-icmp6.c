@@ -996,6 +996,9 @@ dao_input_nonstoring(void)
   int pos;
   int len;
   int i;
+  crt_t *certificate_ptr;
+    static uint8_t hash[32] = {0};
+    uint8_t valid_frame = 0;
 
   prefixlen = 0;
 
@@ -1051,7 +1054,25 @@ dao_input_nonstoring(void)
           memcpy(&dao_parent_addr, buffer + i + 6, 16);
         }
         break;
+
+      case RPL_OPTION_CERTIFICATE:
+
+	   certificate_ptr = (crt_t *)&buffer[i + 2];
+	   sha2_sha256( (uint8_t *)&certificate_ptr->payloadfield_size_control, sizeof(certificate_ptr->payloadfield_size_control),hash);
+	   if (!uECC_verify((void *)&device_certificate.masterpublic_key, hash, sizeof(hash), certificate_ptr->signature, uECC_secp256r1())) {
+		   PRINTF("RPL: Incorrect certificate - discarding\n");
+		   uip_clear_buf();
+		   return;
+	   }
+
+
+	   valid_frame = 1;
     }
+  }
+  if(!valid_frame){
+	  PRINTF("RPL: Unable to verify frame - discarding\n");
+	  uip_clear_buf();
+	  return;
   }
 
   PRINTF("RPL: DAO lifetime: %u, prefix length: %u prefix: ",

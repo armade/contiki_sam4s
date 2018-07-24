@@ -44,8 +44,6 @@
 #include "lib/list.h"
 #include "sys/process.h"
 #include "net/ipv6/sicslowpan.h"
-#include "button-sensor.h"
-//#include "batmon-sensor.h"
 #include "httpd-simple.h"
 #include "pd956_sensor_low_power.h"
 #include "mqtt-client.h"
@@ -57,10 +55,9 @@
 
 #include "PD_FLASH/FLASH_driver.h"
 
-//#include "ti-lib.h"
 /*---------------------------------------------------------------------------*/
 
-PROCESS(cc26xx_web_demo_process, "PD956 MQTT");
+PROCESS(PD956_MAIN_process, "PD956 MQTT");
 /*---------------------------------------------------------------------------*/
 /*
  * Update sensor readings in a staggered fashion every SENSOR_READING_PERIOD
@@ -224,7 +221,7 @@ static uint8_t load_config()
 }
 /*---------------------------------------------------------------------------*/
 /* Don't start everything here, we need to dictate order of initialisation */
-AUTOSTART_PROCESSES(&cc26xx_web_demo_process);
+AUTOSTART_PROCESSES(&PD956_MAIN_process);
 /*---------------------------------------------------------------------------*/
 int ipaddr_sprintf(char *buf, uint8_t buf_len,
 		const uip_ipaddr_t *addr)
@@ -579,7 +576,7 @@ register_http_post_handlers(void);
 
 uint32_t sensor_busy;
 /*---------------------------------------------------------------------------*/
-PROCESS_THREAD(cc26xx_web_demo_process, ev, data)
+PROCESS_THREAD(PD956_MAIN_process, ev, data)
 {
 	uint8_t ret;
 	PROCESS_BEGIN();

@@ -174,7 +174,7 @@ send(mac_callback_t sent, void *ptr)
 		encipher_payload_xtea(buf,(void *)nbr->nbr_session_key, len,*(uint64_t *)IV_crypt);
 		memcpy(data,buf,len);
 		packetbuf_set_attr(PACKETBUF_ATTR_FRAME_TYPE, FRAME802154_DATAFRAME);
-		packetbuf_set_attr(PACKETBUF_ATTR_SECURITY_LEVEL, SEC_LVL);
+		//packetbuf_set_attr(PACKETBUF_ATTR_SECURITY_LEVEL, SEC_LVL);
 	}
 	NETSTACK_MAC.send(sent, ptr);
 }
