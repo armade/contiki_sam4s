@@ -1363,12 +1363,33 @@ dao_ack_input(void)
   uint8_t status;
   rpl_instance_t *instance;
   rpl_parent_t *parent;
+  crt_t *certificate_ptr;
+  static uint8_t hash[32] = {0};
+  uip_ds6_nbr_t *nbr;
 
   buffer = UIP_ICMP_PAYLOAD;
 
   instance_id = buffer[0];
   sequence = buffer[2];
   status = buffer[3];
+
+  //buffer = UIP_ICMP_PAYLOAD;
+   certificate_ptr = (crt_t *)&buffer[4];
+   sha2_sha256( (uint8_t *)&certificate_ptr->payloadfield_size_control, sizeof(certificate_ptr->payloadfield_size_control),hash);
+   if (!uECC_verify((void *)&device_certificate.masterpublic_key, hash, sizeof(hash), certificate_ptr->signature, uECC_secp256r1())) {
+	  PRINTF("RPL: Incorrect certificate - discarding\n");
+	  uip_clear_buf();
+	  return;
+   }
+
+
+   if((nbr = uip_ds6_nbr_lookup(&UIP_IP_BUF->srcipaddr)) == NULL) {
+	  uip_clear_buf();
+	  return;
+   }
+   uECC_shared_secret(certificate_ptr->public_key, (void *)&device_certificate.private_key, nbr->nbr_session_key, uECC_secp256r1());
+   memcpy(nbr->nbr_UUID,certificate_ptr->snr,certificate_ptr->snlen);
+   nbr->nbr_UUID[certificate_ptr->snlen]=0;
 
   instance = rpl_get_instance(instance_id);
   if(instance == NULL) {
@@ -1463,8 +1484,9 @@ dao_ack_output(rpl_instance_t *instance, uip_ipaddr_t *dest, uint8_t sequence,
   buffer[1] = 0;
   buffer[2] = sequence;
   buffer[3] = status;
+  memcpy(&buffer[4],(void *)&device_certificate.crt,sizeof(device_certificate.crt));
 
-  uip_icmp6_send(dest, ICMP6_RPL, RPL_CODE_DAO_ACK, 4);
+  uip_icmp6_send(dest, ICMP6_RPL, RPL_CODE_DAO_ACK, 4+sizeof(device_certificate.crt));
 #endif /* RPL_WITH_DAO_ACK */
 }
 /*---------------------------------------------------------------------------*/

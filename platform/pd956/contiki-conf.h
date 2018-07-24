@@ -55,7 +55,7 @@
 #define RDC_CONF_MCU_SLEEP				1
 //#define NETSTACK_RDC_CHANNEL_CHECK_RATE 16
 //#define RDC_CONF_MCU_SLEEP				1
-
+#define RPL_CONF_WITH_DAO_ACK          1
 
 #define CCIF
 #define CLIF
