@@ -486,6 +486,7 @@ dio_input(void)
 
 
     	   if((nbr = uip_ds6_nbr_lookup(&from)) == NULL) {
+    		   PRINTF("RPL: Neighbor not found (dio) - discarding\n");
 			 goto discard;
     	   }
     	   uECC_shared_secret(certificate_ptr->public_key, (void *)&device_certificate.private_key, nbr->nbr_session_key, uECC_secp256r1());
@@ -797,17 +798,19 @@ dao_input_storing(void)
 
       case RPL_OPTION_CERTIFICATE:
 
-	   certificate_ptr = (crt_t *)&buffer[i + 2];
-	   sha2_sha256( (uint8_t *)&certificate_ptr->payloadfield_size_control, sizeof(certificate_ptr->payloadfield_size_control),hash);
-	   if (!uECC_verify((void *)&device_certificate.masterpublic_key, hash, sizeof(hash), certificate_ptr->signature, uECC_secp256r1())) {
+	    certificate_ptr = (crt_t *)&buffer[i + 2];
+	    sha2_sha256( (uint8_t *)&certificate_ptr->payloadfield_size_control, sizeof(certificate_ptr->payloadfield_size_control),hash);
+	    if (!uECC_verify((void *)&device_certificate.masterpublic_key, hash, sizeof(hash), certificate_ptr->signature, uECC_secp256r1())) {
 		   PRINTF("RPL: Incorrect certificate - discarding\n");
 		   uip_clear_buf();
 		   return;
-	   }
+	    }
+	    valid_frame = 1;
+	    break;
 
-
-	   valid_frame = 1;
-	  break;
+      default:
+        PRINTF("RPL: Unsupported suboption type in DAO: %u\n",
+              (unsigned)subopt_type);
     }
   }
 
@@ -1057,16 +1060,19 @@ dao_input_nonstoring(void)
 
       case RPL_OPTION_CERTIFICATE:
 
-	   certificate_ptr = (crt_t *)&buffer[i + 2];
-	   sha2_sha256( (uint8_t *)&certificate_ptr->payloadfield_size_control, sizeof(certificate_ptr->payloadfield_size_control),hash);
-	   if (!uECC_verify((void *)&device_certificate.masterpublic_key, hash, sizeof(hash), certificate_ptr->signature, uECC_secp256r1())) {
+	    certificate_ptr = (crt_t *)&buffer[i + 2];
+	    sha2_sha256( (uint8_t *)&certificate_ptr->payloadfield_size_control, sizeof(certificate_ptr->payloadfield_size_control),hash);
+	    if (!uECC_verify((void *)&device_certificate.masterpublic_key, hash, sizeof(hash), certificate_ptr->signature, uECC_secp256r1())) {
 		   PRINTF("RPL: Incorrect certificate - discarding\n");
 		   uip_clear_buf();
 		   return;
-	   }
+	    }
+	    valid_frame = 1;
+	    break;
 
-
-	   valid_frame = 1;
+      default:
+        PRINTF("RPL: Unsupported suboption type in DAO: %u\n",
+              (unsigned)subopt_type);
     }
   }
   if(!valid_frame){
@@ -1373,7 +1379,6 @@ dao_ack_input(void)
   sequence = buffer[2];
   status = buffer[3];
 
-  //buffer = UIP_ICMP_PAYLOAD;
    certificate_ptr = (crt_t *)&buffer[4];
    sha2_sha256( (uint8_t *)&certificate_ptr->payloadfield_size_control, sizeof(certificate_ptr->payloadfield_size_control),hash);
    if (!uECC_verify((void *)&device_certificate.masterpublic_key, hash, sizeof(hash), certificate_ptr->signature, uECC_secp256r1())) {
@@ -1384,6 +1389,7 @@ dao_ack_input(void)
 
 
    if((nbr = uip_ds6_nbr_lookup(&UIP_IP_BUF->srcipaddr)) == NULL) {
+	   PRINTF("RPL: Neighbor not found (ack) - discarding\n");
 	  uip_clear_buf();
 	  return;
    }

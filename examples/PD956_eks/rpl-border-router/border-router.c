@@ -49,6 +49,7 @@
 #include "dev/button-sensor.h"
 #include "dev/slip.h"
 #include "ADC_temp.h"
+#include "ip64.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -62,6 +63,40 @@ static uip_ipaddr_t prefix;
 static uint8_t prefix_set;
 
 PROCESS(border_router_process, "Border router process");
+
+static const char *http_config_css2[] = {
+	"<style>",
+	"h1 {",
+	"	font-family: \"Verdana\";",
+	"    border-radius: 2px;",
+	"	background-color: #2196F3;"
+	"	color: white;",
+	"	padding-left:30px;",
+	"   font-size:12px;",
+	"}",
+	"h0 {",
+	"	font-family: \"Verdana\";",
+	"	color: black;",
+	"	padding-left:30px;",
+	"    font-size:22px;",
+	"}",
+	"table {",
+	"    font-family: arial, sans-serif;",
+	"    border-collapse: collapse;",
+	"    width: 100%;",
+	"    font-size:12px;",
+	"}",
+	"td, th {",
+	"    border: 0px solid #dddddd;",
+	"    text-align: left;",
+	"    padding: 2px;",
+	"}",
+	"tr:nth-child(even) {",
+	"    background-color: #d5d5dd;",
+	"}",
+	"</style>",
+  NULL
+};
 
 #if WEBSERVER==0
 /* No webserver */
@@ -216,9 +251,10 @@ PT_THREAD(generate_routes(struct httpd_state *s))
         blen = 0;
       }
 #endif
+      uint8_t k;
       ADD(" SESSION KEY: ");
-      for(j=0;j<sizeof(nbr->nbr_session_key);j++)
-    	  ADD("%x", nbr->nbr_session_key[j]);
+      for(k=0;k<sizeof(nbr->nbr_session_key);k++)
+    	  ADD("%x", nbr->nbr_session_key[k]);
 
       SEND_STRING(&s->sout, buf);
       ADD(" SNR: %s", nbr->nbr_UUID);
@@ -410,7 +446,7 @@ set_prefix_64(uip_ipaddr_t *prefix_64)
 PROCESS_THREAD(border_router_process, ev, data)
 {
   static struct etimer et;
-
+  uip_ip4addr_t ipv4addr, netmask;
   PROCESS_BEGIN();
 
 /* While waiting for the prefix to be sent through the SLIP connection, the future
@@ -423,7 +459,6 @@ PROCESS_THREAD(border_router_process, ev, data)
 
   PROCESS_PAUSE();
 
-
   PRINTF("RPL-Border router started\n");
   /* Request prefix until it has been received */
   while(!prefix_set) {
@@ -431,6 +466,14 @@ PROCESS_THREAD(border_router_process, ev, data)
     request_prefix();
     PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
   }
+
+  ip64_init();
+  /* Start the SLIP */
+/*  printf("Initiating SLIP with IP address is 42.10.0.7.\n");
+
+  uip_ipaddr(&ipv4addr, 42, 10, 0, 7);
+  uip_ipaddr(&netmask, 255, 255, 255, 0);
+  ip64_set_ipv4_address(&ipv4addr, &netmask);*/
 
   /* Now turn the radio on, but disable radio duty cycling.
    * Since we are the DAG root, reception delays would constrain mesh throughput.
