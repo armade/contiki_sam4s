@@ -10,9 +10,9 @@
 #include "udi_cdc.h"
 #include "uart.h"
 #include "sam4s.h"
-#include "gpsd.h"
+extern void gpsd_put_char(uint8_t c);
 
-
+#ifndef NODE_ROUTER
 
 void UART1_Handler(void)
 {
@@ -43,3 +43,4 @@ void gpsd_arch_init(void)
 	// Enable UART IRQ
 	uart_enable_interrupt(UART1, US_IER_RXRDY);
 }
+#endif

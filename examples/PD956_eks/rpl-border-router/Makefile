@@ -8,7 +8,6 @@ SMALL=1
 
 CFLAGS += -DPROJECT_CONF_H=\"project-conf.h\" -DLOW_CLOCK=0 -DNODE_ROUTER=1
 PROJECT_SOURCEFILES += slip-bridge.c
-APPS +=  gpsd
 
 #Simple built-in webserver is the default.
 #Override with make WITH_WEBSERVER=0 for no webserver.
@@ -26,16 +25,9 @@ ifeq ($(MAKE_WITH_NON_STORING),1)
 CFLAGS += -DWITH_NON_STORING=1
 endif
 
-WITH_WEBSERVER=1
-ifeq ($(WITH_WEBSERVER),1)
 CFLAGS += -DUIP_CONF_TCP=1
-CFLAGS += -DWEBSERVER=1
 PROJECT_SOURCEFILES += httpd-simple.c
-else ifneq ($(WITH_WEBSERVER), 0)
-APPS += $(WITH_WEBSERVER)
-CFLAGS += -DUIP_CONF_TCP=1
-CFLAGS += -DWEBSERVER=2
-endif
+
 
 ifeq ($(PREFIX),)
  PREFIX = aaaa::1/64
