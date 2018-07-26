@@ -485,13 +485,13 @@ dio_input(void)
     	   }
 
 
-    	   if((nbr = uip_ds6_nbr_lookup(&from)) == NULL) {
-    		   PRINTF("RPL: Neighbor not found (dio) - discarding\n");
-			 goto discard;
-    	   }
-    	   uECC_shared_secret(certificate_ptr->public_key, (void *)&device_certificate.private_key, nbr->nbr_session_key, uECC_secp256r1());
-    	   memcpy(nbr->nbr_UUID,certificate_ptr->snr,certificate_ptr->snlen);
-		   nbr->nbr_UUID[certificate_ptr->snlen]=0;
+//    	   if((nbr = uip_ds6_nbr_lookup(&from)) == NULL) {
+//    		   PRINTF("RPL: Neighbor not found (dio) - discarding\n");
+//			 goto discard;
+//    	   }
+//    	   uECC_shared_secret(certificate_ptr->public_key, (void *)&device_certificate.private_key, nbr->nbr_session_key, uECC_secp256r1());
+//    	   memcpy(nbr->nbr_UUID,certificate_ptr->snr,certificate_ptr->snlen);
+//		   nbr->nbr_UUID[certificate_ptr->snlen]=0;
     	   valid_frame = 1;
     	  break;
       default:

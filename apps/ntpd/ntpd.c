@@ -138,11 +138,11 @@ static void Send_NTP_time_to_parrent(void)
 	}
 }
 /*---------------------------------------------------------------------------*/
-/*static void
+static void
  set_connection_address(uip_ipaddr_t *ipaddr)
  {
 	uip_ip6addr(ipaddr,0xaaaa,0,0,0,0,0,0,0x0001);
- }*/
+ }
 /*---------------------------------------------------------------------------*/
 PROCESS_THREAD(ntpd_process, ev, data)
 {
@@ -153,31 +153,31 @@ PROCESS_THREAD(ntpd_process, ev, data)
 	PROCESS_BEGIN();
 	PRINTF("ntpd process started\n");
 
-	//set_connection_address(&ipaddr);
+	set_connection_address(&ipaddr);
 
 	/* find the IP of router */
 	//etimer_set(&et, CLOCK_SECOND);
-	while(1){
-		if(uip_ds6_defrt_choose()){
-			uip_ipaddr_copy(&ipaddr, uip_ds6_defrt_choose());
-			break;
-		}
-		etimer_set(&et, CLOCK_SECOND);
-		PROCESS_YIELD_UNTIL(etimer_expired(&et));
-	}
+//	while(1){
+//		if(uip_ds6_defrt_choose()){
+//			uip_ipaddr_copy(&ipaddr, uip_ds6_defrt_choose());
+//			break;
+//		}
+//		etimer_set(&et, CLOCK_SECOND);
+//		PROCESS_YIELD_UNTIL(etimer_expired(&et));
+//	}
 
 	/* new connection with remote host */
 	ntp_conn = udp_new(&ipaddr, UIP_HTONS(NTPD_PORT), NULL);
 
-	etimer_set(&et, SEND_INTERVAL * CLOCK_SECOND);
+	etimer_set(&et, 10 * CLOCK_SECOND);
 	etimer_set(&Update_parrent_timer, 60 * CLOCK_SECOND);
 	while(1){
 		PROCESS_YIELD();
 		if(etimer_expired(&et)){
 			Send_NTP_request();
-			etimer_set(&et, SEND_INTERVAL * CLOCK_SECOND);
+			etimer_set(&et, /*SEND_INTERVAL*/10 * CLOCK_SECOND);
 		}else if(etimer_expired(&Update_parrent_timer)){
-			Send_NTP_time_to_parrent();
+			//Send_NTP_time_to_parrent();
 			etimer_set(&Update_parrent_timer, 60 * CLOCK_SECOND);
 		}else if(ev == tcpip_event){
 			tcpip_handler();

@@ -119,7 +119,7 @@ int main()
 	sleepmgr_lock_mode(SLEEPMGR_SLEEP_WFI);
 	while(1){
 		while(process_run());
-		sleepmgr_enter_sleep();
+		//sleepmgr_enter_sleep();
 	}
 	return 0;
 }

@@ -55,6 +55,7 @@ static const char *clock_js[] = {
 		"ctx.fillStyle='silver';",
 		"ctx.fillText(time,canvas.width/2-35,canvas.height/2+30);}",
 "</script>",
+NULL
 };
 
 

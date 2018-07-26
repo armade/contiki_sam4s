@@ -191,7 +191,7 @@ static const char *http_config_css[] = {
       "margin-left:30px;",
       "font-family:Verdana;",
       "border-collapse:collapse;",
-      "width:90%;",
+      "width:90%%;",
       "font-size:12px;",
   "}td,th{",
       "border: 0px solid #dddddd;",
@@ -494,18 +494,7 @@ PT_THREAD(generate_index(struct httpd_state *s))
   PT_WAIT_THREAD(&s->generate_pt,
                        enqueue_chunk(s, 0, "</table>"));
 
-//======================================================================================
-  /* Default Route */
-  PT_WAIT_THREAD(&s->generate_pt,
-                    enqueue_chunk(s, 0, "<h1>Default Route</h1>"));
-  PT_WAIT_THREAD(&s->generate_pt,
-                      enqueue_chunk(s, 0, "<p>"));
-  memset(ipaddr_buf, 0, IPADDR_BUF_LEN);
-  ipaddr_sprintf(ipaddr_buf, IPADDR_BUF_LEN,
-                                 uip_ds6_defrt_choose());
-  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "%s", ipaddr_buf));
-  PT_WAIT_THREAD(&s->generate_pt,
-                      enqueue_chunk(s, 0, "</p>"));
+
 //======================================================================================
   /* Routes */
 
@@ -559,11 +548,12 @@ PT_THREAD(generate_index(struct httpd_state *s))
   PT_WAIT_THREAD(&s->generate_pt,
                       enqueue_chunk(s, 0, "</p>"));
 
+  // Just for fun
+   PT_WAIT_THREAD(&s->generate_pt,
+   		run_java_script(s, clock_js));
   PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 1, http_bottom));
 
-  // Just for fun
-  PT_WAIT_THREAD(&s->generate_pt,
-  		run_java_script(s, clock_js));
+
 
   PT_END(&s->generate_pt);
 }

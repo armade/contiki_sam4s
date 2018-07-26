@@ -50,6 +50,7 @@
 #include "dev/slip.h"
 #include "ADC_temp.h"
 #include "ip64.h"
+#include "ntpd.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -147,7 +148,8 @@ PROCESS_THREAD(border_router_process, ev, data)
     PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
   }
   process_start(&httpd_simple_process, NULL);
-  ip64_init();
+  //ip64_init();
+  process_start(&ntpd_process, NULL);
   /* Start the SLIP */
 /*  printf("Initiating SLIP with IP address is 42.10.0.7.\n");
 

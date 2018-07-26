@@ -55,6 +55,11 @@
  * Shrink the size of the uIP buffer, routing table and ND cache.
  * Set the TCP MSS
  */
+
+#include "net/ipv6/multicast/uip-mcast6-engines.h"
+
+/* Change this to switch engines. Engine codes in uip-mcast6-engines.h */
+#define UIP_MCAST6_CONF_ENGINE UIP_MCAST6_ENGINE_ROLL_TM
 /*#ifndef UIP_CONF_BUFFER_SIZE
 #define UIP_CONF_BUFFER_SIZE                900
 #define NBR_TABLE_CONF_MAX_NEIGHBORS          5
