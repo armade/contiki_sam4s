@@ -115,10 +115,13 @@ int main()
 	printf("Processes running\n");
 
 	// Power down between tasks, when cpu is in idle
-	sleepmgr_init();
-	sleepmgr_lock_mode(SLEEPMGR_SLEEP_WFI);
+	//sleepmgr_init();
+	//sleepmgr_lock_mode(SLEEPMGR_SLEEP_WFI);
 	while(1){
 		while(process_run());
+		// This will stop the clock.
+		// Not worth it since we power down
+		// when needed.
 		//sleepmgr_enter_sleep();
 	}
 	return 0;

@@ -473,7 +473,7 @@ PT_THREAD(generate_index(struct httpd_state *s))
                    enqueue_chunk(s, 0, "<h1>Neighbors</h1>"));
 
   PT_WAIT_THREAD(&s->generate_pt,
-                     enqueue_chunk(s, 0, "<table><tr><th>IP addr</th><th>Status</th></tr>"));
+                     enqueue_chunk(s, 0, "<table><tr><th>IP addr</th><th>Status</th><th>SESSION KEY</th><th>UUID</th></tr>"));
 
   for(s->nbr = nbr_table_head(ds6_neighbors); s->nbr != NULL;
       s->nbr = nbr_table_next(ds6_neighbors, s->nbr)) {
@@ -487,6 +487,12 @@ PT_THREAD(generate_index(struct httpd_state *s))
     memset(ipaddr_buf, 0, IPADDR_BUF_LEN);
     get_neighbour_state_text(ipaddr_buf, s->nbr->state);
     PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<td>%s</td>", ipaddr_buf));
+
+    memset(ipaddr_buf, 0, IPADDR_BUF_LEN);
+    sprintf(ipaddr_buf,"%x",s->nbr->nbr_session_key);
+    PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<td>%s</td>", ipaddr_buf));
+
+    PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<td>%s</td>", s->nbr->nbr_UUID));
 
     PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "</tr>"));
   }
