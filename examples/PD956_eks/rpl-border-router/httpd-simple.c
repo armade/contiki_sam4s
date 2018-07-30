@@ -200,8 +200,21 @@ static const char *http_config_css[] = {
       "padding-left:45px;",
   "}tr:nth-child(even){",
       "background-color:#d5d5dd;",
-  "}th { background-color: #2196F3;color:white;}",
+  "}th {"
+      "background-color: #2196F3;color:white;}",
   "tr:hover {background-color: #40c0c0}",
+  "ul {"
+  	  "list-style-type: none;",
+  	  "margin: 0; padding: 0;",
+  	  "overflow: hidden;background-color: #2196F3;"
+   "}li {"
+  	  "float: left;"
+  	  "border-right: 1px solid #bbb;",
+   "}li a{"
+  	  "display: block;",
+  	  "color: white; text-align: center;",
+  	  "padding: 14px 16px; text-decoration: none;",
+   "}li a:hover { background-color: #111;}",
   "</style>",
   NULL
 };
@@ -330,6 +343,37 @@ httpd_simple_register_post_handler(httpd_simple_post_handler_t *h)
   list_add(post_handlers, h);
 }
 /*---------------------------------------------------------------------------*/
+
+static int
+timestamp_post_handler(char *key, int key_len, char *val, int val_len)
+{
+  clock_time_t unixtime;
+  char *endptr;
+  uint8_t stranum;
+
+  if(key_len != strlen("Timestamp") ||
+     strncasecmp(key, "Timestamp", strlen("Timestamp")) != 0) {
+    /* Not ours */
+    return HTTPD_SIMPLE_POST_HANDLER_UNKNOWN;
+  }
+
+  unixtime = strtoul(val,&endptr,10);
+
+   if(unixtime < 1514764800) { //Monday, 01/01-2018 00:00:00 UTC
+     return HTTPD_SIMPLE_POST_HANDLER_ERROR;
+   }
+
+  asm volatile("NOP");
+  stranum = clock_quality(-1);
+  if(stranum > 14){
+	clock_set_unix_time(unixtime);
+	clock_quality(14);
+  }
+
+   return HTTPD_SIMPLE_POST_HANDLER_OK;
+}
+HTTPD_SIMPLE_POST_HANDLER(timestamp,timestamp_post_handler);
+/*---------------------------------------------------------------------------*/
 static void
 get_neighbour_state_text(char *buf, uint8_t state)
 {
@@ -454,6 +498,7 @@ static
 PT_THREAD(generate_index(struct httpd_state *s))
 {
   char ipaddr_buf[IPADDR_BUF_LEN]; /* Intentionally on stack */
+  uint8_t i;
 
   PT_BEGIN(&s->generate_pt);
 
@@ -488,8 +533,10 @@ PT_THREAD(generate_index(struct httpd_state *s))
     get_neighbour_state_text(ipaddr_buf, s->nbr->state);
     PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<td>%s</td>", ipaddr_buf));
 
+    // Just to test
     memset(ipaddr_buf, 0, IPADDR_BUF_LEN);
-    sprintf(ipaddr_buf,"%x",s->nbr->nbr_session_key);
+    for(i=0;i<sizeof(s->nbr->nbr_session_key);i++)
+    	sprintf(&ipaddr_buf[i],"%x",s->nbr->nbr_session_key[i]);
     PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<td>%s</td>", ipaddr_buf));
 
     PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<td>%s</td>", s->nbr->nbr_UUID));
@@ -554,12 +601,61 @@ PT_THREAD(generate_index(struct httpd_state *s))
   PT_WAIT_THREAD(&s->generate_pt,
                       enqueue_chunk(s, 0, "</p>"));
 
+  //======================================================================================
+  // Internal clock
+  clock_time_t clk = clock_get_unix_time();
+  tm_t tb;
+  UnixtoRTC(&tb, clk);
+
+  PT_WAIT_THREAD(&s->generate_pt,
+                         enqueue_chunk(s, 0, "<p>"));
+  PT_WAIT_THREAD(&s->generate_pt,
+                       enqueue_chunk(s, 0, "d: %d/%d-%d       %d:%d:%d",
+                      		 tb.tm_mday,
+  							 tb.tm_mon,
+  							 tb.tm_year,
+                             tb.tm_hour,
+  							 tb.tm_min,
+  							 tb.tm_sec));
+
+  PT_WAIT_THREAD(&s->generate_pt,
+                         enqueue_chunk(s, 0, "</p>"));
+
+  //======================================================================================
+  //======================================================================================
+
+  PT_WAIT_THREAD(&s->generate_pt,	enqueue_chunk(s, 0,"<form name=\"input\" action=\"%s\" ",
+		  	  	  	  	  	  	  http_index_page.filename));
+    PT_WAIT_THREAD(&s->generate_pt,	enqueue_chunk(s, 0, "method=\"post\" enctype=\""));
+    PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "application/x-www-form-urlencoded\" "));
+    PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "accept-charset=\"UTF-8\">"));
+
+    //PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0,"<p>"));
+    PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<input type=\"datetime-local\" id=\"demo2\" name=\"Timestamp\">"));
+    PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<button onclick=\"myFunction()\" type=\"submit\" value=\"Submit\">Get time </button>"));
+
+    PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<script> function myFunction() {"));
+    PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "var d = new Date(); var n = d.getTime();"));
+    PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "document.getElementById(\"demo2\").value = Math.floor(n/1000);}"));
+    PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "</script>"));
+
+    //PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "</p>"));
+    PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "</form>"));
+
+
+//  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<button onclick=\"myFunction()\" type=\"submit\" value=\"Submit\">Get time </button>"));
+//  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<input type=\"number\" id=\"demo2\" name=\"Timestamp\">"));
+//  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "script> function myFunction() {"));
+//  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "var d = new Date(); var n = d.getTime();"));
+//  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "document.getElementById(\"demo2\").value = Math.floor(n/1000);"));
+//  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "}</script>"));
+
+  //======================================================================================
+  //======================================================================================
   // Just for fun
-   PT_WAIT_THREAD(&s->generate_pt,
-   		run_java_script(s, clock_js));
+  PT_WAIT_THREAD(&s->generate_pt,
+    		run_java_script(s, clock_js));
   PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 1, http_bottom));
-
-
 
   PT_END(&s->generate_pt);
 }
@@ -977,6 +1073,8 @@ init(void)
   memb_init(&conns);
 
   list_add(pages_list, &http_index_page);
+
+  httpd_simple_register_post_handler(&timestamp_handler);
 
 }
 /*---------------------------------------------------------------------------*/
