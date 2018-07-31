@@ -20,6 +20,7 @@
 #include "pd956_sensor_low_power.h"
 #include "httpd-simple.h"
 #include "mqtt-client.h"
+#include "clock.h"
 
 #include <string.h>
 #include <strings.h>

@@ -278,6 +278,7 @@ struct httpd_state {
   struct pt outputpt;
   struct pt generate_pt;
   struct pt top_matter_pt;
+  struct pt js_pt;
   char state;
   char request_type;
   char return_code;
@@ -482,13 +483,20 @@ PT_THREAD(generate_top_matter(struct httpd_state *s, const char *title,
 static
 PT_THREAD(run_java_script(struct httpd_state *s, const char **script_js))
 {
-	 PT_BEGIN(&s->top_matter_pt);
+	 PT_BEGIN(&s->js_pt);
+
+	 asm volatile ("NOP");
+	 asm volatile ("NOP");
+	 asm volatile ("NOP");
 	 if(script_js != NULL) {
+		 asm volatile ("NOP");
+		 	 asm volatile ("NOP");
+		 	 asm volatile ("NOP");
 		for(s->ptr = script_js; *(s->ptr) != NULL; s->ptr++) {
-		  PT_WAIT_THREAD(&s->top_matter_pt, enqueue_chunk(s, 0, *(s->ptr)));
+		  PT_WAIT_THREAD(&s->js_pt, enqueue_chunk(s, 0, *(s->ptr)));
 		}
 	 }
-	 PT_END(&s->top_matter_pt);
+	 PT_END(&s->js_pt);
 }
 
 
@@ -611,15 +619,15 @@ PT_THREAD(generate_index(struct httpd_state *s))
   ADD("%s","<input type=\"hidden\" id=\"rc2\" name=\"Timestamp\">");
   ADD("%s","<button onclick=\"Get_time()\" type=\"submit\" value=\"Submit\">Set time from browser</button>");
 
-//    PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<script> function Get_time() {"));
-//    PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "var d = new Date(); var n = d.getTime();"));
-//    PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "document.getElementById(\"rc2\").value = Math.floor(n/1000);}"));
-//    PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "</script>"));
+    PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<script> function Get_time() {"));
+    PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "var d = new Date(); var n = d.getTime();"));
+    PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "document.getElementById(\"rc2\").value = Math.floor(n/1000);}"));
+    PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "</script>"));
 
   ADD("%s","</form>");
 
   //======================================================================================
-  PT_WAIT_THREAD(&s->generate_pt, run_java_script(s, Get_time_js));
+
   //======================================================================================
   // Just for fun
   PT_WAIT_THREAD(&s->generate_pt, run_java_script(s, clock_js));

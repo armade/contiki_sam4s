@@ -40,7 +40,7 @@ static unsigned short SEND_INTERVAL = 60 * 60; // every hour
 static unsigned long StartTime = 0;
 static unsigned long CurrTime = 0;
 
-static const ntp_packet_t ntpmsg = { .li = 0, .ver = 3, .mode = 3, 0 };
+static ntp_packet_t ntpmsg;
 
 static struct uip_udp_conn *ntp_conn;
 PROCESS(ntpd_process, "ntpd");
@@ -69,7 +69,7 @@ unsigned long getCurrTime(void)
 static void tcpip_handler(void)
 {
 	ntp_packet_t * NTP = (ntp_packet_t *) uip_appdata;
-	ntp_packet_t NTP_server = { .li = 0, .ver = 3, .mode = 4, 0 };
+	ntp_packet_t NTP_server;
 	clock_time_t time;
 	uint8_t current_stranum;
 
@@ -94,6 +94,8 @@ static void tcpip_handler(void)
 			case 3: // Someone is asking us for the time
 				time = clock_get_unix_time();
 				if(time){
+					NTP_server.mode = 4;
+					NTP_server.ver = 3;
 					NTP_server.stratum = clock_quality(READ_STRANUM);
 					NTP_server.tx_Time_s = uip_ntohl(time + NTP_EPOCH);
 
@@ -116,6 +118,8 @@ static void tcpip_handler(void)
 /*---------------------------------------------------------------------------*/
 static void Send_NTP_request(void)
 {
+	ntpmsg.mode = 3;
+	ntpmsg.ver = 3;
 	// Request time
 	uip_udp_packet_send(ntp_conn, &ntpmsg, 48);
 	// Wait 50 ms for response
