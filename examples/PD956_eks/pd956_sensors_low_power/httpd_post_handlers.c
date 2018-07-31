@@ -531,7 +531,33 @@ defaults_post_handler(char *key, int key_len, char *val, int val_len)
   return HTTPD_SIMPLE_POST_HANDLER_OK;
 }
 /*---------------------------------------------------------------------------*/
+static int
+timestamp_post_handler(char *key, int key_len, char *val, int val_len)
+{
+  clock_time_t unixtime;
+  char *endptr;
 
+  if(key_len != strlen("Timestamp") ||
+     strncasecmp(key, "Timestamp", strlen("Timestamp")) != 0) {
+    /* Not ours */
+    return HTTPD_SIMPLE_POST_HANDLER_UNKNOWN;
+  }
+
+  unixtime = strtoul(val,&endptr,10);
+
+   if(unixtime < 1514764800) { //Monday, 01/01-2018 00:00:00 UTC
+     return HTTPD_SIMPLE_POST_HANDLER_ERROR;
+   }
+
+  if(clock_quality(READ_STRANUM) > PC_TIME){
+	clock_set_unix_time(unixtime,1);
+	clock_quality(PC_TIME);
+  }
+
+   return HTTPD_SIMPLE_POST_HANDLER_OK;
+}
+
+/*---------------------------------------------------------------------------*/
 
 static int
 sensor_readings_handler(char *key, int key_len, char *val, int val_len)
@@ -590,6 +616,7 @@ HTTPD_SIMPLE_POST_HANDLER(reconnect, reconnect_post_handler);
 HTTPD_SIMPLE_POST_HANDLER(sensor, sensor_readings_handler);
 HTTPD_SIMPLE_POST_HANDLER(defaults, defaults_post_handler);
 /*---------------------------------------------------------------------------*/
+HTTPD_SIMPLE_POST_HANDLER(timestamp,timestamp_post_handler);
 
 
 void
@@ -617,6 +644,7 @@ register_http_post_handlers(void)
 	httpd_simple_register_post_handler(&ip_addr_handler);
 	httpd_simple_register_post_handler(&reconnect_handler);
 
-	 httpd_simple_register_post_handler(&sensor_handler);
-	  httpd_simple_register_post_handler(&defaults_handler);
+	httpd_simple_register_post_handler(&sensor_handler);
+	httpd_simple_register_post_handler(&defaults_handler);
+	httpd_simple_register_post_handler(&timestamp_handler);
 }

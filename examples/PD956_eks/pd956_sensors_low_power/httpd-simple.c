@@ -630,6 +630,28 @@ PT_THREAD(generate_index(struct httpd_state *s))
   PT_WAIT_THREAD(&s->generate_pt,
                       enqueue_chunk(s, 0, "</p>"));
 
+
+  //======================================================================================
+  //Set the time on the device. Javascript asks for the time and pass it on to the device
+  // as a Timestamp handle.
+
+  PT_WAIT_THREAD(&s->generate_pt,	enqueue_chunk(s, 0,"<form name=\"input\" action=\"%s\" ",
+		  	  	  	  	  	  	  http_index_page.filename));
+    PT_WAIT_THREAD(&s->generate_pt,	enqueue_chunk(s, 0, "method=\"post\" enctype=\""));
+    PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "application/x-www-form-urlencoded\" "));
+    PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "accept-charset=\"UTF-8\">"));
+
+    PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<input type=\"hidden\" id=\"rc2\" name=\"Timestamp\">"));
+    PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<button onclick=\"Get_time()\" type=\"submit\""));
+    PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, " value=\"Submit\">Set time from browser</button>"));
+
+    PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<script> function Get_time() {"));
+    PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "var d = new Date(); var n = d.getTime();"));
+    PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "document.getElementById(\"rc2\").value = Math.floor(n/1000);}"));
+    PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "</script>"));
+
+    PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "</form>"));
+    //======================================================================================
   PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 1, http_bottom));
 
   PT_END(&s->generate_pt);

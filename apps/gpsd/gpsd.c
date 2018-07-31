@@ -149,7 +149,7 @@ int parse_sentence(char *line)
 				time.tm_year = frame_zda.date.year;
 
 				clock_time_t unixtime = RtctoUnix(&time);
-				clock_set_unix_time(unixtime);
+				clock_set_unix_time(unixtime,1);
 				clock_quality(GPS_TIME);
 
 				printf(INDENT_SPACES "$xxZDA: %d:%d:%d %02d.%02d.%d UTC%+03d:%02d\n",

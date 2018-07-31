@@ -82,7 +82,7 @@ static void tcpip_handler(void)
 				if(clock_quality(READ_STRANUM) > NTP->stratum )
 				{
 					CurrTime = uip_ntohl(NTP->tx_Time_s) - NTP_EPOCH; //UNIX time
-					clock_set_unix_time(CurrTime);
+					clock_set_unix_time(CurrTime,1);
 					StartTime = clock_seconds();
 					current_stranum = (NTP->stratum + 1)>15?15:(NTP->stratum + 1);
 					clock_quality(current_stranum);
@@ -138,11 +138,13 @@ static void Send_NTP_time_to_parrent(void)
 	}
 }
 /*---------------------------------------------------------------------------*/
+#ifdef NODE_ROUTER
 static void
  set_connection_address(uip_ipaddr_t *ipaddr)
  {
 	uip_ip6addr(ipaddr,0xaaaa,0,0,0,0,0,0,0x0001);
  }
+#endif
 /*---------------------------------------------------------------------------*/
 PROCESS_THREAD(ntpd_process, ev, data)
 {
@@ -153,32 +155,32 @@ PROCESS_THREAD(ntpd_process, ev, data)
 	PROCESS_BEGIN();
 	PRINTF("ntpd process started\n");
 
+#ifdef NODE_ROUTER
 	set_connection_address(&ipaddr);
-
+#else
 	/* find the IP of router */
-	//etimer_set(&et, CLOCK_SECOND);
-//	while(1){
-//		if(uip_ds6_defrt_choose()){
-//			uip_ipaddr_copy(&ipaddr, uip_ds6_defrt_choose());
-//			break;
-//		}
-//		etimer_set(&et, CLOCK_SECOND);
-//		PROCESS_YIELD_UNTIL(etimer_expired(&et));
-//	}
-
+	while(1){
+		if(uip_ds6_defrt_choose()){
+			uip_ipaddr_copy(&ipaddr, uip_ds6_defrt_choose());
+			break;
+		}
+		etimer_set(&et, CLOCK_SECOND);
+		PROCESS_YIELD_UNTIL(etimer_expired(&et));
+	}
+#endif
 	/* new connection with remote host */
 	ntp_conn = udp_new(&ipaddr, UIP_HTONS(NTPD_PORT), NULL);
 
 	etimer_set(&et, 10 * CLOCK_SECOND);
-	etimer_set(&Update_parrent_timer, 60 * CLOCK_SECOND);
+	etimer_set(&Update_parrent_timer, SEND_INTERVAL * CLOCK_SECOND);
 	while(1){
 		PROCESS_YIELD();
 		if(etimer_expired(&et)){
 			Send_NTP_request();
 			etimer_set(&et, /*SEND_INTERVAL*/10 * CLOCK_SECOND);
 		}else if(etimer_expired(&Update_parrent_timer)){
-			//Send_NTP_time_to_parrent();
-			etimer_set(&Update_parrent_timer, 60 * CLOCK_SECOND);
+			Send_NTP_time_to_parrent();
+			etimer_set(&Update_parrent_timer, SEND_INTERVAL * CLOCK_SECOND);
 		}else if(ev == tcpip_event){
 			tcpip_handler();
 		}

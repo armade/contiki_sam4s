@@ -59,4 +59,12 @@ NULL
 };
 
 
+static const char *Get_time_js[] = {
+"<script> function Get_time() {"
+		    "var d = new Date(); var n = d.getTime();",
+		    "document.getElementById(\"rc2\").value = Math.floor(n/1000);}",
+"</script>",
+NULL
+};
+
 #endif /* JAVASCRIPT_H_ */

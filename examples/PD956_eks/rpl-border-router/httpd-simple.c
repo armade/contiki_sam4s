@@ -93,7 +93,9 @@ static int state;
 #define STRINGIFY(x) XSTR(x)
 #define XSTR(x)      #x
 
-
+#define ADD(x,...) do {  \
+						PT_WAIT_THREAD(&s->top_matter_pt, enqueue_chunk(s, 0, x, __VA_ARGS__));\
+  	  	  	  	  } while(0)
 
 
 /*---------------------------------------------------------------------------*/
@@ -349,7 +351,6 @@ timestamp_post_handler(char *key, int key_len, char *val, int val_len)
 {
   clock_time_t unixtime;
   char *endptr;
-  uint8_t stranum;
 
   if(key_len != strlen("Timestamp") ||
      strncasecmp(key, "Timestamp", strlen("Timestamp")) != 0) {
@@ -363,11 +364,9 @@ timestamp_post_handler(char *key, int key_len, char *val, int val_len)
      return HTTPD_SIMPLE_POST_HANDLER_ERROR;
    }
 
-  asm volatile("NOP");
-  stranum = clock_quality(-1);
-  if(stranum > 14){
-	clock_set_unix_time(unixtime);
-	clock_quality(14);
+  if(clock_quality(READ_STRANUM) > PC_TIME){
+	clock_set_unix_time(unixtime,1);
+	clock_quality(PC_TIME);
   }
 
    return HTTPD_SIMPLE_POST_HANDLER_OK;
@@ -551,55 +550,37 @@ PT_THREAD(generate_index(struct httpd_state *s))
 //======================================================================================
   /* Routes */
 
-  PT_WAIT_THREAD(&s->generate_pt,
-                      enqueue_chunk(s, 0, "<h1>Routes</h1>"));
+  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<h1>Routes</h1>"));
 
-  PT_WAIT_THREAD(&s->generate_pt,
-                       enqueue_chunk(s, 0, "<table><tr><th>IP addr</th><th>Via</th><th>Lifetime</th></tr>"));
+  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<table><tr><th>IP addr</th><th>Via</th><th>Lifetime</th></tr>"));
 
   for(s->r = uip_ds6_route_head(); s->r != NULL;
       s->r = uip_ds6_route_next(s->r)) {
 
     memset(ipaddr_buf, 0, IPADDR_BUF_LEN);
     ipaddr_sprintf(ipaddr_buf, IPADDR_BUF_LEN, &s->r->ipaddr);
+    PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<td><a href=http://[%s]/index.html> %s </a></td>",ipaddr_buf, ipaddr_buf));
 
-    PT_WAIT_THREAD(&s->generate_pt,
-                          enqueue_chunk(s, 0, "<td><a href=http://[%s]/index.html> %s </a></td>",ipaddr_buf, ipaddr_buf));
-
-    PT_WAIT_THREAD(&s->generate_pt,
-                   enqueue_chunk(s, 0, "<td> %u via ", s->r->length));
+    PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<td> %u via ", s->r->length));
 
     memset(ipaddr_buf, 0, IPADDR_BUF_LEN);
-    ipaddr_sprintf(ipaddr_buf, IPADDR_BUF_LEN,
-                                   uip_ds6_route_nexthop(s->r));
+    ipaddr_sprintf(ipaddr_buf, IPADDR_BUF_LEN,uip_ds6_route_nexthop(s->r));
     PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "%s</td>", ipaddr_buf));
-
-    PT_WAIT_THREAD(&s->generate_pt,
-                   enqueue_chunk(s, 0,
-                                 "<td>%lus</td>", s->r->state.lifetime));
+    PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0,"<td>%lus</td>", s->r->state.lifetime));
   }
 
-  PT_WAIT_THREAD(&s->generate_pt,
-                      enqueue_chunk(s, 0, "</table>"));
-
-
+  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "</table>"));
 
   //======================================================================================
   /* Footer */
-  PT_WAIT_THREAD(&s->generate_pt,
-                      enqueue_chunk(s, 0, "<h1>Statistic</h1>"));
+  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<h1>Statistic</h1>"));
 
-  PT_WAIT_THREAD(&s->generate_pt,
-                      enqueue_chunk(s, 0, "<p>"));
-  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "Page hits: %u<br>",
-                                                numtimes));
-  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "Uptime: %lu secs<br>",
-                                                clock_seconds()));
-  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "Current time: %lu secs<br>",
-		  	  	  	  	  	  	  	  	  	    clock_get_unix_time()));
-
-  PT_WAIT_THREAD(&s->generate_pt,
-                      enqueue_chunk(s, 0, "</p>"));
+  ADD("%s","<p>");
+  ADD("Page hits: %u<br>", numtimes);
+  ADD("Uptime: %lu secs<br>", clock_seconds());
+  ADD("Current time: %lu secs<br>", clock_get_unix_time());
+  ADD("Stranum: %lu <br>", clock_quality(READ_STRANUM));
+  ADD("%s","</p>");
 
   //======================================================================================
   // Internal clock
@@ -607,60 +588,45 @@ PT_THREAD(generate_index(struct httpd_state *s))
   tm_t tb;
   UnixtoRTC(&tb, clk);
 
-  PT_WAIT_THREAD(&s->generate_pt,
-                         enqueue_chunk(s, 0, "<p>"));
-  PT_WAIT_THREAD(&s->generate_pt,
-                       enqueue_chunk(s, 0, "d: %d/%d-%d       %d:%d:%d",
+  ADD("%s","<p>");
+  ADD("d: %d/%d-%d       %d:%d:%d",
                       		 tb.tm_mday,
   							 tb.tm_mon,
   							 tb.tm_year,
                              tb.tm_hour,
   							 tb.tm_min,
-  							 tb.tm_sec));
+  							 tb.tm_sec);
 
-  PT_WAIT_THREAD(&s->generate_pt,
-                         enqueue_chunk(s, 0, "</p>"));
-
-  //======================================================================================
-  //======================================================================================
-
-  PT_WAIT_THREAD(&s->generate_pt,	enqueue_chunk(s, 0,"<form name=\"input\" action=\"%s\" ",
-		  	  	  	  	  	  	  http_index_page.filename));
-    PT_WAIT_THREAD(&s->generate_pt,	enqueue_chunk(s, 0, "method=\"post\" enctype=\""));
-    PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "application/x-www-form-urlencoded\" "));
-    PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "accept-charset=\"UTF-8\">"));
-
-    //PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0,"<p>"));
-    PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<input type=\"datetime-local\" id=\"demo2\" name=\"Timestamp\">"));
-    PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<button onclick=\"myFunction()\" type=\"submit\" value=\"Submit\">Get time </button>"));
-
-    PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<script> function myFunction() {"));
-    PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "var d = new Date(); var n = d.getTime();"));
-    PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "document.getElementById(\"demo2\").value = Math.floor(n/1000);}"));
-    PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "</script>"));
-
-    //PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "</p>"));
-    PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "</form>"));
-
-
-//  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<button onclick=\"myFunction()\" type=\"submit\" value=\"Submit\">Get time </button>"));
-//  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<input type=\"number\" id=\"demo2\" name=\"Timestamp\">"));
-//  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "script> function myFunction() {"));
-//  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "var d = new Date(); var n = d.getTime();"));
-//  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "document.getElementById(\"demo2\").value = Math.floor(n/1000);"));
-//  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "}</script>"));
+  ADD("%s","</p>");
 
   //======================================================================================
+  //Set the time on the device. Javascript asks for the time and pass it on to the device
+  // as a Timestamp handle.
+
+  ADD("<form name=\"input\" action=\"%s\" ", http_index_page.filename);
+  ADD("%s","method=\"post\" enctype=\"");
+  ADD("%s","application/x-www-form-urlencoded\" ");
+  ADD("%s","accept-charset=\"UTF-8\">");
+
+  ADD("%s","<input type=\"hidden\" id=\"rc2\" name=\"Timestamp\">");
+  ADD("%s","<button onclick=\"Get_time()\" type=\"submit\" value=\"Submit\">Set time from browser</button>");
+
+//    PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<script> function Get_time() {"));
+//    PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "var d = new Date(); var n = d.getTime();"));
+//    PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "document.getElementById(\"rc2\").value = Math.floor(n/1000);}"));
+//    PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "</script>"));
+
+  ADD("%s","</form>");
+
+  //======================================================================================
+  PT_WAIT_THREAD(&s->generate_pt, run_java_script(s, Get_time_js));
   //======================================================================================
   // Just for fun
-  PT_WAIT_THREAD(&s->generate_pt,
-    		run_java_script(s, clock_js));
+  PT_WAIT_THREAD(&s->generate_pt, run_java_script(s, clock_js));
   PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 1, http_bottom));
 
   PT_END(&s->generate_pt);
 }
-
-
 
 /*---------------------------------------------------------------------------*/
 static void

@@ -62,16 +62,16 @@ uint32_t rtc_get_hour_mode(Rtc *p_rtc);
 void rtc_enable_interrupt(Rtc *p_rtc, uint32_t ul_sources);
 void rtc_disable_interrupt(Rtc *p_rtc, uint32_t ul_sources);
 uint32_t rtc_get_interrupt_mask(Rtc *p_rtc);
-void rtc_get_time(Rtc *p_rtc, uint32_t *pul_hour, uint32_t *pul_minute,
-		uint32_t *pul_second);
+void rtc_get_time(Rtc *p_rtc, int32_t *pul_hour, int32_t *pul_minute,
+		int32_t *pul_second);
 uint32_t rtc_set_time(Rtc *p_rtc, uint32_t ul_hour, uint32_t ul_minute,
 		uint32_t ul_second);
 uint32_t rtc_set_time_alarm(Rtc *p_rtc,
 		uint32_t ul_hour_flag, uint32_t ul_hour,
 		uint32_t ul_minute_flag, uint32_t ul_minute,
 		uint32_t ul_second_flag, uint32_t ul_second);
-void rtc_get_date(Rtc *p_rtc, uint32_t *pul_year, uint32_t *pul_month,
-		uint32_t *pul_day, uint32_t *pul_week);
+void rtc_get_date(Rtc *p_rtc, int32_t *pul_year, int32_t *pul_month,
+		int32_t *pul_day, int32_t *pul_week);
 uint32_t rtc_set_date(Rtc *p_rtc, uint32_t ul_year, uint32_t ul_month,
 		uint32_t ul_day, uint32_t ul_week);
 uint32_t rtc_set_date_alarm(Rtc *p_rtc,

@@ -153,11 +153,11 @@ uint32_t rtc_get_interrupt_mask(Rtc *p_rtc)
  * \param pul_minute Current minute.
  * \param pul_second Current second.
  */
-void rtc_get_time(Rtc *p_rtc, uint32_t *pul_hour, uint32_t *pul_minute,
-		uint32_t *pul_second)
+void rtc_get_time(Rtc *p_rtc, int32_t *pul_hour, int32_t *pul_minute,
+		int32_t *pul_second)
 {
-	uint32_t ul_time;
-	uint32_t ul_temp;
+	int32_t ul_time;
+	int32_t ul_temp;
 
 	/* Get the current RTC time (multiple reads are necessary to insure a stable value). */
 	ul_time = p_rtc->RTC_TIMR;
@@ -296,8 +296,8 @@ uint32_t rtc_set_time_alarm(Rtc *p_rtc,
  * \param pul_day Current day.
  * \param pul_week Current day in current week.
  */
-void rtc_get_date(Rtc *p_rtc, uint32_t *pul_year, uint32_t *pul_month,
-		uint32_t *pul_day, uint32_t *pul_week)
+void rtc_get_date(Rtc *p_rtc, int32_t *pul_year, int32_t *pul_month,
+		int32_t *pul_day, int32_t *pul_week)
 {
 	uint32_t ul_date;
 	uint32_t ul_cent;
