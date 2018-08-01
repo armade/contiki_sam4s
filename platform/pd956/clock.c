@@ -247,11 +247,11 @@ static void Store_time_to_RTC(void *data)
 
 }
 
-static void Decrement_stranum(void *data)
+static void Increment_stranum(void *data)
 {
 	if(clock_gpbr->stranum < 15)
-		clock_gpbr->stranum--;
-	ctimer_set(&stranum_timer, 1 * 60 * 60 * CLOCK_SECOND, Decrement_stranum, NULL); // 1 hr interval
+		clock_gpbr->stranum++;
+	ctimer_set(&stranum_timer, 1 * 60 * 60 * CLOCK_SECOND, Increment_stranum, NULL); // 1 hr interval
 }
 
 int clock_quality(int stranum_new)
@@ -262,6 +262,6 @@ int clock_quality(int stranum_new)
 		stranum_new = 15;
 
 	clock_gpbr->stranum = stranum_new;
-	ctimer_set(&stranum_timer, 1 * 60 * 60 * CLOCK_SECOND, Decrement_stranum, NULL); // 1 hr interval
+	ctimer_set(&stranum_timer, 1 * 60 * 60 * CLOCK_SECOND, Increment_stranum, NULL); // 1 hr interval
 	return 1;
 }

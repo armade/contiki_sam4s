@@ -102,6 +102,7 @@ receiver(struct simple_udp_connection *c,
 			case 3: // Someone is asking us for the time
 				time = clock_get_unix_time();
 				if(time){
+					memset(&NTP_server,0,sizeof(NTP_server));
 					NTP_server.mode = 4;
 					NTP_server.ver = 3;
 					NTP_server.stratum = clock_quality(READ_STRANUM);
@@ -186,7 +187,7 @@ PROCESS_THREAD(ntpd_process, ev, data)
 		PROCESS_YIELD();
 		if(etimer_expired(&Send_NTP_request_timer)){
 			Send_NTP_request(&ipaddr);
-			etimer_set(&Send_NTP_request_timer, /*SEND_INTERVAL*/10 * CLOCK_SECOND);
+			etimer_set(&Send_NTP_request_timer, SEND_INTERVAL * CLOCK_SECOND/clock_quality(READ_STRANUM)); // 1hr - 4min
 		}else if(etimer_expired(&Update_parrent_timer)){
 			Send_NTP_time_to_parrent(&ipaddr);
 			etimer_set(&Update_parrent_timer, SEND_INTERVAL * CLOCK_SECOND);

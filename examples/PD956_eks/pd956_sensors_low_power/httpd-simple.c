@@ -627,6 +627,8 @@ PT_THREAD(generate_index(struct httpd_state *s))
   PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "Current time: %lu secs<br>",
 		  	  	  	  	  	  	  	  	  	    clock_get_unix_time()));
 
+  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "Stranum: %lu <br>", clock_quality(READ_STRANUM)));
+
   PT_WAIT_THREAD(&s->generate_pt,
                       enqueue_chunk(s, 0, "</p>"));
 
