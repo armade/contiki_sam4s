@@ -163,7 +163,7 @@ send(mac_callback_t sent, void *ptr)
 
 	if(nbr->enable_encryption)
 	{
-		nbr = uip_ds6_nbr_lookup(&UIP_IP_BUF->srcipaddr);
+
 		hotfix = len & 7;
 		// TODO: add padding to buffer if there is room.
 		//if(hotfix && space_left > 8)

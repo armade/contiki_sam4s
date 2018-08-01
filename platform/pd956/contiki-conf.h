@@ -130,7 +130,7 @@ typedef unsigned short uip_stats_t;
 //#define NETSTACK_CONF_LLSEC XTEAsec_driver
 
 
-#define UIP_CONF_ROUTER                 1
+//#define UIP_CONF_ROUTER                 1
 
 #define SICSLOWPAN_CONF_COMPRESSION             SICSLOWPAN_COMPRESSION_HC06
 #define SICSLOWPAN_CONF_MAXAGE                  8
@@ -155,7 +155,7 @@ typedef unsigned short uip_stats_t;
 #define UIP_CONF_MAX_ROUTES   30
 
 
-#define UIP_CONF_ND6_SEND_RA			0
+#define UIP_CONF_ND6_SEND_RA			1
 #define UIP_CONF_ND6_REACHABLE_TIME     600000
 #define UIP_CONF_ND6_RETRANS_TIMER      10000
 

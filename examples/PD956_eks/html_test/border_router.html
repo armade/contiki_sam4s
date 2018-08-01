@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<style>
+h1 {
+	font-family:Verdana;
+    border-radius: 5px;
+	background-color: #2196F3;
+	color: white;
+	padding-left:30px;
+    font-size:18px;
+    padding-bottom:7px;
+}
+h0 {
+	font-family: Verdana;
+	color: black;
+	padding-left:15px;
+    font-size:25px;
+}
+a{
+font-family: Verdana;
+	color: blue;
+}
+table {
+margin-left: 30px;
+    font-family: Verdana;
+    border-collapse: collapse;
+    width: 90%;
+    font-size:12px;
+}
+td, th {
+    border:0px solid #dddddd;
+    text-align: left;
+    padding: 2px;
+    padding-left:45px;
+}
+th { background-color: #2196F3;color:white;}
+tr:nth-child(even) {
+    background-color: #d5d5dd;
+}
+tr:hover {background-color: #40c0c0}
+img {
+    position: absolute;
+    left: 0px;
+    top: 10px;
+    z-index: -1;
+}
+</style>
+<html>
+<body  >
+
+<div>
+        <h0>
+        	<img src="https://www.how-to-draw-funny-cartoons.com/images/xhow-to-draw-a-snowflake-010.jpg.pagespeed.ic.0EmX9XC8Hj.jpg"  width="25" height="25"> 			
+		Router home  
+        </h0>	  
+        </div>
+
+		<h1>Neighbors</h1>
+		<table>
+  <tr>
+    <th>IP addr</th>
+    <th>Status</th>
+    <th>SESSION KEY</th>
+	<th>UUID</th>
+  </tr>
+  <tr>
+    <td> <a href = http://www.google.dk> Alfreds Futterkiste </a></td>
+    <td>REACHABLE</td>
+	<td>124b2f42b4a45a</td>
+	<td>12345678PD</td>
+  </tr>
+  <tr>
+    <td>Centro comercial Moctezuma</td>
+    <td>Francisco Chang</td>
+    <td>Mexico</td>
+  </tr>
+ </table>
+ 
+ 
+ 
+		<h1>Default Routes</h1>
+
+
+
+<table>
+  <tr>
+    <th>IP addr</th>
+    <th>Status</th>
+    <th>Lifetime</th>
+  </tr>
+  <tr>
+    <td> <a href = http://www.google.dk> aaaa::3031:3735:3034:3234 </a></td>
+    <td>REACHABLE</td>
+    <td>1530</td>
+  </tr>
+  <tr>
+    <td> <a href = http://www.google.dk> aaaa::3031:3133:3738:3531 </a></td>
+    <td>REACHABLE</td>
+    <td>7137</td>
+  </tr>
+  <tr>
+    <td>Ernst Handel</td>
+    <td>Roland Mendel</td>
+    <td>Austria</td>
+  </tr>
+  <tr>
+    <td>Island Trading</td>
+    <td>Helen Bennett</td>
+    <td>UK</td>
+  </tr>
+  <tr>
+    <td>Laughing Bacchus Winecellars</td>
+    <td>Yoshi Tannamuri</td>
+    <td>Canada</td>
+  </tr>
+  <tr>
+    <td>Magazzini Alimentari Riuniti</td>
+    <td>Giovanni Rovelli</td>
+    <td>Italy</td>
+  </tr>
+ </table>
+
+</body>
+</html>
+<canvas id="canvas" width="600" height="480"
+style="background-color:#fff">
+</canvas>
+
+<script>
+var canvas = document.getElementById("canvas");
+//canvas.setAttribute('style', "position: absolute;  left: 50%;margin-left:-400px; top: 50%;margin-top:-300px; border:2px solid blue");
+var ctx = canvas.getContext("2d");
+ctx.globalAlpha=1;
+
+ctx.strokeStyle = '#CfCfCf';
+ctx.lineWidth = 17;
+//ctx.lineCap = 'round';
+ctx.shadowBlur = 25;
+ctx.shadowColor = '#2136F3';
+setInterval(drawClock, 100);
+
+
+
+function degToRad(degree){
+  var factor = Math.PI/180;
+  return degree*factor;
+}
+
+function drawClock() {
+	var now = new Date();
+    var today = now.toDateString();
+    var time = now.toLocaleTimeString();
+	var hours = now.getHours();
+	var minutes = now.getMinutes();
+    var seconds = now.getSeconds();
+	var milisec = now.getMilliseconds();
+	var new_sec = seconds + (milisec/1000);
+//Background 
+    //ctx.fillStyle = 'black';
+	gradient = ctx.createRadialGradient(255,255,5,255,255,300);
+	gradient.addColorStop(0,'#0930a3');
+	gradient.addColorStop(1,'black');
+	ctx.fillStyle = gradient;
+    ctx.fillRect(0,0,canvas.width,canvas.height);
+//Hours
+    ctx.beginPath();
+    ctx.arc(canvas.width/2,canvas.height/2,200,degToRad(270), degToRad((hours*15)-89.9));
+    ctx.stroke();
+//Minutes
+    ctx.beginPath();
+    ctx.arc(canvas.width/2,canvas.height/2,170,degToRad(270), degToRad((minutes*6)-89.9));
+    ctx.stroke();
+//seconds
+    ctx.beginPath();
+    ctx.arc(canvas.width/2,canvas.height/2,140,degToRad(270), degToRad((new_sec*6)-89.9));
+    ctx.stroke();
+    
+    ctx.font = "25px Arial";
+    ctx.fillStyle = 'silver';
+    ctx.fillText(today, canvas.width/2-85,canvas.height/2);
+    
+    ctx.font = "25px Arial";
+    ctx.fillStyle = 'silver';
+    ctx.fillText(time, canvas.width/2-35,canvas.height/2+30);
+    
+    
+}
+
+
+</script>
+

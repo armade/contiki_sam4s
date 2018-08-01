@@ -1,4 +1,4 @@
-DEFINES+=PROJECT_CONF_H=\"project-conf.h\"
+DEFINES+=PROJECT_CONF_H=\"project-conf.h\" -DLOW_CLOCK=0 -DUIP_CONF_ROUTER=1
 
 all: pd956_sensor
 

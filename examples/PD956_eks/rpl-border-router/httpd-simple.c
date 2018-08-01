@@ -485,13 +485,7 @@ PT_THREAD(run_java_script(struct httpd_state *s, const char **script_js))
 {
 	 PT_BEGIN(&s->js_pt);
 
-	 asm volatile ("NOP");
-	 asm volatile ("NOP");
-	 asm volatile ("NOP");
 	 if(script_js != NULL) {
-		 asm volatile ("NOP");
-		 	 asm volatile ("NOP");
-		 	 asm volatile ("NOP");
 		for(s->ptr = script_js; *(s->ptr) != NULL; s->ptr++) {
 		  PT_WAIT_THREAD(&s->js_pt, enqueue_chunk(s, 0, *(s->ptr)));
 		}
@@ -515,73 +509,67 @@ PT_THREAD(generate_index(struct httpd_state *s))
                                       http_config_css));
 //======================================================================================
   /* ND Cache */
-   PT_WAIT_THREAD(&s->generate_pt,
-                      enqueue_chunk(s, 0, "<div><h0><img src=\"https://www.how-to-draw-funny-cartoons.com/"
+  ADD("%s","<div><h0><img src=\"https://www.how-to-draw-funny-cartoons.com/"
                     		  "images/xhow-to-draw-a-snowflake-010.jpg.pagespeed.ic.0EmX9XC8Hj.jpg\" "
-                    		  "width=\"25\" height=\"25\">Router home</h0></div>"));
+                    		  "width=\"25\" height=\"25\">Router home</h0></div>");
 
-
-  PT_WAIT_THREAD(&s->generate_pt,
-                   enqueue_chunk(s, 0, "<h1>Neighbors</h1>"));
-
-  PT_WAIT_THREAD(&s->generate_pt,
-                     enqueue_chunk(s, 0, "<table><tr><th>IP addr</th><th>Status</th><th>SESSION KEY</th><th>UUID</th></tr>"));
+  ADD("%s","<h1>Neighbors</h1>");
+  ADD("%s","<table><tr><th>IP addr</th><th>Status</th><th>SESSION KEY</th><th>UUID</th></tr>");
 
   for(s->nbr = nbr_table_head(ds6_neighbors); s->nbr != NULL;
       s->nbr = nbr_table_next(ds6_neighbors, s->nbr)) {
 
-    PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<tr>"));
+	  ADD("%s","<tr>");
 
     memset(ipaddr_buf, 0, IPADDR_BUF_LEN);
     ipaddr_sprintf(ipaddr_buf, IPADDR_BUF_LEN, &s->nbr->ipaddr);
-    PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<td>%s</td>", ipaddr_buf));
+    ADD("<td>%s</td>", ipaddr_buf);
 
     memset(ipaddr_buf, 0, IPADDR_BUF_LEN);
     get_neighbour_state_text(ipaddr_buf, s->nbr->state);
-    PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<td>%s</td>", ipaddr_buf));
+    ADD("<td>%s</td>", ipaddr_buf);
 
     // Just to test
     memset(ipaddr_buf, 0, IPADDR_BUF_LEN);
     for(i=0;i<sizeof(s->nbr->nbr_session_key);i++)
     	sprintf(&ipaddr_buf[i],"%x",s->nbr->nbr_session_key[i]);
-    PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<td>%s</td>", ipaddr_buf));
+    ADD("<td>%s</td>", ipaddr_buf);
 
-    PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<td>%s</td>", s->nbr->nbr_UUID));
+    ADD("<td>%s</td>", s->nbr->nbr_UUID);
 
-    PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "</tr>"));
+    ADD("%s","</tr>");
   }
 
-  PT_WAIT_THREAD(&s->generate_pt,
-                       enqueue_chunk(s, 0, "</table>"));
+  ADD("%s","</table>");
 
 
 //======================================================================================
   /* Routes */
 
-  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<h1>Routes</h1>"));
+  ADD("%s","<h1>Routes</h1>");
 
-  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<table><tr><th>IP addr</th><th>Via</th><th>Lifetime</th></tr>"));
+  ADD("%s","<table><tr><th>IP addr</th><th>Via</th><th>Lifetime</th></tr>");
 
   for(s->r = uip_ds6_route_head(); s->r != NULL;
       s->r = uip_ds6_route_next(s->r)) {
 
     memset(ipaddr_buf, 0, IPADDR_BUF_LEN);
     ipaddr_sprintf(ipaddr_buf, IPADDR_BUF_LEN, &s->r->ipaddr);
-    PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<td><a href=http://[%s]/index.html> %s </a></td>",ipaddr_buf, ipaddr_buf));
+    ADD("<td><a href=http://[%s]/index.html> %s </a></td>",ipaddr_buf, ipaddr_buf);
 
-    PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<td> %u via ", s->r->length));
+    ADD("<td> %u via ", s->r->length);
 
     memset(ipaddr_buf, 0, IPADDR_BUF_LEN);
     ipaddr_sprintf(ipaddr_buf, IPADDR_BUF_LEN,uip_ds6_route_nexthop(s->r));
-    PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "%s</td>", ipaddr_buf));
-    PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0,"<td>%lus</td>", s->r->state.lifetime));
+    ADD("%s</td>", ipaddr_buf);
+    ADD("<td>%lus</td>", s->r->state.lifetime);
   }
 
-  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "</table>"));
+  ADD("%s","</table>");
 
   //======================================================================================
   /* Footer */
-  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<h1>Statistic</h1>"));
+  ADD("%s","<h1>Statistic</h1>");
 
   ADD("%s","<p>");
   ADD("Page hits: %u<br>", numtimes);

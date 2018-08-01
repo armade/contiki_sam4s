@@ -57,6 +57,9 @@ receiver(struct simple_udp_connection *c,
 			memset((char *)diagram->buf,0,DATASIZE);
 			diagram->buf[0] = 'R';
 			simple_udp_sendto(&unicast_connection, &diagram->buf, sizeof("R"), sender_addr);
+			flash_erase_df(FLASH_FIRMWARE_OFFSET+0*64*1024,erase_64k_block);
+			flash_erase_df(FLASH_FIRMWARE_OFFSET+1*64*1024,erase_64k_block);
+
 		}
 		// TODO: Make it possible to ask for firmware version
 	}
@@ -109,8 +112,9 @@ PROCESS_THREAD(udpstream_process, ev, data)
 	PROCESS_WAIT_UNTIL(uip_ds6_get_global(ADDR_PREFERRED));
 
 
+
     /* The sink creates a dag and waits for UDP datagrams */
-    servreg_hack_register(SERVICE_ID, &ip_addr->ipaddr);
+    //servreg_hack_register(SERVICE_ID, &ip_addr->ipaddr);
     simple_udp_register(&unicast_connection, UDP_PORT,
                         NULL, UDP_PORT, receiver);
     while(1) {

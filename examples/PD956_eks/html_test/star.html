@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<body>
+
+<canvas id="myCanvas" width="50" height="50" style="border:1px solid #d3d3d3;">
+Your browser does not support the HTML5 canvas tag.</canvas>
+
+<script>
+
+var c = document.getElementById("myCanvas");
+//c.setAttribute('style', "position: absolute;  left: 10%; top: 50%;margin-top:-300px");
+var ctx = c.getContext("2d"); 
+ctx.strokeStyle = '#0050a0';
+ctx.lineWidth = 1.2;
+//ctx.lineCap = 'round';
+ctx.shadowBlur = 25;
+ctx.shadowColor = 'grey';
+ctx.globalAlpha=1;
+
+var origo_x = c.width/2;
+var origo_y = c.height/2;
+var amp = c.width/2;
+var amp2 = c.width/8;
+var amp3 = c.width/16;
+var amp4 = c.width/32;
+
+var start_first_flake_x;
+var start_first_flake_y;
+var stop_first_flake_x;
+var stop_first_flake_y;
+
+var i;
+var k;
+for (i = 0; i < 8; i++) {
+    ctx.beginPath();
+	ctx.moveTo(origo_x,origo_y);
+	y_line = amp*Math.sin((i*45*Math.PI/180));
+	x_line = amp*Math.cos((i*45*Math.PI/180));
+	ctx.lineTo(origo_x+x_line,origo_y+y_line);
+////////////////////////////////////////////////////////////////////////////////////////////
+	for (k = 0; k < 4; k++) {
+		// start point
+		start_first_flake_x = (amp-(amp2+k*amp3))*Math.sin((i*45*Math.PI/180));
+		start_first_flake_y = (amp-(amp2+k*amp3))*Math.cos((i*45*Math.PI/180));
+		// point on line (midpoint)
+		stop_first_flake_x = (amp-(amp4+k*amp3))*Math.sin(((i*45-(12+k*3))*Math.PI/180));
+		stop_first_flake_y = (amp-(amp4+k*amp3))*Math.cos(((i*45-(12+k*3))*Math.PI/180));
+		// draw line
+		ctx.moveTo(origo_x+stop_first_flake_x,origo_y+stop_first_flake_y);
+		ctx.lineTo(origo_x+start_first_flake_x,origo_x+start_first_flake_y);
+		// Stop point
+		stop_first_flake_x = (amp-(amp4+k*amp3))*Math.sin(((i*45+(12+k*3))*Math.PI/180));
+		stop_first_flake_y = (amp-(amp4+k*amp3))*Math.cos(((i*45+(12+k*3))*Math.PI/180));
+		ctx.lineTo(origo_x+stop_first_flake_x,origo_y+stop_first_flake_y);
+	}
+
+	
+	ctx.stroke();
+} 
+
+
+</script>
+
+</body>
+</html>

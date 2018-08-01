@@ -6,7 +6,7 @@ CONTIKI=../../..
 #linker optimizations
 SMALL=1
 
-CFLAGS += -DPROJECT_CONF_H=\"project-conf.h\" -DLOW_CLOCK=0 -DNODE_ROUTER=1
+CFLAGS += -DPROJECT_CONF_H=\"project-conf.h\" -DLOW_CLOCK=0 -DNODE_ROUTER=1 -DUIP_CONF_ROUTER=1
 PROJECT_SOURCEFILES += slip-bridge.c
 APPS += ntpd
 
@@ -45,3 +45,4 @@ connect-router:	$(CONTIKI)/tools/tunslip6
 
 connect-router-cooja:	$(CONTIKI)/tools/tunslip6
 	sudo $(CONTIKI)/tools/tunslip6 -a 127.0.0.1 $(PREFIX)
+

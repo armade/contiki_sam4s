@@ -42,5 +42,6 @@ void gpsd_arch_init(void)
 
 	// Enable UART IRQ
 	uart_enable_interrupt(UART1, US_IER_RXRDY);
+
 }
 #endif
