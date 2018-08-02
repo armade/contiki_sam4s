@@ -13,10 +13,10 @@
 static const char *clock_js[] = {
 "<canvas id=\"canvas\" width=\"500\" height=\"500\"",
 	"style=\"background-color:#fff\">",
-	"canvas.setAttribute('style', \"position: absolute;  left: 100%;margin-left:-520px; top: 5%;border:2px solid blue\");",
 "</canvas>",
 "<script>",
 	"var canvas=document.getElementById(\"canvas\");",
+	"canvas.setAttribute('style', \"position: absolute;  left: 100%%;margin-left:-520px; top: 5%%;border:2px solid blue\");",
 	"var ctx=canvas.getContext(\"2d\");",
 	"ctx.strokeStyle='#CfCfCf';",
 	"ctx.lineWidth=17;",
