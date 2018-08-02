@@ -218,6 +218,15 @@ static const char *http_config_css[] = {
   	  "color: white; text-align: center;",
   	  "padding: 14px 16px; text-decoration: none;",
    "}li a:hover { background-color: #111;}",
+   "legend {",
+       "background-color: #2196F3;",
+   		"font-family: Verdana;",
+   		"color: #fff;",
+   		"padding: 3px 6px;",
+   		"font-size: 24px;",
+   "}fieldset{",
+   	   "margin:30px;",
+   	   "width: 200px;}",
   "</style>",
   NULL
 };
@@ -570,14 +579,23 @@ PT_THREAD(generate_index(struct httpd_state *s))
 
   //======================================================================================
   /* Footer */
-  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<h1>Statistic</h1>"));
+  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<fieldset>"));
+  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<legend>Statistic</legend>"));
 
-  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<p>"));
   PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "Page hits: %u<br>", numtimes));
   PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "Uptime: %lu secs<br>", clock_seconds()));
   PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "Current time: %lu secs<br>", clock_get_unix_time()));
   PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "Stranum: %lu <br>", clock_quality(READ_STRANUM)));
-  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "</p>"));
+
+  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "</fieldset>"));
+//  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<h1>Statistic</h1>"));
+//
+//  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<p>"));
+//  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "Page hits: %u<br>", numtimes));
+//  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "Uptime: %lu secs<br>", clock_seconds()));
+//  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "Current time: %lu secs<br>", clock_get_unix_time()));
+//  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "Stranum: %lu <br>", clock_quality(READ_STRANUM)));
+//  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "</p>"));
 
   //======================================================================================
   // Internal clock
