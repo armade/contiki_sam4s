@@ -181,6 +181,7 @@ static const char *http_config_css[] = {
   	  "padding-left:30px;",
       "font-size:18px;",
       "padding-bottom:7px;",
+      "width: 57%;",
   "}h0{",
   	  "font-family:Verdana;",
   	  "color:black;",
@@ -193,7 +194,7 @@ static const char *http_config_css[] = {
       "margin-left:30px;",
       "font-family:Verdana;",
       "border-collapse:collapse;",
-      "width:90%%;",
+      "width:55%%;",
       "font-size:12px;",
   "}td,th{",
       "border: 0px solid #dddddd;",
@@ -509,74 +510,74 @@ PT_THREAD(generate_index(struct httpd_state *s))
                                       http_config_css));
 //======================================================================================
   /* ND Cache */
-  ADD("%s","<div><h0><img src=\"https://www.how-to-draw-funny-cartoons.com/"
+   PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<div><h0><img src=\"https://www.how-to-draw-funny-cartoons.com/"
                     		  "images/xhow-to-draw-a-snowflake-010.jpg.pagespeed.ic.0EmX9XC8Hj.jpg\" "
-                    		  "width=\"25\" height=\"25\">Router home</h0></div>");
+                    		  "width=\"25\" height=\"25\">Router home</h0></div>"));
 
-  ADD("%s","<h1>Neighbors</h1>");
-  ADD("%s","<table><tr><th>IP addr</th><th>Status</th><th>SESSION KEY</th><th>UUID</th></tr>");
+  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<h1>Neighbors</h1>"));
+  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<table><tr><th>IP addr</th><th>Status</th><th>SESSION KEY</th><th>UUID</th></tr>"));
 
   for(s->nbr = nbr_table_head(ds6_neighbors); s->nbr != NULL;
       s->nbr = nbr_table_next(ds6_neighbors, s->nbr)) {
 
-	  ADD("%s","<tr>");
+	  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<tr>"));
 
     memset(ipaddr_buf, 0, IPADDR_BUF_LEN);
     ipaddr_sprintf(ipaddr_buf, IPADDR_BUF_LEN, &s->nbr->ipaddr);
-    ADD("<td>%s</td>", ipaddr_buf);
+    PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<td>%s</td>", ipaddr_buf));
 
     memset(ipaddr_buf, 0, IPADDR_BUF_LEN);
     get_neighbour_state_text(ipaddr_buf, s->nbr->state);
-    ADD("<td>%s</td>", ipaddr_buf);
+    PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<td>%s</td>", ipaddr_buf));
 
     // Just to test
     memset(ipaddr_buf, 0, IPADDR_BUF_LEN);
     for(i=0;i<sizeof(s->nbr->nbr_session_key);i++)
     	sprintf(&ipaddr_buf[i],"%x",s->nbr->nbr_session_key[i]);
-    ADD("<td>%s</td>", ipaddr_buf);
+    PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<td>%s</td>", ipaddr_buf));
 
-    ADD("<td>%s</td>", s->nbr->nbr_UUID);
+    PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<td>%s</td>", s->nbr->nbr_UUID));
 
-    ADD("%s","</tr>");
+    PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "</tr>"));
   }
 
-  ADD("%s","</table>");
+  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "</table>"));
 
 
 //======================================================================================
   /* Routes */
 
-  ADD("%s","<h1>Routes</h1>");
+  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<h1>Routes</h1>"));
 
-  ADD("%s","<table><tr><th>IP addr</th><th>Via</th><th>Lifetime</th></tr>");
+  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<table><tr><th>IP addr</th><th>Via</th><th>Lifetime</th></tr>"));
 
   for(s->r = uip_ds6_route_head(); s->r != NULL;
       s->r = uip_ds6_route_next(s->r)) {
 
     memset(ipaddr_buf, 0, IPADDR_BUF_LEN);
     ipaddr_sprintf(ipaddr_buf, IPADDR_BUF_LEN, &s->r->ipaddr);
-    ADD("<td><a href=http://[%s]/index.html> %s </a></td>",ipaddr_buf, ipaddr_buf);
+    PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<td><a href=http://[%s]/index.html> %s </a></td>",ipaddr_buf, ipaddr_buf));
 
-    ADD("<td> %u via ", s->r->length);
+    PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<td> %u via ", s->r->length));
 
     memset(ipaddr_buf, 0, IPADDR_BUF_LEN);
     ipaddr_sprintf(ipaddr_buf, IPADDR_BUF_LEN,uip_ds6_route_nexthop(s->r));
-    ADD("%s</td>", ipaddr_buf);
-    ADD("<td>%lus</td>", s->r->state.lifetime);
+    PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "%s</td>", ipaddr_buf));
+    PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<td>%lus</td>", s->r->state.lifetime));
   }
 
-  ADD("%s","</table>");
+  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "</table>"));
 
   //======================================================================================
   /* Footer */
-  ADD("%s","<h1>Statistic</h1>");
+  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<h1>Statistic</h1>"));
 
-  ADD("%s","<p>");
-  ADD("Page hits: %u<br>", numtimes);
-  ADD("Uptime: %lu secs<br>", clock_seconds());
-  ADD("Current time: %lu secs<br>", clock_get_unix_time());
-  ADD("Stranum: %lu <br>", clock_quality(READ_STRANUM));
-  ADD("%s","</p>");
+  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<p>"));
+  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "Page hits: %u<br>", numtimes));
+  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "Uptime: %lu secs<br>", clock_seconds()));
+  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "Current time: %lu secs<br>", clock_get_unix_time()));
+  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "Stranum: %lu <br>", clock_quality(READ_STRANUM)));
+  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "</p>"));
 
   //======================================================================================
   // Internal clock
@@ -584,35 +585,35 @@ PT_THREAD(generate_index(struct httpd_state *s))
   tm_t tb;
   UnixtoRTC(&tb, clk);
 
-  ADD("%s","<p>");
-  ADD("d: %d/%d-%d       %d:%d:%d",
+  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<p>"));
+  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "d: %d/%d-%d       %d:%d:%d",
                       		 tb.tm_mday,
   							 tb.tm_mon,
   							 tb.tm_year,
                              tb.tm_hour,
   							 tb.tm_min,
-  							 tb.tm_sec);
+  							 tb.tm_sec));
 
-  ADD("%s","</p>");
+  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "</p>"));
 
   //======================================================================================
   //Set the time on the device. Javascript asks for the time and pass it on to the device
   // as a Timestamp handle.
 
-  ADD("<form name=\"input\" action=\"%s\" ", http_index_page.filename);
-  ADD("%s","method=\"post\" enctype=\"");
-  ADD("%s","application/x-www-form-urlencoded\" ");
-  ADD("%s","accept-charset=\"UTF-8\">");
+  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<form name=\"input\" action=\"%s\" ", http_index_page.filename));
+  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "method=\"post\" enctype=\""));
+  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "application/x-www-form-urlencoded\" "));
+  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "accept-charset=\"UTF-8\">"));
 
-  ADD("%s","<input type=\"hidden\" id=\"rc2\" name=\"Timestamp\">");
-  ADD("%s","<button onclick=\"Get_time()\" type=\"submit\" value=\"Submit\">Set time from browser</button>");
+  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<input type=\"hidden\" id=\"rc2\" name=\"Timestamp\">"));
+  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<button onclick=\"Get_time()\" type=\"submit\" value=\"Submit\">Set time from browser</button>"));
 
-    PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<script> function Get_time() {"));
-    PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "var d = new Date(); var n = d.getTime();"));
-    PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "document.getElementById(\"rc2\").value = Math.floor(n/1000);}"));
-    PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "</script>"));
+  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<script> function Get_time() {"));
+  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "var d = new Date(); var n = d.getTime();"));
+  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "document.getElementById(\"rc2\").value = Math.floor(n/1000);}"));
+  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "</script>"));
 
-  ADD("%s","</form>");
+  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "</form>"));
 
   //======================================================================================
 

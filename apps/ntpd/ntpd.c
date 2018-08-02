@@ -41,10 +41,12 @@ static unsigned long StartTime = 0;
 static unsigned long CurrTime = 0;
 
 static ntp_packet_t ntpmsg;
+static struct etimer Send_NTP_request_timer;
+static struct etimer Update_parrent_timer;
 
 static struct simple_udp_connection unicast_connection;
 
-static struct uip_udp_conn *ntp_conn;
+//static struct uip_udp_conn *ntp_conn;
 PROCESS(ntpd_process, "ntpd");
 
 static struct ctimer delay_timer;
@@ -56,13 +58,18 @@ notify_ready(void *not_used)
 	// Timeout. Stop waiting.
 	NTP_BUSY = 0;
 }
+
+uint8_t NTP_status(void)
+{
+	return NTP_BUSY;
+}
 /*---------------------------------------------------------------------------*/
-unsigned long getCurrTime(void)
+/*unsigned long getCurrTime(void)
 {
 	if((StartTime == 0) && (CurrTime == 0))
 		return 0;
 	return (clock_seconds() - StartTime + CurrTime);
-}
+}*/
 /*---------------------------------------------------------------------------*/
 // Extract the 32 bits that represent the time-stamp seconds (since NTP epoch) from when the packet received.
 // Subtract 70 years worth of seconds from the seconds. (NTP base is 1900 and UNIX base is 1970).
@@ -124,13 +131,17 @@ receiver(struct simple_udp_connection *c,
 /*---------------------------------------------------------------------------*/
 static void Send_NTP_request(uip_ipaddr_t *ipaddr)
 {
-	NTP_BUSY = 1;
-	ntpmsg.mode = 3;
-	ntpmsg.ver = 3;
-	// Request time
-	simple_udp_sendto(&unicast_connection, &ntpmsg, 48, ipaddr);
-	// Wait 50 ms for response
-	ctimer_set(&delay_timer, 50, notify_ready, NULL);
+	if(!NTP_BUSY){
+		NTP_BUSY = 1;
+		ntpmsg.mode = 3;
+		ntpmsg.ver = 3;
+		// Request time
+		simple_udp_sendto(&unicast_connection, &ntpmsg, 48, ipaddr);
+		// Wait 50 ms for response
+		ctimer_set(&delay_timer, 50, notify_ready, NULL);
+	}else{
+		etimer_set(&Send_NTP_request_timer, 60 * CLOCK_SECOND);
+	}
 }
 /*---------------------------------------------------------------------------*/
 static void Send_NTP_time_to_parrent(uip_ipaddr_t *ipaddr)
@@ -138,13 +149,15 @@ static void Send_NTP_time_to_parrent(uip_ipaddr_t *ipaddr)
 	ntp_packet_t NTP_server = { .li = 0, .ver = 3, .mode = 4, 0 };
 	clock_time_t time;
 	time = clock_get_unix_time();
-	if(time){
+	if(time && !NTP_BUSY){
+		NTP_BUSY = 1;
 		NTP_server.stratum = clock_quality(READ_STRANUM);
 		NTP_server.tx_Time_s = uip_ntohl(time + NTP_EPOCH);
 		simple_udp_sendto(&unicast_connection, &NTP_server, 48, ipaddr);
 		// Wait 50 ms so we have time to send packet
 		ctimer_set(&delay_timer, 50*CLOCK_SECOND/1000, notify_ready, NULL);
-		NTP_BUSY = 1;
+	}else{
+		etimer_set(&Update_parrent_timer, 60 * CLOCK_SECOND);
 	}
 }
 /*---------------------------------------------------------------------------*/
@@ -158,8 +171,7 @@ static void
 /*---------------------------------------------------------------------------*/
 PROCESS_THREAD(ntpd_process, ev, data)
 {
-	static struct etimer Send_NTP_request_timer;
-	static struct etimer Update_parrent_timer;
+
 	static uip_ipaddr_t ipaddr;
 
 	PROCESS_BEGIN();
@@ -190,7 +202,7 @@ PROCESS_THREAD(ntpd_process, ev, data)
 			etimer_set(&Send_NTP_request_timer, SEND_INTERVAL * CLOCK_SECOND/clock_quality(READ_STRANUM)); // 1hr - 4min
 		}else if(etimer_expired(&Update_parrent_timer)){
 			Send_NTP_time_to_parrent(&ipaddr);
-			etimer_set(&Update_parrent_timer, SEND_INTERVAL * CLOCK_SECOND);
+			etimer_set(&Update_parrent_timer, SEND_INTERVAL * CLOCK_SECOND * (clock_quality(READ_STRANUM)/15));
 		}
 		
 	}

@@ -30,7 +30,7 @@
 #define NTP_EPOCH            (86400U * (365U * 70U + 17U))
 #define NTPD_PORT             123
 
-#define UDP_IP_BUF   ((struct uip_udpip_hdr *)&uip_buf[UIP_LLH_LEN])
+//#define UDP_IP_BUF   ((struct uip_udpip_hdr *)&uip_buf[UIP_LLH_LEN])
 
 /*	0                   1                   2                   3
     0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
@@ -123,7 +123,8 @@ typedef struct
 #pragma pack()
 PROCESS_NAME(ntpd_process);
 
-unsigned long getCurrTime(void);
+//unsigned long getCurrTime(void);
+uint8_t NTP_status(void);
 
 //static void tcpip_handler(void);
 //static void timeout_handler(void);

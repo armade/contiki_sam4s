@@ -3,6 +3,9 @@ CFLAGS += -DNODE_HTU21D=1  -DLOW_CLOCK=0
 
 all: pd956_sensor_low_power
 
+ifeq ($(UUID),)
+ UUID = 12345678PD
+endif
 
 PROJECT_SOURCEFILES += mqtt-client.c
 PROJECT_SOURCEFILES += httpd-simple.c

@@ -34,6 +34,10 @@ ifeq ($(PREFIX),)
  PREFIX = aaaa::1/64
 endif
 
+ifeq ($(UUID),)
+ UUID = 12345678PD
+endif
+
 CONTIKI_WITH_IPV6 = 1
 include $(CONTIKI)/Makefile.include
 

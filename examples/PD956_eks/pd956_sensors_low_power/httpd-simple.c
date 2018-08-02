@@ -187,26 +187,35 @@ static const char *http_header_con_close[] = {
 
 static const char *http_config_css2[] = {
   "<style>",
-  ".left{float:left;text-align:right;margin-left:50px;}",
-  ".right{margin-left:245px;}",
-  "h1 { font-family: \"Georgia\";",
-  "border-radius: 12px;",
-  "background-color: #2196F3;",
-  "color: white;",
-  "padding-left:30px; }",
-  "h2 { font-family: \"Verdana\"; padding-left:30px;}",
-  "p { font-family: \"Verdana\"; padding-left:50px;}",
-  "body { font-family: \"Verdana\";",
-  "padding-left: 14px; }"
-  "ul {    list-style-type: none;",
-  "margin: 0; padding: 0;",
-  "overflow: hidden;background-color: #2196F3;}"
-  "li {float: left;"
-  "border-right: 1px solid #bbb;}",
-  "li a { display: block;",
-  "color: white; text-align: center;",
-  "padding: 14px 16px; text-decoration: none;}",
-  "li a:hover { background-color: #111;}",
+  ".left{padding-left:30px;float:left;text-align:right}",
+  ".right{margin-left:345px;}",
+  "h1{",
+  	  "font-family:Vardana;",
+  	  "border-radius:5px;",
+  	  "background-color: #2196F3;",
+  	  "color: white;",
+  	  "padding-left:30px;",
+  "p{",
+  	  "font-family:Verdana;",
+  	  "padding-left:50px;",
+  "}body{",
+  	  "font-family:Verdana;",
+  "}ul{",
+  	  "list-style-type:none;",
+  	  "margin:0;",
+  	  "padding:0;",
+  	  "overflow:hidden;",
+  	  "background-color:#2196F3;",
+  "}li{",
+  	  "float:left;"
+  	  "border-right:1px solid #bbb;",
+  "}li a{",
+  	  "display:block;",
+  	  "color:white;",
+  	  "text-align:center;",
+  	  "padding:14px 16px;",
+  	  "text-decoration:none;",
+  "}li a:hover{background-color:#111;}",
   "</style>",
   NULL
 };
@@ -304,9 +313,6 @@ static page_t http_mqtt_cfg_page = {
   generate_mqtt_config,
 };
 
-/*---------------------------------------------------------------------------*/
-#define IBM_QUICKSTART_LINK_LEN 128
-static char http_mqtt_a[IBM_QUICKSTART_LINK_LEN];
 /*---------------------------------------------------------------------------*/
 static uint16_t numtimes;
 static const httpd_simple_post_handler_t *handler;
@@ -505,9 +511,6 @@ PT_THREAD(generate_top_matter(struct httpd_state *s, const char *title,
 
 
   PT_WAIT_THREAD(&s->top_matter_pt,
-                 enqueue_chunk(s, 0, " %s", http_mqtt_a));
-
-  PT_WAIT_THREAD(&s->top_matter_pt,
                  enqueue_chunk(s, 0, "</ul>" SECTION_CLOSE));
 
   PT_END(&s->top_matter_pt);
@@ -526,10 +529,9 @@ PT_THREAD(generate_index(struct httpd_state *s))
                                       http_config_css2));
 //======================================================================================
   /* ND Cache */
-   PT_WAIT_THREAD(&s->generate_pt,
-                     enqueue_chunk(s, 0, "<h1>Connection status</h1>"));
+
   PT_WAIT_THREAD(&s->generate_pt,
-                   enqueue_chunk(s, 0, "<h2>Neighbors</h2>"));
+                   enqueue_chunk(s, 0, "<h1>Neighbors</h1>"));
 
   PT_WAIT_THREAD(&s->generate_pt,
                      enqueue_chunk(s, 0, "<p>"));
@@ -554,7 +556,7 @@ PT_THREAD(generate_index(struct httpd_state *s))
 //======================================================================================
   /* Default Route */
   PT_WAIT_THREAD(&s->generate_pt,
-                    enqueue_chunk(s, 0, "<h2>Default Route</h2>"));
+                    enqueue_chunk(s, 0, "<h1>Default Route</h1>"));
   PT_WAIT_THREAD(&s->generate_pt,
                       enqueue_chunk(s, 0, "<p>"));
   memset(ipaddr_buf, 0, IPADDR_BUF_LEN);
@@ -567,7 +569,7 @@ PT_THREAD(generate_index(struct httpd_state *s))
   /* Routes */
 
   PT_WAIT_THREAD(&s->generate_pt,
-                      enqueue_chunk(s, 0, "<h2>Routes</h2>"));
+                      enqueue_chunk(s, 0, "<h1>Routes</h1>"));
 
   PT_WAIT_THREAD(&s->generate_pt,
                       enqueue_chunk(s, 0, "<p>"));
@@ -632,6 +634,23 @@ PT_THREAD(generate_index(struct httpd_state *s))
   PT_WAIT_THREAD(&s->generate_pt,
                       enqueue_chunk(s, 0, "</p>"));
 
+  //======================================================================================
+  // Internal clock
+  clock_time_t clk = clock_get_unix_time();
+  tm_t tb;
+  UnixtoRTC(&tb, clk);
+
+  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<p>"));
+  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "d: %d/%d-%d       %d:%d:%d",
+                        		 tb.tm_mday,
+    							 tb.tm_mon,
+    							 tb.tm_year,
+    							 tb.tm_hour,
+    							 tb.tm_min,
+    							 tb.tm_sec));
+
+  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "</p>"));
+
 
   //======================================================================================
   //Set the time on the device. Javascript asks for the time and pass it on to the device
@@ -639,20 +658,20 @@ PT_THREAD(generate_index(struct httpd_state *s))
 
   PT_WAIT_THREAD(&s->generate_pt,	enqueue_chunk(s, 0,"<form name=\"input\" action=\"%s\" ",
 		  	  	  	  	  	  	  http_index_page.filename));
-    PT_WAIT_THREAD(&s->generate_pt,	enqueue_chunk(s, 0, "method=\"post\" enctype=\""));
-    PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "application/x-www-form-urlencoded\" "));
-    PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "accept-charset=\"UTF-8\">"));
+  PT_WAIT_THREAD(&s->generate_pt,	enqueue_chunk(s, 0, "method=\"post\" enctype=\""));
+  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "application/x-www-form-urlencoded"));
+  PT_WAIT_THREAD(&s->top_matter_pt, enqueue_chunk(s, 0, http_head_charset));
 
-    PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<input type=\"hidden\" id=\"rc2\" name=\"Timestamp\">"));
-    PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<button onclick=\"Get_time()\" type=\"submit\""));
-    PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, " value=\"Submit\">Set time from browser</button>"));
+  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<input type=\"hidden\" id=\"rc2\" name=\"Timestamp\">"));
+  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<button onclick=\"Get_time()\" type=\"submit\""));
+  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, " value=\"Submit\">Set time from browser</button>"));
 
-    PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<script> function Get_time() {"));
-    PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "var d = new Date(); var n = d.getTime();"));
-    PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "document.getElementById(\"rc2\").value = Math.floor(n/1000);}"));
-    PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "</script>"));
+  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<script> function Get_time() {"));
+  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "var d = new Date(); var n = d.getTime();"));
+  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "document.getElementById(\"rc2\").value = Math.floor(n/1000);}"));
+  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "</script>"));
 
-    PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "</form>"));
+  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "</form>"));
     //======================================================================================
   PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 1, http_bottom));
 
@@ -980,28 +999,6 @@ PT_THREAD(generate_step_motor_config(struct httpd_state *s))
 
   PT_WAIT_THREAD(&s->generate_pt,
                     enqueue_chunk(s, 0, CONTENT_CLOSE SECTION_CLOSE));
-  //=====================================================================================
-
-  PT_WAIT_THREAD(&s->generate_pt,
-                   enqueue_chunk(s, 0, "<h1>RTC time</h1>"));
-
-  clock_time_t clk = clock_get_unix_time();
-  tm_t tb;
-  UnixtoRTC(&tb, clk);
-
-  PT_WAIT_THREAD(&s->generate_pt,
-                       enqueue_chunk(s, 0, "<p>"));
-  PT_WAIT_THREAD(&s->generate_pt,
-                     enqueue_chunk(s, 0, "d: %d. %d. %d       %d:%d:%d",
-                    		 tb.tm_mday,
-							 tb.tm_mon,
-							 tb.tm_year,
-                             tb.tm_hour,
-							 tb.tm_min,
-							 tb.tm_sec));
-
-  PT_WAIT_THREAD(&s->generate_pt,
-                       enqueue_chunk(s, 0, "</p>"));
 
     //=====================================================================================
   PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 1, http_bottom));
@@ -1104,28 +1101,6 @@ PT_THREAD(generate_light_config(struct httpd_state *s))
 
   PT_WAIT_THREAD(&s->generate_pt,
                     enqueue_chunk(s, 0, CONTENT_CLOSE SECTION_CLOSE));
-  //=====================================================================================
-
-  PT_WAIT_THREAD(&s->generate_pt,
-                   enqueue_chunk(s, 0, "<h1>RTC time</h1>"));
-
-  clock_time_t clk = clock_get_unix_time();
-  tm_t tb;
-  UnixtoRTC(&tb, clk);
-
-  PT_WAIT_THREAD(&s->generate_pt,
-                       enqueue_chunk(s, 0, "<p>"));
-  PT_WAIT_THREAD(&s->generate_pt,
-                     enqueue_chunk(s, 0, "d: %d. %d. %d       %d:%d:%d",
-                    		 tb.tm_mday,
-							 tb.tm_mon,
-							 tb.tm_year,
-                             tb.tm_hour,
-							 tb.tm_min,
-							 tb.tm_sec));
-
-  PT_WAIT_THREAD(&s->generate_pt,
-                       enqueue_chunk(s, 0, "</p>"));
 
     //=====================================================================================
   PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 1, http_bottom));
@@ -1228,28 +1203,7 @@ PT_THREAD(generate_hard_light_config(struct httpd_state *s))
 
   PT_WAIT_THREAD(&s->generate_pt,
                     enqueue_chunk(s, 0, CONTENT_CLOSE SECTION_CLOSE));
-  //=====================================================================================
 
-  PT_WAIT_THREAD(&s->generate_pt,
-                   enqueue_chunk(s, 0, "<h1>RTC time</h1>"));
-
-  clock_time_t clk = clock_get_unix_time();
-  tm_t tb;
-  UnixtoRTC(&tb, clk);
-
-  PT_WAIT_THREAD(&s->generate_pt,
-                       enqueue_chunk(s, 0, "<p>"));
-  PT_WAIT_THREAD(&s->generate_pt,
-                     enqueue_chunk(s, 0, "d: %d. %d. %d       %d:%d:%d",
-                    		 tb.tm_mday,
-							 tb.tm_mon,
-							 tb.tm_year,
-                             tb.tm_hour,
-							 tb.tm_min,
-							 tb.tm_sec));
-
-  PT_WAIT_THREAD(&s->generate_pt,
-                       enqueue_chunk(s, 0, "</p>"));
 
     //=====================================================================================
   PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 1, http_bottom));
@@ -1325,28 +1279,7 @@ PT_THREAD(generate_relay4_config(struct httpd_state *s))
   PT_WAIT_THREAD(&s->generate_pt,
                       enqueue_chunk(s, 0, CONTENT_CLOSE SECTION_CLOSE));
 
-  //=====================================================================================
 
-    PT_WAIT_THREAD(&s->generate_pt,
-                     enqueue_chunk(s, 0, "<h1>RTC time</h1>"));
-
-    clock_time_t clk = clock_get_unix_time();
-    tm_t tb;
-    UnixtoRTC(&tb, clk);
-
-    PT_WAIT_THREAD(&s->generate_pt,
-                         enqueue_chunk(s, 0, "<p>"));
-    PT_WAIT_THREAD(&s->generate_pt,
-                       enqueue_chunk(s, 0, "d: %d. %d. %d       %d:%d:%d",
-                      		 tb.tm_mday,
-  							 tb.tm_mon,
-  							 tb.tm_year,
-                               tb.tm_hour,
-  							 tb.tm_min,
-  							 tb.tm_sec));
-
-    PT_WAIT_THREAD(&s->generate_pt,
-                         enqueue_chunk(s, 0, "</p>"));
 
       //=====================================================================================
 
@@ -1808,8 +1741,6 @@ PROCESS_THREAD(httpd_simple_process, ev, data)
   httpd_simple_event_new_config = process_alloc_event();
 
   init();
-
-  snprintf(http_mqtt_a,sizeof("<li><a href=\"https://www.google.com/\">Google</a></li>"), "<li><a href=\"https://www.google.com/\">Google</a></li>");
 
   while(1) {
     PROCESS_WAIT_EVENT_UNTIL(ev == tcpip_event);

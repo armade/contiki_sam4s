@@ -11,8 +11,9 @@
 // Thank you Andrew Trivette: https://www.youtube.com/watch?v=9dtDaWi6R0g
 
 static const char *clock_js[] = {
-"<canvas id=\"canvas\" width=\"600\" height=\"480\"",
+"<canvas id=\"canvas\" width=\"500\" height=\"500\"",
 	"style=\"background-color:#fff\">",
+	"canvas.setAttribute('style', \"position: absolute;  left: 100%;margin-left:-520px; top: 5%;border:2px solid blue\");",
 "</canvas>",
 "<script>",
 	"var canvas=document.getElementById(\"canvas\");",
@@ -58,13 +59,13 @@ static const char *clock_js[] = {
 NULL
 };
 
-
+/*
 static const char *Get_time_js[] = {
 "<script> function Get_time() {"
 		    "var d = new Date(); var n = d.getTime();",
 		    "document.getElementById(\"rc2\").value = Math.floor(n/1000);}",
 "</script>",
 NULL
-};
+};*/
 
 #endif /* JAVASCRIPT_H_ */
