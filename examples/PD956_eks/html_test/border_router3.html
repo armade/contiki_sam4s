@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<style>
+h1 {
+	font-family:Verdana;
+    border-radius: 5px;
+	background-color: #2196F3;
+	color: white;
+	padding-left:30px;
+    font-size:18px;
+    padding-bottom:7px;
+	width: 800px;
+}
+h0 {
+	font-family: Verdana;
+	color: black;
+	padding-left:15px;
+    font-size:25px;
+}
+a{
+font-family: Verdana;
+	color: blue;
+}
+table {
+	margin-left: 30px;
+    font-family: Verdana;
+    border-collapse: collapse;
+    width: 700px;
+    font-size:12px;
+}
+td, th {
+    border:0px solid #dddddd;
+    text-align: left;
+    padding: 2px;
+    padding-left:45px;
+}
+th { background-color: #2196F3;color:white;}
+tr:nth-child(even) {
+    background-color: #d5d5dd;
+}
+tr:hover {background-color: #70c0c0}
+
+legend {
+    //background-color: #2196F3;
+	font-family: Verdana;
+    color: darkblue;//#fff;
+    padding: 8px 8px;
+	font-size: 16px;
+	font-weight:bold;
+}
+fieldset{
+	margin:30px;
+	width: 200px;
+	background-color:#FAFAFF;
+	border:3px solid grey;
+    -moz-border-radius:8px;
+    -webkit-border-radius:8px;	
+    border-radius:8px;
+	
+}
+#canvas {
+    <!-- position: absolute; -->
+	botton: 1;
+    left: 0;
+    right: 0;
+    margin:auto;
+	
+}
+</style>
+<html>
+<body  >
+
+<div>
+        <h0>
+        	<img src="https://www.how-to-draw-funny-cartoons.com/images/xhow-to-draw-a-snowflake-010.jpg.pagespeed.ic.0EmX9XC8Hj.jpg"  width="25" height="25"> 			
+		Router home  
+        </h0>	  
+        </div>
+
+		<h1>Neighbors</h1>
+		<table>
+  <tr>
+    <th>IP addr</th>
+    <th>Status</th>
+    <th>SESSION KEY</th>
+	<th>UUID</th>
+  </tr>
+  <tr>
+    <td> <a href = http://www.google.dk> aaaa::3031:3735:3034:3234 </a></td>
+    <td>REACHABLE</td>
+	<td>124b2f42b4a45a</td>
+	<td>12345678PD</td>
+  </tr>
+  <tr>
+    <td> <a href = http://www.google.dk> aaaa::3031:3133:3738:3531 </a></td>
+    <td>REACHABLE</td>
+	<td>124b2f12312312a45a</td>
+	<td>99999999PD</td>
+ </table>
+ 
+ 
+ 
+		<h1>Default Routes</h1>
+
+
+
+<table>
+  <tr>
+    <th>IP addr</th>
+    <th>Status</th>
+    <th>Lifetime</th>
+  </tr>
+  <tr>
+    <td> <a href = http://www.google.dk> aaaa::3031:3735:3034:3234 </a></td>
+    <td>REACHABLE</td>
+    <td>1530</td>
+  </tr>
+  <tr>
+    <td> <a href = http://www.google.dk> aaaa::3031:3133:3738:3531 </a></td>
+    <td>REACHABLE</td>
+    <td>7137</td>
+  </tr>
+
+ </table>
+
+ 
+
+
+</body>
+<fieldset>
+<legend>Statistic</legend>
+
+  Page hits: 4<br>
+  Uptime: 12 secs<br>
+  Current time: 12457865secs<br>
+  Stranum: 15 <br>
+
+</fieldset>
+<fieldset>
+<legend>Internal clock</legend>
+d: 13/04-%2018       16:23:17
+</fieldset>
+</html>
+<canvas id="canvas" width="500" height="500"
+style="background-color:#fff">
+</canvas>
+<body onresize="resize_canvas()">
+        <canvas id="canvas">Your browser doesn't support canvas</canvas>
+</body>
+<script>
+var canvas = document.getElementById("canvas");
+//canvas.setAttribute('style', "position: absolute; top: 5%;border:2px solid blue");
+var ctx = canvas.getContext("2d");
+//ctx.globalAlpha=0.5;
+setInterval(drawClock, 100);
+resize_canvas();
+
+
+
+function degToRad(degree){
+  var factor = Math.PI/180;
+  return degree*factor;
+}
+
+function drawClock() {
+	var now = new Date();
+    var today = now.toDateString();
+    var time = now.toLocaleTimeString();
+	var hours = now.getHours();
+	var minutes = now.getMinutes();
+    var seconds = now.getSeconds();
+	var milisec = now.getMilliseconds();
+	var new_sec = seconds + (milisec/1000);
+	
+	var radius;
+	
+	if(canvas.height > canvas.width)
+		radius = canvas.width * 0.45;
+	else
+		radius = canvas.height * 0.45;
+		
+	ctx.strokeStyle = '#CfCfCf';
+	ctx.lineWidth = 17*radius/225;
+	ctx.shadowBlur = 25;
+	ctx.shadowColor = '#2136F3';
+
+//Background 
+    //ctx.fillStyle = 'black';
+	gradient = ctx.createRadialGradient(canvas.width/2,canvas.height/2,5,canvas.width/2,canvas.height/2,canvas.width*0.7);
+	gradient.addColorStop(0,'#0930a3');
+	gradient.addColorStop(1,'black');
+	ctx.fillStyle = gradient;
+    ctx.fillRect(0,0,canvas.width,canvas.height);
+//Hours
+    ctx.beginPath();
+    ctx.arc(canvas.width/2,canvas.height/2,radius,degToRad(270), degToRad((hours*15)-89.9));
+    ctx.stroke();
+//Minutes
+    ctx.beginPath();
+    ctx.arc(canvas.width/2,canvas.height/2,radius*0.87,degToRad(270), degToRad((minutes*6)-89.9));
+    ctx.stroke();
+//seconds
+    ctx.beginPath();
+    ctx.arc(canvas.width/2,canvas.height/2,radius*0.74,degToRad(270), degToRad((new_sec*6)-89.9));
+    ctx.stroke();
+    
+    ctx.font = getFont(radius);
+    ctx.fillStyle = 'silver';
+    ctx.fillText(today, canvas.width/2-85* radius/225,canvas.height/2);
+    
+    ctx.font = getFont(radius);
+    ctx.fillStyle = 'silver';
+    ctx.fillText(time, canvas.width/2-35* radius/225,canvas.height/2+30* radius/225);
+    
+    
+}
+function getFont(radius) {
+    var size = 30* radius/225;   // get font size based on current width
+    return (size|0) + 'px Arial'; // set font
+}
+ function resize_canvas(){
+	canvas = document.getElementById("canvas");
+	canvas.width  = window.innerWidth*0.45;
+	canvas.height = window.innerHeight*0.8;
+}
+
+
+</script>
+

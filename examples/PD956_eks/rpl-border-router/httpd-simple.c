@@ -217,17 +217,27 @@ static const char *http_config_css[] = {
    "}li a{"
   	  "display: block;",
   	  "color: white; text-align: center;",
-  	  "padding: 14px 16px; text-decoration: none;",
-   "}li a:hover { background-color: #111;}",
+  	  "padding: 14px 16px; text-decoration:none;",
+   "}li a:hover { background-color:#70c0c0;}",
    "legend {",
-       "background-color: #2196F3;",
-   		"font-family: Verdana;",
-   		"color: #fff;",
-   		"padding: 3px 6px;",
-   		"font-size: 18px;",
+   	   "font-family: Verdana;",
+       "color: darkblue;",
+       "padding: 8px 8px;",
+       "font-size: 16px;",
+       "font-weight:bold;",
    "}fieldset{",
-   	   "margin:30px;",
-   	   "width: 200px;}",
+   		"margin:30px;",
+   		"width: 200px;",
+   		"background-color:#FAFAFF;",
+   		"border:3px solid grey;",
+   		"-moz-border-radius:8px;",
+   		"-webkit-border-radius:8px;",
+   		"border-radius:8px;}",
+   	"#canvas {",
+    	"position: absolute;",
+    	"left: 1;",
+    	"right: 0;",
+    	"margin:auto;}",
   "</style>",
   NULL
 };
@@ -604,7 +614,8 @@ PT_THREAD(generate_index(struct httpd_state *s))
   tm_t tb;
   UnixtoRTC(&tb, clk);
 
-  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<p>"));
+  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<fieldset>"));
+  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<legend>Internal clock</legend>"));
   PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "d: %d/%d-%d       %d:%d:%d",
                       		 tb.tm_mday,
   							 tb.tm_mon,
@@ -613,7 +624,7 @@ PT_THREAD(generate_index(struct httpd_state *s))
   							 tb.tm_min,
   							 tb.tm_sec));
 
-  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "</p>"));
+  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "</fieldset>"));
 
   //======================================================================================
   //Set the time on the device. Javascript asks for the time and pass it on to the device

@@ -173,6 +173,7 @@ PROCESS_THREAD(ntpd_process, ev, data)
 {
 
 	static uip_ipaddr_t ipaddr;
+	int stranum_val;
 
 	PROCESS_BEGIN();
 	PRINTF("ntpd process started\n");
@@ -197,12 +198,16 @@ PROCESS_THREAD(ntpd_process, ev, data)
 	etimer_set(&Update_parrent_timer, SEND_INTERVAL * CLOCK_SECOND);
 	while(1){
 		PROCESS_YIELD();
+		stranum_val = clock_quality(READ_STRANUM);
 		if(etimer_expired(&Send_NTP_request_timer)){
 			Send_NTP_request(&ipaddr);
-			etimer_set(&Send_NTP_request_timer, SEND_INTERVAL * CLOCK_SECOND/clock_quality(READ_STRANUM)); // 1hr - 4min
+			if(stranum_val == 15)
+				etimer_set(&Send_NTP_request_timer, 10*SEND_INTERVAL); // 10sec
+			else
+				etimer_set(&Send_NTP_request_timer, SEND_INTERVAL * CLOCK_SECOND/stranum_val); // 1hr - 4min
 		}else if(etimer_expired(&Update_parrent_timer)){
 			Send_NTP_time_to_parrent(&ipaddr);
-			etimer_set(&Update_parrent_timer, SEND_INTERVAL * CLOCK_SECOND * (clock_quality(READ_STRANUM)/15));
+			etimer_set(&Update_parrent_timer, SEND_INTERVAL * CLOCK_SECOND * (stranum_val/15));
 		}
 		
 	}

@@ -12,7 +12,7 @@
 #include "sam4s.h"
 extern void gpsd_put_char(uint8_t c);
 
-#ifndef NODE_ROUTER
+#ifdef NODE_GPS
 
 void UART1_Handler(void)
 {

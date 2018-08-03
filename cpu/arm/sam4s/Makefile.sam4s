@@ -13,7 +13,7 @@ SIZE    = arm-none-eabi-size
 
 LDSCRIPT = $(CONTIKI_CPU)/flash.ld
 
-CFLAGS += -mcpu=cortex-m4 -mthumb -mlittle-endian -O2
+CFLAGS += -mcpu=cortex-m4 -mthumb -mlittle-endian -O2 -march=ARMv7E-M
 CFLAGS += -ffunction-sections -fdata-sections
 CFLAGS += -fshort-enums -fomit-frame-pointer -fno-strict-aliasing
 CFLAGS += -Wall -g3 -D __SAM4SD32B__ -D SAM4S
@@ -102,11 +102,8 @@ CUSTOM_RULE_LINK=1
 %.lst: %.elf
 	$(OBJDUMP) $(OBJDUMP_FLAGS) $< > $@
 
-### We don't really need the .hex and .bin for the .$(TARGET) but let's make
-### sure they get built
-
-
-%.$(TARGET): %.elf %.hex %.bin
+# Build .elf and .bin files
+%.$(TARGET): %.elf %.bin
 	cp $< $@
 	@echo "$@"
 	@$(CC) --version

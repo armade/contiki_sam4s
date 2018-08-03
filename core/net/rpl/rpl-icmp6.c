@@ -308,7 +308,7 @@ dio_input(void)
   uint8_t valid_frame = 0;
   crt_t *certificate_ptr;
   static uint8_t hash[32] = {0};
-  uip_ds6_nbr_t *nbr;
+  //uip_ds6_nbr_t *nbr;
 
   memset(&dio, 0, sizeof(dio));
 

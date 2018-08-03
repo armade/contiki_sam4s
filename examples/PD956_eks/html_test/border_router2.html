@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<style>
+
+h1 {
+	font-family:Verdana;
+    border-radius: 5px;
+	background-color: #2196F3;
+	background: radial-gradient(ellipse at right,  lightgreen  10%, green 100%);
+	color: white;
+	padding-left:30px;
+    font-size:18px;
+    padding-bottom:7px;
+	width: 800px;
+	text-shadow: 1px 1px black;
+}
+h0 {
+margin:20px;
+	font-family: Verdana;
+	color: white;
+	padding-left:15px;
+    font-size:35px;
+	z-index: 1;
+	position: absolute;
+	top: 30px;
+	left: 2px;
+	/* offset-x | offset-y | color */
+	text-shadow: 2px 2px black;
+}
+
+h7 {
+	margin:20px;
+	font-family: Verdana;
+	color: white;
+	padding-left:15px;
+    font-size:12px;
+	z-index: 1;
+	position: absolute;
+	top: 85px;
+	left: 75px;
+}
+a{
+	font-family: Verdana;
+	color: blue;
+}
+table {
+	margin-left: 30px;
+    font-family: Verdana;
+    border-collapse: collapse;
+    width: 700px;
+    font-size:12px;
+}
+td, th {
+    border:0px solid #dddddd;
+    text-align: left;
+    padding: 2px;
+    padding-left:45px;
+	font-size:14px;
+}
+th { 
+	color:white;
+	background: radial-gradient(ellipse at center,  lightgreen  10%, green 100%); text-shadow: 1px 1px black;
+}
+tr:nth-child(even) {
+    background-color: #d5d5dd;
+}
+tr:nth-child(odd) {
+    background-color: #ffffffff;
+}
+tr:hover {background-color: #70c0c0}
+
+legend {
+    background: radial-gradient(ellipse at center,  lightgreen  10%, green 100%); text-shadow: 1px 1px black;
+	font-family: Verdana;
+    color: white;//#fff;
+    padding: 2px 5px;
+	font-size: 16px;
+	font-weight:bold;
+	text-shadow: 1px 1px black;
+}
+fieldset{
+	margin:20px;
+	width: 770px;
+	background-color:#FAFAFF;
+	background: radial-gradient(ellipse at center,  #FfF7FF  0%, #ffffffff 70%);
+	border:3px solid lightgreen;
+    -moz-border-radius:8px;
+    -webkit-border-radius:8px;	
+    border-radius:8px;
+	display : inline-block;
+	
+}
+<!-- fieldset:hover { -->
+    <!-- width: 400px; -->
+	<!-- font-size: 26px; -->
+	<!-- -webkit-transition: width 1s, height 2s, -webkit-transform 1s; /* Safari */ -->
+    <!-- transition: width 1s, height 2s, transform 1s; -->
+<!-- } -->
+#canvas {
+    <!-- position: absolute; -->
+	botton: 1;
+    left: 0;
+    right: 0;
+    margin:20px;
+	
+}
+body {
+    background: #595959;
+    <!-- background: radial-gradient(ellipse at center,  #1e1e1e  0%, #ffffffff 70%); -->
+    background-size: 1000px;
+	font-size:12px;
+}
+</style>
+<html>
+<body  >
+
+<div>
+        <h0>
+        	<img src="https://www.how-to-draw-funny-cartoons.com/images/xhow-to-draw-a-snowflake-010.jpg.pagespeed.ic.0EmX9XC8Hj.jpg"  width="45" height="45"> 			
+		Router home  
+        </h0>
+		<br>
+		<h7>
+			Welcome to my world!!!<br>
+			This is where connections happen.
+		</h7>
+        </div>
+<canvas id="canvas" width="850" height="250"
+style="background-color:#fff">
+</canvas>
+<br>
+<fieldset>
+		<h1>Neighbors</h1>
+		<table>
+  <tr>
+    <th>IP addr</th>
+    <th>Status</th>
+    <th>SESSION KEY</th>
+	<th>UUID</th>
+  </tr>
+  <tr>
+    <td> <a href = http://www.google.dk> aaaa::3031:3735:3034:3234 </a></td>
+    <td>REACHABLE</td>
+	<td>124b2f42b4a45a</td>
+	<td>12345678PD</td>
+  </tr>
+  <tr>
+    <td> <a href = http://www.google.dk> aaaa::3031:3133:3738:3531 </a></td>
+    <td>REACHABLE</td>
+	<td>124b2f12312312a45a</td>
+	<td>99999999PD</td>
+ </table>
+ 
+ 
+ 
+		<h1>Default Routes</h1>
+
+
+
+<table>
+  <tr>
+    <th>IP addr</th>
+    <th>Status</th>
+    <th>Lifetime</th>
+  </tr>
+  <tr>
+    <td> <a href = http://www.google.dk> aaaa::3031:3735:3034:3234 </a></td>
+    <td>REACHABLE</td>
+    <td>1530</td>
+  </tr>
+  <tr>
+    <td> <a href = http://www.google.dk> aaaa::3031:3133:3738:3531 </a></td>
+    <td>REACHABLE</td>
+    <td>7137</td>
+  </tr>
+
+ </table>
+</fieldset>
+ <br>
+<fieldset>
+
+
+<fieldset>
+<legend>Statistic</legend>
+<div>
+  Page hits: 4<br>
+  Uptime: 12 secs<br>
+  Current time: 12457865secs<br>
+  Stranum: 15 <br>
+</div>
+</fieldset>
+
+<fieldset>
+<legend>Internal clock</legend>
+d: 13/04-2018       16:23:17
+</fieldset>
+
+</fieldset>
+<br>
+</body>
+</html>
+
+<!-- <body onresize="resize_canvas()"> -->
+        <!-- <canvas id="canvas">Your browser doesn't support canvas</canvas> -->
+<!-- </body> -->
+<script>
+var canvas = document.getElementById("canvas");
+//canvas.setAttribute('style', "position: absolute; top: 5%;border:2px solid blue");
+var ctx = canvas.getContext("2d");
+ctx.globalAlpha=1;
+setInterval(drawClock, 100);
+<!-- resize_canvas(); -->
+
+
+
+function degToRad(degree){
+  var factor = Math.PI/180;
+  return degree*factor;
+}
+
+function drawClock() {
+	var now = new Date();
+    var today = now.toDateString();
+    var time = now.toLocaleTimeString();
+	var hours = now.getHours();
+	var minutes = now.getMinutes();
+    var seconds = now.getSeconds();
+	var milisec = now.getMilliseconds();
+	var new_sec = seconds + (milisec/1000);
+	
+	var radius;
+	
+	if(canvas.height > canvas.width)
+		radius = canvas.width * 0.45;
+	else
+		radius = canvas.height * 0.45;
+		
+	ctx.strokeStyle = '#CfCfCf';
+	ctx.lineWidth = 17*radius/225;
+	ctx.shadowBlur = 25;
+	ctx.shadowColor = '#2136F3';
+
+//Background 
+    //ctx.fillStyle = 'black';
+	gradient = ctx.createRadialGradient(canvas.width/2,canvas.height/2,5,canvas.width/2,canvas.height/2,canvas.width*0.7);
+	gradient.addColorStop(0,'lightgreen');
+	gradient.addColorStop(1,'green');
+	ctx.fillStyle = gradient;
+    ctx.fillRect(0,0,canvas.width,canvas.height);
+//Hours
+    ctx.beginPath();
+    ctx.arc(canvas.width/2,canvas.height/2,radius,degToRad(270), degToRad((hours*15)-89.9));
+    ctx.stroke();
+//Minutes
+    ctx.beginPath();
+    ctx.arc(canvas.width/2,canvas.height/2,radius*0.87,degToRad(270), degToRad((minutes*6)-89.9));
+    ctx.stroke();
+//seconds
+    ctx.beginPath();
+    ctx.arc(canvas.width/2,canvas.height/2,radius*0.74,degToRad(270), degToRad((new_sec*6)-89.9));
+    ctx.stroke();
+    
+	
+	ctx.shadowBlur = 15;
+	ctx.shadowColor = 'orange';
+	
+    ctx.font = getFont(radius);
+    ctx.fillStyle = 'black';
+    ctx.fillText(today, canvas.width/2-120* radius/225,canvas.height/2);
+    
+    ctx.font = getFont(radius);
+    ctx.fillStyle = 'black';
+    ctx.fillText(time, canvas.width/2-45* radius/225,canvas.height/2+35* radius/225);
+    
+    
+}
+function getFont(radius) {
+    var size = 35* radius/225;   // get font size based on current width
+    return (size|0) + 'px Arial'; // set font
+}
+ function resize_canvas(){
+	canvas = document.getElementById("canvas");
+	canvas.width  = window.innerWidth*0.45;
+	canvas.height = window.innerHeight*0.8;
+}
+
+
+</script>
+
