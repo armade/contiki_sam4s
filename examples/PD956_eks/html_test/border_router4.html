@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<style>
+
+h1 {
+	font-family:Verdana;
+	border-radius: 5px;
+	background-color: #2196F3;
+	background: radial-gradient(ellipse at right, #aed6f4  10%, #065b9d 100%);
+	color: white;
+	padding-left:30px;
+	font-size:18px;
+	padding-bottom:7px;
+	padding-top:7px;
+	width: 800px;
+	text-shadow: 2px 2px black;
+}
+h0 {
+	margin:20px;
+	font-family: Verdana;
+	color: white;
+	padding-left:15px;
+	font-size:35px;
+	z-index: 1;
+	position: absolute;
+	top: 40px;
+	left: 62px;
+	/* offset-x | offset-y | color */
+	text-shadow: 2px 2px black;
+}
+
+h7 {
+	margin:20px;
+	font-family: Verdana;
+	color: white;
+	padding-left:15px;
+	font-size:12px;
+	z-index: 1;
+	position: absolute;
+	top: 85px;
+	left: 75px;
+
+}
+a{
+	font-family: Verdana;
+	color: blue;
+}
+table {
+	margin-left: 30px;
+	font-family: Verdana;
+	border-collapse: collapse;
+	width: 700px;
+	font-size:12px;
+}
+td, th {
+	border:0px solid #dddddd;
+	text-align: left;
+	padding: 2px;
+	padding-left:45px;
+	font-size:14px;
+}
+th { 
+	color:white;
+	background: radial-gradient(ellipse at center,  #aed6f4  10%, #065b9d 100%); text-shadow: 1px 1px black;
+}
+tr:nth-child(even) {
+    background-color: #d5d5dd;
+}
+tr:nth-child(odd) {
+    background-color: #ffffffff;
+}
+tr:hover {background-color: #70c0c0}
+
+legend {
+	background: radial-gradient(ellipse at center,  #aed6f4  10%, #065b9d 100%); text-shadow: 1px 1px black;
+	font-family: Verdana;
+	color: white;//#fff;
+	padding: 2px 5px;
+	font-size: 16px;
+	font-weight:bold;
+	text-shadow: 1px 1px black;
+}
+fieldset{
+	margin:20px;
+	width: 770px;
+	background-color:#FAFAFF;
+	background: radial-gradient(ellipse at center,  #FfF7FF  0%, #ffffffff 70%);
+	border:3px solid #065b9d;
+	-moz-border-radius:8px;
+	-webkit-border-radius:8px;	
+	border-radius:12px;
+	display : inline-block;
+}
+.legend1:hover {
+	font-size: 26px;
+}
+#ClockCanvas {
+	<!-- position: absolute; -->
+	left: 0;
+	right: 0;
+	margin:20px;
+}
+body {
+	background: #595959;
+	<!-- background: radial-gradient(ellipse at center,  #1e1e1e  0%, #ffffffff 70%); -->
+	background-size: 1000px;
+	font-size:12px;
+}
+</style>
+<html>
+<body  >
+
+<canvas id="SnowflakeCanvas" width="60" height="60" ">
+Your browser does not support the HTML5 canvas tag.</canvas>
+
+<div>
+        <h0>			
+		Router home  
+        </h0>
+		<br>
+		<h7>
+			Welcome to my world!!!<br>
+			This is where connections happen.
+		</h7>
+        </div>
+<canvas id="ClockCanvas" width="850" height="250"
+style="background-color:#fff">
+</canvas>
+<br>
+<fieldset>
+		<h1>Neighbors</h1>
+		<table>
+  <tr>
+    <th>IP addr</th>
+    <th>Status</th>
+    <th>SESSION KEY</th>
+	<th>UUID</th>
+  </tr>
+  <tr>
+    <td> <a href = http://www.google.dk> aaaa::3031:3735:3034:3234 </a></td>
+    <td>REACHABLE</td>
+	<td>124b2f42b4a45a</td>
+	<td>12345678PD</td>
+  </tr>
+  <tr>
+    <td> <a href = http://www.google.dk> aaaa::3031:3133:3738:3531 </a></td>
+    <td>REACHABLE</td>
+	<td>124b2f12312312a45a</td>
+	<td>99999999PD</td>
+ </table>
+ 
+ 
+ 
+		<h1>Default Routes</h1>
+
+
+
+<table>
+  <tr>
+    <th>IP addr</th>
+    <th>Status</th>
+    <th>Lifetime</th>
+  </tr>
+  <tr>
+    <td> <a href = http://www.google.dk> aaaa::3031:3735:3034:3234 </a></td>
+    <td>REACHABLE</td>
+    <td>1530</td>
+  </tr>
+  <tr>
+    <td> <a href = http://www.google.dk> aaaa::3031:3133:3738:3531 </a></td>
+    <td>REACHABLE</td>
+    <td>7137</td>
+  </tr>
+
+ </table>
+</fieldset>
+ <br>
+<fieldset>
+
+</div>
+<fieldset>
+<legend>Statistic</legend>
+<div>
+<div class="legend1">
+  Page hits: 4<br>
+  Uptime: 12 secs<br>
+  Current time: 12457865secs<br>
+  Stranum: 15 <br>
+</div>
+</div>
+</fieldset>
+
+<fieldset>
+<legend>Internal clock</legend>
+<div class="legend1">
+d: 13/04-2018       16:23:17
+</div>
+</fieldset>
+
+</fieldset>
+<br>
+</body>
+</html>
+
+<!-- <body onresize="resize_canvas()"> -->
+        <!-- <canvas id="canvas">Your browser doesn't support canvas</canvas> -->
+<!-- </body> -->
+<script>
+var clock_canvas = document.getElementById("ClockCanvas");
+//clock_canvas.setAttribute('style', "position: absolute; top: 5%;border:2px solid blue");
+var ctx = clock_canvas.getContext("2d");
+ctx.globalAlpha=1;
+setInterval(drawClock, 100);
+<!-- resize_canvas(); -->
+
+
+
+function degToRad(degree){
+  var factor = Math.PI/180;
+  return degree*factor;
+}
+
+function drawClock() {
+	var now = new Date();
+    var today = now.toDateString();
+    var time = now.toLocaleTimeString();
+	var hours = now.getHours();
+	var minutes = now.getMinutes();
+    var seconds = now.getSeconds();
+	var milisec = now.getMilliseconds();
+	var new_sec = seconds + (milisec/1000);
+	
+	var radius;
+	
+	if(clock_canvas.height > clock_canvas.width)
+		radius = clock_canvas.width * 0.45;
+	else
+		radius = clock_canvas.height * 0.45;
+		
+	ctx.strokeStyle = '#CfCfCf';
+	ctx.lineWidth = 17*radius/225;
+	ctx.shadowBlur = 25;
+	ctx.shadowColor = '#2136F3';
+
+//Background 
+    //ctx.fillStyle = 'black';
+	gradient = ctx.createRadialGradient(clock_canvas.width/2,clock_canvas.height/2,5,clock_canvas.width/2,clock_canvas.height/2,clock_canvas.width*0.7);
+	gradient.addColorStop(0,'#aed6f4');
+	gradient.addColorStop(1,'#065b9d');
+	ctx.fillStyle = gradient;
+    ctx.fillRect(0,0,clock_canvas.width,clock_canvas.height);
+//Hours
+    ctx.beginPath();
+    ctx.arc(clock_canvas.width/2,clock_canvas.height/2,radius,degToRad(270), degToRad((hours*15)-89.9));
+    ctx.stroke();
+//Minutes
+    ctx.beginPath();
+    ctx.arc(clock_canvas.width/2,clock_canvas.height/2,radius*0.87,degToRad(270), degToRad((minutes*6)-89.9));
+    ctx.stroke();
+//seconds
+    ctx.beginPath();
+    ctx.arc(clock_canvas.width/2,clock_canvas.height/2,radius*0.74,degToRad(270), degToRad((new_sec*6)-89.9));
+    ctx.stroke();
+    
+	
+	ctx.shadowBlur = 15;
+	ctx.shadowColor = 'orange';
+	
+    ctx.font = getFont(radius);
+    ctx.fillStyle = 'black';
+    ctx.fillText(today, clock_canvas.width/2-120* radius/225,clock_canvas.height/2);
+    
+    ctx.font = getFont(radius);
+    ctx.fillStyle = 'black';
+    ctx.fillText(time, clock_canvas.width/2-95* radius/225,clock_canvas.height/2+35* radius/225);
+    
+    
+}
+function getFont(radius) {
+    var size = 35* radius/225;   // get font size based on current width
+    return (size|0) + 'px Arial'; // set font
+}
+ function resize_canvas(){
+	clock_canvas = document.getElementById("ClockCanvas");
+	clock_canvas.width  = window.innerWidth*0.45;
+	clock_canvas.height = window.innerHeight*0.8;
+}
+
+
+</script>
+
+<script>
+var SnowCanvas = document.getElementById("SnowflakeCanvas");
+SnowCanvas.setAttribute('style', "position: absolute;  left: 35px; top: 50px");
+var ctx_snow = SnowCanvas.getContext("2d"); 
+ctx_snow.strokeStyle = '#ffffff';
+ctx_snow.lineWidth = 1.2;
+//ctx_snow.lineCap = 'round';
+ctx_snow.shadowBlur = 25;
+ctx_snow.shadowColor = 'grey';
+ctx_snow.globalAlpha=1;
+
+var origo_x = SnowCanvas.width/2;
+var origo_y = SnowCanvas.height/2;
+var amp = SnowCanvas.width/2;
+var amp2 = SnowCanvas.width/8;
+var amp3 = SnowCanvas.width/16;
+var amp4 = SnowCanvas.width/32;
+
+var start_first_flake_x;
+var start_first_flake_y;
+var stop_first_flake_x;
+var stop_first_flake_y;
+
+var i;
+var k;
+for (i = 0; i < 8; i++) {
+	ctx_snow.beginPath();
+	ctx_snow.moveTo(origo_x,origo_y);
+	y_line = amp*Math.sin((i*45*Math.PI/180));
+	x_line = amp*Math.cos((i*45*Math.PI/180));
+	ctx_snow.lineTo(origo_x+x_line,origo_y+y_line);
+	////////////////////////////////////////////////////////////////////////////////////////////
+	for (k = 0; k < 4; k++) {
+		// start point
+		start_first_flake_x = (amp-(amp2+k*amp3))*Math.sin((i*45*Math.PI/180));
+		start_first_flake_y = (amp-(amp2+k*amp3))*Math.cos((i*45*Math.PI/180));
+		// point on line (midpoint)
+		stop_first_flake_x = (amp-(amp4+k*amp3))*Math.sin(((i*45-(12+k*3))*Math.PI/180));
+		stop_first_flake_y = (amp-(amp4+k*amp3))*Math.cos(((i*45-(12+k*3))*Math.PI/180));
+		// draw line
+		ctx_snow.moveTo(origo_x+stop_first_flake_x,origo_y+stop_first_flake_y);
+		ctx_snow.lineTo(origo_x+start_first_flake_x,origo_x+start_first_flake_y);
+		// Stop point
+		stop_first_flake_x = (amp-(amp4+k*amp3))*Math.sin(((i*45+(12+k*3))*Math.PI/180));
+		stop_first_flake_y = (amp-(amp4+k*amp3))*Math.cos(((i*45+(12+k*3))*Math.PI/180));
+		ctx_snow.lineTo(origo_x+stop_first_flake_x,origo_y+stop_first_flake_y);
+	}
+
+
+	ctx_snow.stroke();
+} 
+
+
+</script>
+

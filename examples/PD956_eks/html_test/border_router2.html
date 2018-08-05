@@ -10,6 +10,7 @@ h1 {
 	padding-left:30px;
     font-size:18px;
     padding-bottom:7px;
+padding-top:7px;
 	width: 800px;
 	text-shadow: 1px 1px black;
 }
@@ -37,6 +38,7 @@ h7 {
 	position: absolute;
 	top: 85px;
 	left: 75px;
+
 }
 a{
 	font-family: Verdana;
@@ -87,6 +89,7 @@ fieldset{
     -webkit-border-radius:8px;	
     border-radius:8px;
 	display : inline-block;
+font-weight:bold;
 	
 }
 <!-- fieldset:hover { -->
@@ -269,7 +272,7 @@ function drawClock() {
     
     ctx.font = getFont(radius);
     ctx.fillStyle = 'black';
-    ctx.fillText(time, canvas.width/2-45* radius/225,canvas.height/2+35* radius/225);
+    ctx.fillText(time, canvas.width/2-95* radius/225,canvas.height/2+35* radius/225);
     
     
 }
