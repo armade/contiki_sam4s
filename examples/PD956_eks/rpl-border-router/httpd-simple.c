@@ -212,7 +212,7 @@ static const char *http_config_css[] = {
       "margin-left:30px;",
       "font-family:Verdana;",
       "border-collapse:collapse;",
-      "width:700px",
+      "width:700px;",
       "font-size:12px;",
   "}td,th{",
       "border: 0px solid #dddddd;",
@@ -222,19 +222,19 @@ static const char *http_config_css[] = {
       "font-size:14px;",
   "}th {",
       "color:white;",
-      "background: radial-gradient(ellipse at center,  #aed6f4  10%, #065b9d 100%); text-shadow: 1px 1px black;",
+      "background: radial-gradient(ellipse at center,  #aed6f4  10%%, #065b9d 100%%); text-shadow: 1px 1px black;",
   "}tr:nth-child(even){",
       "background-color:#d5d5dd;",
   "}tr:nth-child(odd) {",
 	  "background-color: #ffffffff;",
   "}th {"
       "background-color: #2196F3;color:white;",
-  "}tr:hover {background-color: #70c0c0",
+  "}tr:hover {background-color: #70c0c0;",
   "}ul {"
   	  "font-family: Verdana;",
   	  "text-shadow: 2px 2px black;",
   	  "font-size:14px;",
-  	  "width: 870px",
+  	  "width: 870px;",
   	  "list-style-type: none;",
   	  "margin: 0; padding: 0;",
   	  "overflow: hidden;background-color: #2196F3;",
@@ -247,7 +247,8 @@ static const char *http_config_css[] = {
   	  "padding: 14px 16px; text-decoration:none;",
    "}li a:hover { background-color:#70c0c0;",
    "}legend{",
-	  "background: radial-gradient(ellipse at center,  #aed6f4  10%, #065b9d 100%); text-shadow: 1px 1px black;",
+	  "background: radial-gradient(ellipse at center,  #aed6f4  10%%, #065b9d 100%%);",
+	  "text-shadow: 1px 1px black;",
 	  "font-family: Verdana;",
 	  "color: white;",
 	  "padding: 2px 5px;",
@@ -258,7 +259,7 @@ static const char *http_config_css[] = {
 	  "margin:20px;",
 	  "width: 770px;",
 	  "background-color:#FAFAFF;",
-	  "background: radial-gradient(ellipse at center,  #FfF7FF  0%, #ffffffff 70%);",
+	  "background: radial-gradient(ellipse at center,  #FfF7FF  0%%, #ffffffff 70%%);",
 	  "border:3px solid #065b9d;",
 	  "-moz-border-radius:8px;",
 	  "-webkit-border-radius:8px;",
@@ -580,7 +581,7 @@ PT_THREAD(generate_index(struct httpd_state *s))
    PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "</h7>"));
    PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "</div>"));
    PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<canvas id=\"ClockCanvas\" width=\"850\" height=\"250\""));
-   PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "style=\"background-color:#fff\>"));
+   PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "style=\"background-color:#fff\">"));
    PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "</canvas><br>"));
 
 
