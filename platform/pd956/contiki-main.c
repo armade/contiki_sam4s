@@ -43,7 +43,7 @@ volatile devicecert_t device_certificate = (devicecert_t) {
 };
 
 uint8_t sleepmgr_locks[SLEEPMGR_NR_OF_MODES];
-
+rtimer_clock_t static rtime_now,rtime_old;
 
 int main()
 {
@@ -103,8 +103,9 @@ int main()
 	netstack_init();
 	SetIEEEAddr(node_mac);
 
-	csprng_start();
 	Load_time_from_RTC();
+	csprng_start();
+
 	process_start(&sensors_process, NULL);
 
 #if NETSTACK_CONF_WITH_IPV6 || NETSTACK_CONF_WITH_IPV4
@@ -115,10 +116,14 @@ int main()
 	printf("Processes running\n");
 
 	// Power down between tasks, when cpu is in idle
-	//sleepmgr_init();
-	//sleepmgr_lock_mode(SLEEPMGR_SLEEP_WFI);
+	sleepmgr_init();
+	sleepmgr_lock_mode(SLEEPMGR_SLEEP_WFI);
 	while(1){
 		while(process_run());
+		rtime_old = rtimer_arch_now();
+		sleepmgr_enter_sleep();
+		rtime_now = rtimer_arch_now();
+		clock_adjust_ticks((rtime_now-rtime_old)*CLOCK_CONF_SECOND/RTIMER_ARCH_SECOND);
 		// This will stop the clock.
 		// Not worth it since we power down
 		// when needed.

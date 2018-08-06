@@ -13,6 +13,7 @@
 #include "rtimer-arch.h"
 #include "platform-conf.h"
 #include "stdint.h"
+#include "clock.h"
 
 #include "csprng.h"
 #include "sha256.h"
@@ -99,7 +100,9 @@ void csprng_start(void)
 	for(i=0;i<4;i++){
 		get_eeprom(Flash_unique_id[i], h);
 		csprng_feed(h);
+		csprng_feed(rand()); // initialized in radio with random seed
 	}
+	csprng_feed(clock_get_unix_time()); // if clock is set this will be good.
 	csprng_feedix = 0;
 	csprng_ready = 0;
 

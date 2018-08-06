@@ -181,12 +181,30 @@ static const char *http_config_css[] = {
   	  "padding-left:30px;",
       "font-size:18px;",
       "padding-bottom:7px;",
-      "width: 50%%;",
+      "padding-top:7px;",
+      "width: 800px;",
+      "text-shadow: 2px 2px black;",
   "}h0{",
-  	  "font-family:Verdana;",
-  	  "color:black;",
+  	  "margin:20px;",
+  	  "font-family: Verdana;",
+  	  "color: white;",
   	  "padding-left:15px;",
-      "font-size:25px;",
+  	  "font-size:35px;",
+  	  "z-index: 1;",
+  	  "position: absolute;",
+  	  "top: 80px;",
+  	  "left: 62px;",
+  	  "text-shadow: 2px 2px black;",
+   "}h7 {",
+  		"margin:20px;",
+  		"font-family: Verdana;",
+  		"color: white;",
+  		"padding-left:15px;",
+  		"font-size:12px;",
+  		"z-index: 1;",
+  		"position: absolute;",
+  		"top: 125px;",
+  		"left: 75px;",
   "}a{",
       "font-family:Verdana;",
   	  "color: blue;",
@@ -194,51 +212,70 @@ static const char *http_config_css[] = {
       "margin-left:30px;",
       "font-family:Verdana;",
       "border-collapse:collapse;",
-      "width:45%%;",
+      "width:700px",
       "font-size:12px;",
   "}td,th{",
       "border: 0px solid #dddddd;",
       "text-align:left;",
       "padding:2px;",
       "padding-left:45px;",
+      "font-size:14px;",
+  "}th {",
+      "color:white;",
+      "background: radial-gradient(ellipse at center,  #aed6f4  10%, #065b9d 100%); text-shadow: 1px 1px black;",
   "}tr:nth-child(even){",
       "background-color:#d5d5dd;",
+  "}tr:nth-child(odd) {",
+	  "background-color: #ffffffff;",
   "}th {"
-      "background-color: #2196F3;color:white;}",
-  "tr:hover {background-color: #40c0c0}",
-  "ul {"
-  	  "width: 50%%;",
+      "background-color: #2196F3;color:white;",
+  "}tr:hover {background-color: #70c0c0",
+  "}ul {"
+  	  "font-family: Verdana;",
+  	  "text-shadow: 2px 2px black;",
+  	  "font-size:14px;",
+  	  "width: 870px",
   	  "list-style-type: none;",
   	  "margin: 0; padding: 0;",
-  	  "overflow: hidden;background-color: #2196F3;"
-   "}li {"
-  	  "float: left;"
-  	  "border-right: 1px solid #bbb;",
+  	  "overflow: hidden;background-color: #2196F3;",
+   "}li {",
+  	  "float: left;",
+  	  "border-right: 2px solid #bbb;",
    "}li a{"
   	  "display: block;",
   	  "color: white; text-align: center;",
   	  "padding: 14px 16px; text-decoration:none;",
-   "}li a:hover { background-color:#70c0c0;}",
-   "legend {",
-   	   "font-family: Verdana;",
-       "color: darkblue;",
-       "padding: 8px 8px;",
-       "font-size: 16px;",
-       "font-weight:bold;",
+   "}li a:hover { background-color:#70c0c0;",
+   "}legend{",
+	  "background: radial-gradient(ellipse at center,  #aed6f4  10%, #065b9d 100%); text-shadow: 1px 1px black;",
+	  "font-family: Verdana;",
+	  "color: white;",
+	  "padding: 2px 5px;",
+	  "font-size: 16px;",
+	  "font-weight:bold;",
+	  "text-shadow: 1px 1px black;",
    "}fieldset{",
-   		"margin:30px;",
-   		"width: 200px;",
-   		"background-color:#FAFAFF;",
-   		"border:3px solid grey;",
-   		"-moz-border-radius:8px;",
-   		"-webkit-border-radius:8px;",
-   		"border-radius:8px;}",
-   	"#canvas {",
-    	"position: absolute;",
-    	"left: 1;",
-    	"right: 0;",
-    	"margin:auto;}",
-  "</style>",
+	  "margin:20px;",
+	  "width: 770px;",
+	  "background-color:#FAFAFF;",
+	  "background: radial-gradient(ellipse at center,  #FfF7FF  0%, #ffffffff 70%);",
+	  "border:3px solid #065b9d;",
+	  "-moz-border-radius:8px;",
+	  "-webkit-border-radius:8px;",
+	  "border-radius:12px;",
+	  "display : inline-block;",
+   "}.legend1:hover{",
+	  "font-size: 26px;",
+   "}#ClockCanvas{",
+      "left: 0;",
+      "right: 0;",
+      "margin:20px;",
+   "}body{",
+      "background: #595959;",
+      "background-size: 1000px;",
+      "font-size:12px;",
+   "}#settimebtn{margin-left: 20px;",
+   "}</style>",
   NULL
 };
 
@@ -528,13 +565,28 @@ PT_THREAD(generate_index(struct httpd_state *s))
    PT_WAIT_THREAD(&s->generate_pt,
                   generate_top_matter(s, http_index_page.title,
                                       http_config_css));
-//======================================================================================
-  /* ND Cache */
-   PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<div><h0><img src=\"https://www.how-to-draw-funny-cartoons.com/"
-                    		  "images/xhow-to-draw-a-snowflake-010.jpg.pagespeed.ic.0EmX9XC8Hj.jpg\" "
-                    		  "width=\"25\" height=\"25\">Router home</h0></div>"));
+   //======================================================================================
+     /* clock and banner */
 
-  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<h1>Neighbors</h1>"));
+   PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<canvas id=\"SnowflakeCanvas\" width=\"60\" height=\"60\">"));
+   PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "Your browser does not support the HTML5 canvas tag.</canvas>"));
+
+   PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<div>"));
+		PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<h0>Router home</h0>"));
+   PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<br>"));
+   PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<h7>"));
+   	   PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "Welcome to my world!!!<br>"));
+   	   PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "This is where connections happen."));
+   PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "</h7>"));
+   PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "</div>"));
+   PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<canvas id=\"ClockCanvas\" width=\"850\" height=\"250\""));
+   PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "style=\"background-color:#fff\>"));
+   PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "</canvas><br>"));
+
+
+   //======================================================================================
+     /* ND Cache */
+  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<fieldset><h1>Neighbors</h1>"));
   PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<table><tr><th>IP addr</th><th>Status</th><th>SESSION KEY</th><th>UUID</th></tr>"));
 
   for(s->nbr = nbr_table_head(ds6_neighbors); s->nbr != NULL;
@@ -586,27 +638,22 @@ PT_THREAD(generate_index(struct httpd_state *s))
     PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<td>%lus</td>", s->r->state.lifetime));
   }
 
-  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "</table>"));
+  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "</table></fieldset><br>"));
 
   //======================================================================================
   /* Footer */
   PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<fieldset>"));
+
+  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<fieldset>"));
   PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<legend>Statistic</legend>"));
+  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<div class=\"legend1\">"));
 
   PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "Page hits: %u<br>", numtimes));
   PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "Uptime: %lu secs<br>", clock_seconds()));
   PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "Current time: %lu secs<br>", clock_get_unix_time()));
   PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "Stranum: %lu <br>", clock_quality(READ_STRANUM)));
 
-  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "</fieldset>"));
-//  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<h1>Statistic</h1>"));
-//
-//  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<p>"));
-//  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "Page hits: %u<br>", numtimes));
-//  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "Uptime: %lu secs<br>", clock_seconds()));
-//  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "Current time: %lu secs<br>", clock_get_unix_time()));
-//  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "Stranum: %lu <br>", clock_quality(READ_STRANUM)));
-//  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "</p>"));
+  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "</div></fieldset>"));
 
   //======================================================================================
   // Internal clock
@@ -616,6 +663,7 @@ PT_THREAD(generate_index(struct httpd_state *s))
 
   PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<fieldset>"));
   PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<legend>Internal clock</legend>"));
+  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<div class=\"legend1\">"));
   PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "d: %d/%d-%d       %d:%d:%d",
                       		 tb.tm_mday,
   							 tb.tm_mon,
@@ -624,7 +672,7 @@ PT_THREAD(generate_index(struct httpd_state *s))
   							 tb.tm_min,
   							 tb.tm_sec));
 
-  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "</fieldset>"));
+  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "</div></fieldset>"));
 
   //======================================================================================
   //Set the time on the device. Javascript asks for the time and pass it on to the device
@@ -636,7 +684,8 @@ PT_THREAD(generate_index(struct httpd_state *s))
   PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "accept-charset=\"UTF-8\">"));
 
   PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<input type=\"hidden\" id=\"rc2\" name=\"Timestamp\">"));
-  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<button onclick=\"Get_time()\" type=\"submit\" value=\"Submit\">Set time from browser</button>"));
+  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<button onclick=\"Get_time()\" type=\"submit\" value=\"Submit\""));
+  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, " id=\"settimebtn\">Set time from browser</button>"));
 
   PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<script> function Get_time() {"));
   PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "var d = new Date(); var n = d.getTime();"));
@@ -645,11 +694,13 @@ PT_THREAD(generate_index(struct httpd_state *s))
 
   PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "</form>"));
 
+  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "</fieldset><br>"));
   //======================================================================================
 
   //======================================================================================
-  // Just for fun
+
   PT_WAIT_THREAD(&s->generate_pt, run_java_script(s, clock_js));
+  PT_WAIT_THREAD(&s->generate_pt, run_java_script(s, snowflake_js));
   PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 1, http_bottom));
 
   PT_END(&s->generate_pt);
