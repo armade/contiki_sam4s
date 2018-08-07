@@ -44,20 +44,9 @@ static inline void csprng_feed(unsigned d)
 	csprng_feedix = fix;
 }
 
-/*void RngTimerIRQHandel(void)
-{
-	volatile unsigned status = RngTimer.TC_SR;
-	UNUSED(status);
-
-	csprng_feed(SysTick->VAL & 0xFFFFFF);
-
-	if (csprng_feedix == 5000){ //approximately 0.5s before ready
-		RngTimer.TC_RC = 32;//32 is approximately 1000Hz, 3 is approximately 10kHz. After 2000 interrupts the feed rate is reduced from 10kHz to 1kHz feed rate.
-		csprng_ready = 1;
-	}
-}*/
 // This function is called with normal clock,
 // and adding the rtimer as feed.
+// The rtimer runs on 32kHz rc clock.
 static void
 RNG_handler(void *not_used)
 {

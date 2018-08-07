@@ -155,10 +155,21 @@ send(mac_callback_t sent, void *ptr)
 	uint8_t hotfix;
 	//TODO: buffer is not needed but good for debugging
 	uint8_t buf[100] = {0};
+	uip_ipaddr_t *border_router;
+	rpl_dag_t *dag;
+
+	dag = rpl_get_any_dag();
+
+	border_router = &dag->dag_id;
+	// If it's for a neighbor we don't know.....
+	// Assume it's for someone outside the network.
+	// Use border router key.
 
 	nbr = uip_ds6_nbr_lookup(&UIP_IP_BUF->destipaddr);
 	if(nbr == NULL){
-		return;
+		nbr = uip_ds6_nbr_lookup(&border_router);
+		if(nbr == NULL)
+			return;
 	}
 
 	if(nbr->enable_encryption)

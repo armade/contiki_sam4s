@@ -365,7 +365,7 @@ RF231_init(void)
  */
 static void rf_generate_random_seed(void)
 {
-	uint16_t seed = 0;
+	uint32_t seed = 0;
 	uint8_t cur_random_val = 0;
 	uint8_t i;
 
@@ -397,10 +397,10 @@ static void rf_generate_random_seed(void)
 	trx_bit_write(SR_RX_PDT_DIS, RX_ENABLE);
 
 	/*
-	 * The 16-bit random value is generated from various 2-bit random
+	 * The 32-bit random value is generated from various 2-bit random
 	 * values.
 	 */
-	for (i = 0; i < 8; i++) {
+	for (i = 0; i < 16; i++) {
 		/* Now we can safely read the 2-bit random number. */
 		cur_random_val = trx_bit_read(SR_RND_VALUE);
 		seed = seed << 2;
