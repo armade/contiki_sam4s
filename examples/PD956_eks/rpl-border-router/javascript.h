@@ -15,7 +15,7 @@ static const char *clock_js[] = {
 "var clock_canvas = document.getElementById(\"ClockCanvas\");",
 "var ctx = clock_canvas.getContext(\"2d\");",
 "ctx.globalAlpha=1;",
-"setInterval(drawClock, 100);",
+"setInterval(drawClock, 1000);",
 "function degToRad(degree){",
 	"var factor = Math.PI/180;",
 	"return degree*factor;}",
@@ -51,12 +51,14 @@ static const char *clock_js[] = {
 	"ctx.beginPath();",//seconds
 	"ctx.arc(clock_canvas.width/2,clock_canvas.height/2,radius*0.74,degToRad(270), degToRad((new_sec*6)-89.9));",
 	"ctx.stroke();",
+	"ctx.shadowBlur = 15;",
+	"ctx.shadowColor = 'orange';",
 	"ctx.font = getFont(radius);",
 	"ctx.fillStyle = 'silver';",
-	"ctx.fillText(today, clock_canvas.width/2-85* radius/225,clock_canvas.height/2);",
+	"ctx.fillText(today, clock_canvas.width/2-120* radius/225,clock_canvas.height/2);",
 	"ctx.font = getFont(radius);",
 	"ctx.fillStyle = 'silver';",
-	"ctx.fillText(time, clock_canvas.width/2-35* radius/225,clock_canvas.height/2+30* radius/225);}",
+	"ctx.fillText(time, clock_canvas.width/2-95* radius/225,clock_canvas.height/2+35* radius/225);}",
 "function getFont(radius){",
 	"var size = 35* radius/225;",   // get font size based on current width
 	"return (size|0) + 'px Arial';}", // set font

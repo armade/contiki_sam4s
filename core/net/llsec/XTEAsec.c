@@ -48,6 +48,7 @@
 #include "net/netstack.h"
 #include "net/packetbuf.h"
 #include "net/ipv6/uip-ds6.h"
+#include "net/rpl/rpl.h"
 
 void encipher(unsigned num_rounds, uint32_t *v, unsigned const key[4])
 {

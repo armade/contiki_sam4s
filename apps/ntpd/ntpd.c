@@ -97,6 +97,9 @@ receiver(struct simple_udp_connection *c,
 				if(clock_quality(READ_STRANUM) > NTP->stratum )
 				{
 					CurrTime = uip_ntohl(NTP->tx_Time_s) - NTP_EPOCH; //UNIX time
+					if(CurrTime < 1514764800) { //Monday, 01/01-2018 00:00:00 UTC
+						return;
+					}
 					clock_set_unix_time(CurrTime,1);
 					StartTime = clock_seconds();
 					current_stranum = (NTP->stratum + 1)>15?15:(NTP->stratum + 1);

@@ -424,10 +424,11 @@ timestamp_post_handler(char *key, int key_len, char *val, int val_len)
      return HTTPD_SIMPLE_POST_HANDLER_ERROR;
    }
 
-  if(clock_quality(READ_STRANUM) > PC_TIME){
+   //always set time
+  //if(clock_quality(READ_STRANUM) > PC_TIME){
 	clock_set_unix_time(unixtime,1);
 	clock_quality(PC_TIME);
-  }
+  //}
 
    return HTTPD_SIMPLE_POST_HANDLER_OK;
 }
