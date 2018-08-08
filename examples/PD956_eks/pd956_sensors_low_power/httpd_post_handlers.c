@@ -577,7 +577,7 @@ sensor_readings_handler(char *key, int key_len, char *val, int val_len)
       /* Be pedantic: only accept 0 and 1, not just any non-zero value */
       if(ret == 0) {
         reading->publish = 0;
-        snprintf(reading->converted, CC26XX_WEB_DEMO_CONVERTED_LEN, "\"N/A\"");
+        snprintf(reading->converted, SENSOR_CONVERTED_LEN, "\"N/A\"");
       } else if(ret == 1) {
         reading->publish = 1;
       } else {

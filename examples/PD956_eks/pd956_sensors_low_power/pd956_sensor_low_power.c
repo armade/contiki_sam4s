@@ -64,23 +64,7 @@ PROCESS(PD956_MAIN_process, "PD956 MQTT");
  * ticks + a random interval between 0 and SENSOR_READING_RANDOM ticks
  */
 
-struct ctimer Internal_ADC_timer;
-#ifdef NODE_STEP_MOTOR
-struct ctimer Step_motor_timer;
-#endif
-#if defined(NODE_STEP_MOTOR) || defined(NODE_4_ch_relay)
-struct ctimer dht11_temperature_timer;
-struct ctimer dht11_humidity_timer;
-#endif
-#ifdef NODE_PRESSURE
-struct ctimer bmp_timer;
-#endif
-#ifdef NODE_LIGHT
-struct ctimer RGB_light_timer;
-#endif
-#ifdef NODE_HTU21D
-struct ctimer HTU21D_timer;
-#endif
+
 
 /*---------------------------------------------------------------------------*/
 process_event_t MQTT_publish_sensor_data_event;
@@ -100,7 +84,7 @@ LIST(sensor_list);
 /* The objects representing sensors used in this demo */
 #define DEMO_SENSOR(name, type, descr, xml_element, form_field, units, hass_component) \
 		MQTT_sensor_reading_t name##_reading = \
-  { NULL, 0, 0, descr, xml_element, form_field, units, type, 1, 1, hass_component}
+  { NULL, 0, 0,0, descr, xml_element, form_field, units, type, 1, 1, hass_component}
 
 /*sensors */
 DEMO_SENSOR(temp, PD956_WEB_DEMO_SENSOR_ADC, "Internaltemperature",
@@ -135,6 +119,13 @@ DEMO_SENSOR(HTU21D_sensor_humid, PD956_WEB_DEMO_SENSOR_HTU21D_humid, "Humidity",
 DEMO_SENSOR(HTU21D_sensor_temp, PD956_WEB_DEMO_SENSOR_HTU21D_TEMP,
 		"Temperature", "Temperature", "Temperature", UNIT_TEMP,
 		"sensor");
+#endif
+
+#ifdef NODE_GPS
+	DEMO_SENSOR(GPS_sensor_LONG, PD956_WEB_DEMO_SENSOR_GPS_LONG, "Long", "Longitude", "Longitude", UNIT_ANGLE,"sensor");
+	DEMO_SENSOR(GPS_sensor_LAT,  PD956_WEB_DEMO_SENSOR_GPS_LAT , "Lat", "Latitude", "Latitude", UNIT_ANGLE,"sensor");
+	DEMO_SENSOR(GPS_sensor_ALT, PD956_WEB_DEMO_SENSOR_GPS_ALT, "Alt", "Altitude", "Altitude", UNIT_DISTANCE,"sensor");
+	DEMO_SENSOR(GPS_sensor_SPEED, PD956_WEB_DEMO_SENSOR_GPS_SPEED, "spd", "speed", "speed", UNIT_SPEED,"sensor");
 #endif
 /*---------------------------------------------------------------------------*/
 /*static void
@@ -205,7 +196,7 @@ static uint8_t load_config()
 				reading->publish = 1;
 			} else{
 				reading->publish = 0;
-				snprintf(reading->converted, CC26XX_WEB_DEMO_CONVERTED_LEN,
+				snprintf(reading->converted, SENSOR_CONVERTED_LEN,
 						"\"N/A\"");
 			}
 		}
@@ -285,12 +276,12 @@ static void get_temp_reading(void)
 			temp_reading.raw = value;
 
 			buf = temp_reading.converted;
-			memset(buf, 0, CC26XX_WEB_DEMO_CONVERTED_LEN);
+			memset(buf, 0, SENSOR_CONVERTED_LEN);
 			high = value / 1000;
 			low = value - high * 1000;
-			snprintf(buf, CC26XX_WEB_DEMO_CONVERTED_LEN, "%d.%d", high, low);
+			snprintf(buf, SENSOR_CONVERTED_LEN, "%d.%d", high, low);
 		} else{
-			snprintf(buf, CC26XX_WEB_DEMO_CONVERTED_LEN, "\"N/A\"");
+			snprintf(buf, SENSOR_CONVERTED_LEN, "\"N/A\"");
 		}
 	}
 
@@ -313,13 +304,13 @@ get_RGB_reading(void)
 			rgb.all = value;
 
 			buf = RGB_sensor_reading.converted;
-			memset(buf, 0, CC26XX_WEB_DEMO_CONVERTED_LEN);
+			memset(buf, 0, SENSOR_CONVERTED_LEN);
 
-			snprintf(buf, CC26XX_WEB_DEMO_CONVERTED_LEN, "%d,%d,%d",rgb.led.r,rgb.led.g,rgb.led.b);
+			snprintf(buf, SENSOR_CONVERTED_LEN, "%d,%d,%d",rgb.led.r,rgb.led.g,rgb.led.b);
 		}
 		else
 		{
-			snprintf(buf, CC26XX_WEB_DEMO_CONVERTED_LEN, "\"N/A\"");
+			snprintf(buf, SENSOR_CONVERTED_LEN, "\"N/A\"");
 		}
 	}
 }
@@ -339,13 +330,13 @@ get_step_reading(void)
 			step_motor_reading.raw = value;
 
 			buf = step_motor_reading.converted;
-			memset(buf, 0, CC26XX_WEB_DEMO_CONVERTED_LEN);
+			memset(buf, 0, SENSOR_CONVERTED_LEN);
 
-			snprintf(buf, CC26XX_WEB_DEMO_CONVERTED_LEN, "%d",value);
+			snprintf(buf, SENSOR_CONVERTED_LEN, "%d",value);
 		}
 		else
 		{
-			snprintf(buf, CC26XX_WEB_DEMO_CONVERTED_LEN, "\"N/A\"");
+			snprintf(buf, SENSOR_CONVERTED_LEN, "\"N/A\"");
 		}
 	}
 }
@@ -365,13 +356,13 @@ get_dht11_temperature_reading(void)
 		if(value != SENSOR_ERROR){
 			dht11_temperature_reading.raw = value;
 
-			memset(buf, 0, CC26XX_WEB_DEMO_CONVERTED_LEN);
+			memset(buf, 0, SENSOR_CONVERTED_LEN);
 
-			snprintf(buf, CC26XX_WEB_DEMO_CONVERTED_LEN, "%d.%d",(value>>8),value&0xff);
+			snprintf(buf, SENSOR_CONVERTED_LEN, "%d.%d",(value>>8),value&0xff);
 		}
 		else
 		{
-			snprintf(buf, CC26XX_WEB_DEMO_CONVERTED_LEN, "");
+			snprintf(buf, SENSOR_CONVERTED_LEN, "");
 		}
 	}
 
@@ -382,13 +373,13 @@ get_dht11_temperature_reading(void)
 		if(value != SENSOR_ERROR){
 			dht11_humidity_reading.raw = value;
 
-			memset(buf, 0, CC26XX_WEB_DEMO_CONVERTED_LEN);
+			memset(buf, 0, SENSOR_CONVERTED_LEN);
 
-			snprintf(buf, CC26XX_WEB_DEMO_CONVERTED_LEN, "%d.%d",(value>>8),value&0xff);
+			snprintf(buf, SENSOR_CONVERTED_LEN, "%d.%d",(value>>8),value&0xff);
 		}
 		else
 		{
-			snprintf(buf, CC26XX_WEB_DEMO_CONVERTED_LEN, "\"N/A\"");
+			snprintf(buf, SENSOR_CONVERTED_LEN, "\"N/A\"");
 		}
 	}
 	SENSORS_DEACTIVATE(dht11_sensor);
@@ -411,14 +402,14 @@ get_bmp_reading()
 		if(value != SENSOR_ERROR){
 			bmp_280_sensor_press_reading.raw = value;
 
-			memset(buf, 0, CC26XX_WEB_DEMO_CONVERTED_LEN);
+			memset(buf, 0, SENSOR_CONVERTED_LEN);
 			high = value/100;
 			low = value-high*100;
-			snprintf(buf, CC26XX_WEB_DEMO_CONVERTED_LEN, "%d.%d", high,low);
+			snprintf(buf, SENSOR_CONVERTED_LEN, "%d.%d", high,low);
 		}
 		else
 		{
-			snprintf(buf, CC26XX_WEB_DEMO_CONVERTED_LEN, "\"N/A\"");
+			snprintf(buf, SENSOR_CONVERTED_LEN, "\"N/A\"");
 		}
 	}
 
@@ -429,14 +420,14 @@ get_bmp_reading()
 		if(value != SENSOR_ERROR){
 			bmp_280_sensor_temp_reading.raw = value;
 
-			memset(buf, 0, CC26XX_WEB_DEMO_CONVERTED_LEN);
+			memset(buf, 0, SENSOR_CONVERTED_LEN);
 			high = value/100;
 			low = value-high*100;
-			snprintf(buf, CC26XX_WEB_DEMO_CONVERTED_LEN, "%d.%d", high,low);
+			snprintf(buf, SENSOR_CONVERTED_LEN, "%d.%d", high,low);
 		}
 		else
 		{
-			snprintf(buf, CC26XX_WEB_DEMO_CONVERTED_LEN, "\"N/A\"");
+			snprintf(buf, SENSOR_CONVERTED_LEN, "\"N/A\"");
 		}
 	}
 
@@ -460,12 +451,12 @@ static void get_HTU21D_reading()
 		if(value != SENSOR_ERROR){
 			HTU21D_sensor_humid_reading.raw = value;
 
-			memset(buf, 0, CC26XX_WEB_DEMO_CONVERTED_LEN);
+			memset(buf, 0, SENSOR_CONVERTED_LEN);
 			high = value / 1000;
 			low = value - high * 1000;
-			snprintf(buf, CC26XX_WEB_DEMO_CONVERTED_LEN, "%d.%d", high, low);
+			snprintf(buf, SENSOR_CONVERTED_LEN, "%d.%d", high, low);
 		} else{
-			snprintf(buf, CC26XX_WEB_DEMO_CONVERTED_LEN, "\"N/A\"");
+			snprintf(buf, SENSOR_CONVERTED_LEN, "\"N/A\"");
 		}
 	}
 
@@ -476,16 +467,85 @@ static void get_HTU21D_reading()
 		if(value != SENSOR_ERROR){
 			HTU21D_sensor_temp_reading.raw = value;
 
-			memset(buf, 0, CC26XX_WEB_DEMO_CONVERTED_LEN);
+			memset(buf, 0, SENSOR_CONVERTED_LEN);
 			high = value / 1000;
 			low = value - high * 1000;
-			snprintf(buf, CC26XX_WEB_DEMO_CONVERTED_LEN, "%d.%d", high, low);
+			snprintf(buf, SENSOR_CONVERTED_LEN, "%d.%d", high, low);
 		} else{
-			snprintf(buf, CC26XX_WEB_DEMO_CONVERTED_LEN, "\"N/A\"");
+			snprintf(buf, SENSOR_CONVERTED_LEN, "\"N/A\"");
 		}
 	}
 
 	SENSORS_DEACTIVATE(HTU21D_sensor);
+
+}
+#endif
+
+#ifdef NODE_GPS
+
+static void get_GPS_reading()
+{
+	char *buf;
+	float value;
+	int ret;
+
+	if(GPS_sensor_LONG_reading.publish){
+		ret = GPS_sensor.value(GPS_SENSOR_TYPE_LONG);
+		buf = GPS_sensor_LONG_reading.converted;
+		value = *(float *)ret;
+		if(ret != SENSOR_ERROR){
+			GPS_sensor_LONG_reading.raw_f = value;
+
+			memset(buf, 0, SENSOR_CONVERTED_LEN);
+			snprintf(buf, SENSOR_CONVERTED_LEN, "%f", value);
+		} else{
+			snprintf(buf, SENSOR_CONVERTED_LEN, "\"N/A\"");
+		}
+	}
+
+	if(GPS_sensor_LAT_reading.publish){
+		ret = GPS_sensor.value(GPS_SENSOR_TYPE_LAT);
+		buf = GPS_sensor_LAT_reading.converted;
+		value = *(float *)ret;
+		if(ret != SENSOR_ERROR){
+			GPS_sensor_LONG_reading.raw_f = value;
+
+			memset(buf, 0, SENSOR_CONVERTED_LEN);
+			snprintf(buf, SENSOR_CONVERTED_LEN, "%f", value);
+		} else{
+			snprintf(buf, SENSOR_CONVERTED_LEN, "\"N/A\"");
+		}
+	}
+
+	if(GPS_sensor_ALT_reading.publish){
+		ret = GPS_sensor.value(GPS_SENSOR_TYPE_ALT);
+		buf = GPS_sensor_ALT_reading.converted;
+		value = *(float *)ret;
+		if(ret != SENSOR_ERROR){
+			GPS_sensor_LONG_reading.raw_f = value;
+
+			memset(buf, 0, SENSOR_CONVERTED_LEN);
+			snprintf(buf, SENSOR_CONVERTED_LEN, "%f", value);
+		} else{
+			snprintf(buf, SENSOR_CONVERTED_LEN, "\"N/A\"");
+		}
+	}
+
+	if(GPS_sensor_SPEED_reading.publish){
+		ret = GPS_sensor.value(GPS_SENSOR_TYPE_SPEED);
+		buf = GPS_sensor_SPEED_reading.converted;
+		value = *(float *)ret;
+		if(ret != SENSOR_ERROR){
+			GPS_sensor_LONG_reading.raw_f = value;
+
+			memset(buf, 0, SENSOR_CONVERTED_LEN);
+			snprintf(buf, SENSOR_CONVERTED_LEN, "%f", value);
+		} else{
+			snprintf(buf, SENSOR_CONVERTED_LEN, "\"N/A\"");
+		}
+	}
+
+	SENSORS_DEACTIVATE(GPS_sensor);
 
 }
 #endif
@@ -495,48 +555,59 @@ static void get_HTU21D_reading()
 static void init_sensors(void)
 {
 	list_add(sensor_list, &temp_reading);
-	snprintf(temp_reading.converted, CC26XX_WEB_DEMO_CONVERTED_LEN, "\"N/A\"");
+	snprintf(temp_reading.converted, SENSOR_CONVERTED_LEN, "\"N/A\"");
 
 #ifdef NODE_STEP_MOTOR
 	list_add(sensor_list, &step_motor_reading);
-	snprintf(step_motor_reading.converted, CC26XX_WEB_DEMO_CONVERTED_LEN, "\"N/A\"");
+	snprintf(step_motor_reading.converted, SENSOR_CONVERTED_LEN, "\"N/A\"");
 
 	list_add(sensor_list, &dht11_temperature_reading);
 	list_add(sensor_list, &dht11_humidity_reading);
-	snprintf(dht11_temperature_reading.converted, CC26XX_WEB_DEMO_CONVERTED_LEN, "\"N/A\"");
-	snprintf(dht11_humidity_reading.converted, CC26XX_WEB_DEMO_CONVERTED_LEN, "\"N/A\"");
+	snprintf(dht11_temperature_reading.converted, SENSOR_CONVERTED_LEN, "\"N/A\"");
+	snprintf(dht11_humidity_reading.converted, SENSOR_CONVERTED_LEN, "\"N/A\"");
 #endif
 
 #ifdef NODE_LIGHT
-	snprintf(RGB_sensor_reading.converted, CC26XX_WEB_DEMO_CONVERTED_LEN, "\"N/A\"");
+	snprintf(RGB_sensor_reading.converted, SENSOR_CONVERTED_LEN, "\"N/A\"");
 #endif
 
 #ifdef NODE_HARD_LIGHT
-	snprintf(hard_RGB_sensor_reading.converted, CC26XX_WEB_DEMO_CONVERTED_LEN, "\"N/A\"");
+	snprintf(hard_RGB_sensor_reading.converted, SENSOR_CONVERTED_LEN, "\"N/A\"");
 #endif
 
 #ifdef NODE_4_ch_relay
 	list_add(sensor_list, &dht11_temperature_reading);
 	list_add(sensor_list, &dht11_humidity_reading);
-	snprintf(dht11_temperature_reading.converted, CC26XX_WEB_DEMO_CONVERTED_LEN, "\"N/A\"");
-	snprintf(dht11_humidity_reading.converted, CC26XX_WEB_DEMO_CONVERTED_LEN, "\"N/A\"");
+	snprintf(dht11_temperature_reading.converted, SENSOR_CONVERTED_LEN, "\"N/A\"");
+	snprintf(dht11_humidity_reading.converted, SENSOR_CONVERTED_LEN, "\"N/A\"");
 
 #endif
 
 #ifdef NODE_PRESSURE
 	list_add(sensor_list, &bmp_280_sensor_press_reading);
 	list_add(sensor_list, &bmp_280_sensor_temp_reading);
-	snprintf(bmp_280_sensor_press_reading.converted, CC26XX_WEB_DEMO_CONVERTED_LEN, "\"N/A\"");
-	snprintf(bmp_280_sensor_temp_reading.converted, CC26XX_WEB_DEMO_CONVERTED_LEN, "\"N/A\"");
+	snprintf(bmp_280_sensor_press_reading.converted, SENSOR_CONVERTED_LEN, "\"N/A\"");
+	snprintf(bmp_280_sensor_temp_reading.converted, SENSOR_CONVERTED_LEN, "\"N/A\"");
 #endif
 
 #ifdef NODE_HTU21D
 	list_add(sensor_list, &HTU21D_sensor_humid_reading);
 	list_add(sensor_list, &HTU21D_sensor_temp_reading);
 	snprintf(HTU21D_sensor_humid_reading.converted,
-			CC26XX_WEB_DEMO_CONVERTED_LEN, "\"N/A\"");
+			SENSOR_CONVERTED_LEN, "\"N/A\"");
 	snprintf(HTU21D_sensor_temp_reading.converted,
-			CC26XX_WEB_DEMO_CONVERTED_LEN, "\"N/A\"");
+			SENSOR_CONVERTED_LEN, "\"N/A\"");
+#endif
+
+#ifdef NODE_GPS
+	list_add(sensor_list, &GPS_sensor_LAT_reading);
+	list_add(sensor_list, &GPS_sensor_LONG_reading);
+	list_add(sensor_list, &GPS_sensor_ALT_reading);
+	list_add(sensor_list, &GPS_sensor_SPEED_reading);
+	snprintf(GPS_sensor_LAT_reading.converted, SENSOR_CONVERTED_LEN, "\"N/A\"");
+	snprintf(GPS_sensor_LONG_reading.converted, SENSOR_CONVERTED_LEN, "\"N/A\"");
+	snprintf(GPS_sensor_ALT_reading.converted, SENSOR_CONVERTED_LEN, "\"N/A\"");
+	snprintf(GPS_sensor_SPEED_reading.converted, SENSOR_CONVERTED_LEN, "\"N/A\"");
 #endif
 }
 
@@ -569,6 +640,10 @@ static void trigger_sensors(void)
 
 #ifdef NODE_HTU21D
 	SENSORS_ACTIVATE(HTU21D_sensor);
+#endif
+
+#ifdef NODE_GPS
+	SENSORS_ACTIVATE(GPS_sensor);
 #endif
 }
 extern void
@@ -667,6 +742,15 @@ PROCESS_THREAD(PD956_MAIN_process, ev, data)
 			get_bmp_reading();
 			sensor_busy &= ~(1ul<<PD956_WEB_DEMO_SENSOR_BMP280_PRES);
 			sensor_busy &= ~(1ul<<PD956_WEB_DEMO_SENSOR_BMP280_TEMP);
+#endif
+
+#ifdef NODE_GPS
+		} else if(ev == sensors_event && data == &GPS_sensor){
+			get_GPS_reading();
+			sensor_busy &= ~(1ul << PD956_WEB_DEMO_SENSOR_GPS_LONG);
+			sensor_busy &= ~(1ul << PD956_WEB_DEMO_SENSOR_GPS_LAT);
+			sensor_busy &= ~(1ul << PD956_WEB_DEMO_SENSOR_GPS_ALT);
+			sensor_busy &= ~(1ul << PD956_WEB_DEMO_SENSOR_GPS_SPEED);
 #endif
 
 		}

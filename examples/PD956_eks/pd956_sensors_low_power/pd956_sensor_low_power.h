@@ -85,37 +85,46 @@
  */
 /*---------------------------------------------------------------------------*/
 /* Sensor types */
-#define PD956_WEB_DEMO_SENSOR_ADC     		20
-#define PD956_WEB_DEMO_SENSOR_STEP     		21
-#define PD956_WEB_DEMO_SENSOR_DHT11_TEMP  		22
+#define PD956_WEB_DEMO_SENSOR_ADC     				20
+#define PD956_WEB_DEMO_SENSOR_STEP     				21
+#define PD956_WEB_DEMO_SENSOR_DHT11_TEMP  			22
 #define PD956_WEB_DEMO_SENSOR_DHT11_HUMIDITY  		23
-#define PD956_WEB_DEMO_SENSOR_BMP280_PRES  		24
+#define PD956_WEB_DEMO_SENSOR_BMP280_PRES  			24
 #define PD956_WEB_DEMO_SENSOR_BMP280_TEMP  			25
-#define PD956_WEB_DEMO_SENSOR_RGB  			26
+#define PD956_WEB_DEMO_SENSOR_RGB  					26
 #define PD956_WEB_DEMO_SENSOR_HTU21D_humid  		27
 #define PD956_WEB_DEMO_SENSOR_HTU21D_TEMP  			28
+
+#define PD956_WEB_DEMO_SENSOR_GPS_LONG  			1
+#define PD956_WEB_DEMO_SENSOR_GPS_LAT	  			2
+#define PD956_WEB_DEMO_SENSOR_GPS_ALT	  			3
+#define PD956_WEB_DEMO_SENSOR_GPS_SPEED  			4
 /*---------------------------------------------------------------------------*/
 extern process_event_t MQTT_publish_sensor_data_event;
 extern process_event_t config_loaded_event;
 extern process_event_t load_config_defaults;
 extern process_event_t Trig_sensors;
 /*---------------------------------------------------------------------------*/
-#define UNIT_TEMP     "C"
-#define UNIT_VOLT     "V"
-#define UNIT_PRES     "hPa"
-#define UNIT_HUMIDITY "%RH"
-#define UNIT_LIGHT    "lux"
-#define UNIT_ACC      "G"
-#define UNIT_GYRO     "deg per sec"
-#define UNIT_STEP     "ticks"
-#define UNIT_NONE     ""
+#define UNIT_TEMP		"C"
+#define UNIT_VOLT		"V"
+#define UNIT_PRES		"hPa"
+#define UNIT_HUMIDITY	"%RH"
+#define UNIT_LIGHT		"lux"
+#define UNIT_ACC		"G"
+#define UNIT_GYRO		"deg per sec"
+#define UNIT_STEP		"ticks"
+#define UNIT_NONE		""
+#define UNIT_SPEED		"km/hr"
+#define UNIT_ANGLE		"deg"
+#define UNIT_DISTANCE	"m"
 /*---------------------------------------------------------------------------*/
 /* A data type for sensor readings, internally stored in a linked list */
-#define CC26XX_WEB_DEMO_CONVERTED_LEN        12
+#define SENSOR_CONVERTED_LEN        12
 
 typedef struct sensor_reading {
   struct sensor_reading *next;
   int raw;
+  float raw_f;
   int last;
   const char *descr;
   const char *xml_element;
@@ -124,7 +133,7 @@ typedef struct sensor_reading {
   uint8_t type;
   uint8_t publish;
   uint8_t changed;
-  char converted[CC26XX_WEB_DEMO_CONVERTED_LEN];
+  char converted[SENSOR_CONVERTED_LEN];
   /* can be:
    * 	- binary_sensor
    * 	- cover

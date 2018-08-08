@@ -14,7 +14,7 @@
 #include "4ch_relay.h"
 #include "bmp-280-sensor.h"
 #include "htu21d-sensor.h"
-
+#include "GPS-sensor.h"
 
 //#define NODE_4_ch_relay
 //#define NODE_LIGHT
@@ -22,6 +22,7 @@
 //#define NODE_STEP_MOTOR
 //#define NODE_PRESSURE
 //#define NODE_HTU21D
+//#define NODE_GPS
 
 
 
@@ -47,6 +48,10 @@
 
 #ifdef NODE_HTU21D
 #define SENSOR_STRING 		"NODE_HTU21D"
+#endif
+
+#ifdef NODE_GPS
+#define SENSOR_STRING 		"NODE_GPS"
 #endif
 /*---------------------------------------------------------------------------*/
 #endif /* BOARD_PERIPHERALS_H_ */

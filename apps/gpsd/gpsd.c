@@ -73,7 +73,7 @@ int parse_sentence(char *line)
 		case MINMEA_SENTENCE_GGA: {
 
 			if (minmea_parse_gga(&frame_gga, line)) {
-				printf(INDENT_SPACES "$xxGGA: fix quality: %d\n", frame_gga.fix_quality);
+
 			}
 			else {
 				printf(INDENT_SPACES "$xxGGA sentence is not parsed\n");
@@ -83,19 +83,7 @@ int parse_sentence(char *line)
 		case MINMEA_SENTENCE_GST: {
 
 			if (minmea_parse_gst(&frame_gst, line)) {
-				printf(INDENT_SPACES "$xxGST: raw latitude,longitude and altitude error deviation: (%d/%d,%d/%d,%d/%d)\n",
-						frame_gst.latitude_error_deviation.value, frame_gst.latitude_error_deviation.scale,
-						frame_gst.longitude_error_deviation.value, frame_gst.longitude_error_deviation.scale,
-						frame_gst.altitude_error_deviation.value, frame_gst.altitude_error_deviation.scale);
-				printf(INDENT_SPACES "$xxGST fixed point latitude,longitude and altitude error deviation"
-					   " scaled to one decimal place: (%d,%d,%d)\n",
-						minmea_rescale(&frame_gst.latitude_error_deviation, 10),
-						minmea_rescale(&frame_gst.longitude_error_deviation, 10),
-						minmea_rescale(&frame_gst.altitude_error_deviation, 10));
-				printf(INDENT_SPACES "$xxGST floating point degree latitude, longitude and altitude error deviation: (%f,%f,%f)",
-						minmea_tofloat(&frame_gst.latitude_error_deviation),
-						minmea_tofloat(&frame_gst.longitude_error_deviation),
-						minmea_tofloat(&frame_gst.altitude_error_deviation));
+
 			}
 			else {
 				printf(INDENT_SPACES "$xxGST sentence is not parsed\n");
@@ -105,14 +93,14 @@ int parse_sentence(char *line)
 		case MINMEA_SENTENCE_GSV: {
 
 			if (minmea_parse_gsv(&frame_gsv, line)) {
-				printf(INDENT_SPACES "$xxGSV: message %d of %d\n", frame_gsv.msg_nr, frame_gsv.total_msgs);
+				/*printf(INDENT_SPACES "$xxGSV: message %d of %d\n", frame_gsv.msg_nr, frame_gsv.total_msgs);
 				printf(INDENT_SPACES "$xxGSV: sattelites in view: %d\n", frame_gsv.total_sats);
 				for (int i = 0; i < 4; i++)
 					printf(INDENT_SPACES "$xxGSV: sat nr %d, elevation: %d, azimuth: %d, snr: %d dbm\n",
 						frame_gsv.sats[i].nr,
 						frame_gsv.sats[i].elevation,
 						frame_gsv.sats[i].azimuth,
-						frame_gsv.sats[i].snr);
+						frame_gsv.sats[i].snr);*/
 			}
 			else {
 				printf(INDENT_SPACES "$xxGSV sentence is not parsed\n");
@@ -122,14 +110,7 @@ int parse_sentence(char *line)
 		case MINMEA_SENTENCE_VTG: {
 
 		   if (minmea_parse_vtg(&frame_vtg, line)) {
-				printf(INDENT_SPACES "$xxVTG: true track degrees = %f\n",
-					   minmea_tofloat(&frame_vtg.true_track_degrees));
-				printf(INDENT_SPACES "        magnetic track degrees = %f\n",
-					   minmea_tofloat(&frame_vtg.magnetic_track_degrees));
-				printf(INDENT_SPACES "        speed knots = %f\n",
-						minmea_tofloat(&frame_vtg.speed_knots));
-				printf(INDENT_SPACES "        speed kph = %f\n",
-						minmea_tofloat(&frame_vtg.speed_kph));
+
 		   }
 		   else {
 				printf(INDENT_SPACES "$xxVTG sentence is not parsed\n");
@@ -141,6 +122,9 @@ int parse_sentence(char *line)
 			if (minmea_parse_zda(&frame_zda, line)) {
 				tm_t time;
 
+				if( frame_zda.time.hours == -1)
+					break;
+
 				time.tm_hour = frame_zda.time.hours;
 				time.tm_min =  frame_zda.time.minutes;
 				time.tm_sec =  frame_zda.time.seconds;
@@ -149,6 +133,14 @@ int parse_sentence(char *line)
 				time.tm_year = frame_zda.date.year;
 
 				clock_time_t unixtime = RtctoUnix(&time);
+				unixtime += frame_zda.hour_offset*60*60;
+				//Fields 5 and 6 together yield the total offset.
+				//For example, if field 5 is -5 and field 6 is +15,
+				//local time is 5 hours and 15 minutes earlier than GMT
+				if(frame_zda.hour_offset>0)
+					unixtime += frame_zda.minute_offset*60;
+				else
+					unixtime -= frame_zda.minute_offset*60;
 				clock_set_unix_time(unixtime,1);
 				clock_quality(GPS_TIME);
 

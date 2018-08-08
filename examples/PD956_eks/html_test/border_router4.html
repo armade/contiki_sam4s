@@ -11,7 +11,7 @@ h1 {
 	font-size:18px;
 	padding-bottom:7px;
 	padding-top:7px;
-	width: 800px;
+	width: 90%;
 	text-shadow: 2px 2px black;
 }
 h0 {
@@ -48,7 +48,7 @@ table {
 	margin-left: 30px;
 	font-family: Verdana;
 	border-collapse: collapse;
-	width: 700px;
+	width: 80%;
 	font-size:12px;
 }
 td, th {
@@ -73,7 +73,7 @@ ul {
 font-family: Verdana;
 text-shadow: 2px 2px black;
 font-size:14px;
-  	width: 870px;
+  	width: 98%;
   	list-style-type: none;
   	margin: 0; padding: 0;
   	overflow: hidden;
@@ -99,7 +99,7 @@ legend {
 }
 fieldset{
 	margin:20px;
-	width: 770px;
+	width: 90%;
 	background-color:#FAFAFF;
 	background: radial-gradient(ellipse at center,  #FfF7FF  0%, #ffffffff 70%);
 	border:3px solid #065b9d;
@@ -129,7 +129,7 @@ body {
 </style>
 <html>
 <body  >
-<div><ul> <li><b href="index.html">Index</b></li>   <li><b href="config.html">Device Config</b></li>  <li><b href="motor.html">Step motor Config</b></li>  <li><b href="mqtt.html">MQTT/IBM Cloud Config</b></li>   </ul></div>
+<div><ul> <li><b href="index.html">Index</b></li>    </ul></div>
 <canvas id="SnowflakeCanvas" width="60" height="60" ">
 Your browser does not support the HTML5 canvas tag.</canvas>
 
@@ -227,20 +227,20 @@ document.getElementById(\"rc2\").value = Math.floor(n/1000);}
 
 </form>"
 <br>
-</body>
-</html>
 
-<!-- <body onresize="resize_canvas()"> -->
-        <!-- <canvas id="canvas">Your browser doesn't support canvas</canvas> -->
-<!-- </body> -->
+<body onresize="resize_canvas()">
+        <canvas id="ClockCanvas">Your browser doesn't support canvas</canvas>
+</body>
 <script>
 var clock_canvas = document.getElementById("ClockCanvas");
 //clock_canvas.setAttribute('style', "position: absolute; top: 5%;border:2px solid blue");
 var ctx = clock_canvas.getContext("2d");
 ctx.globalAlpha=1;
-setInterval(drawClock, 100);
-<!-- resize_canvas(); -->
 
+setInterval(drawClock, 1000);
+
+resize_canvas();
+drawClock();
 
 
 function degToRad(degree){
@@ -255,8 +255,6 @@ function drawClock() {
 	var hours = now.getHours();
 	var minutes = now.getMinutes();
     var seconds = now.getSeconds();
-	var milisec = now.getMilliseconds();
-	var new_sec = seconds + (milisec/1000);
 	
 	var radius;
 	
@@ -272,22 +270,22 @@ function drawClock() {
 
 //Background 
     //ctx.fillStyle = 'black';
-	gradient = ctx.createRadialGradient(clock_canvas.width/2,clock_canvas.height/2,5,clock_canvas.width/2,clock_canvas.height/2,clock_canvas.width*0.7);
+	gradient = ctx.createRadialGradient(clock_canvas.width-(radius+17),clock_canvas.height-(radius),5,clock_canvas.width-(radius+17),clock_canvas.height-(radius),clock_canvas.width*0.7);
 	gradient.addColorStop(0,'#aed6f4');
 	gradient.addColorStop(1,'#065b9d');
 	ctx.fillStyle = gradient;
     ctx.fillRect(0,0,clock_canvas.width,clock_canvas.height);
 //Hours
     ctx.beginPath();
-    ctx.arc(clock_canvas.width/2,clock_canvas.height/2,radius,degToRad(270), degToRad((hours*15)-89.9));
+    ctx.arc(clock_canvas.width-(radius+17),clock_canvas.height/2,radius,degToRad(270), degToRad((hours*15)-89.9));
     ctx.stroke();
 //Minutes
     ctx.beginPath();
-    ctx.arc(clock_canvas.width/2,clock_canvas.height/2,radius*0.87,degToRad(270), degToRad((minutes*6)-89.9));
+    ctx.arc(clock_canvas.width-(radius+17),clock_canvas.height/2,radius*0.87,degToRad(270), degToRad((minutes*6)-89.9));
     ctx.stroke();
 //seconds
     ctx.beginPath();
-    ctx.arc(clock_canvas.width/2,clock_canvas.height/2,radius*0.74,degToRad(270), degToRad((new_sec*6)-89.9));
+    ctx.arc(clock_canvas.width-(radius+17),clock_canvas.height/2,radius*0.74,degToRad(270), degToRad((seconds*6)-89.9));
     ctx.stroke();
     
 	
@@ -296,11 +294,11 @@ function drawClock() {
 	
     ctx.font = getFont(radius);
     ctx.fillStyle = 'black';
-    ctx.fillText(today, clock_canvas.width/2-120* radius/225,clock_canvas.height/2);
+    ctx.fillText(today, clock_canvas.width-(radius+17)-135* radius/225,clock_canvas.height/2);
     
     ctx.font = getFont(radius);
     ctx.fillStyle = 'black';
-    ctx.fillText(time, clock_canvas.width/2-95* radius/225,clock_canvas.height/2+35* radius/225);
+    ctx.fillText(time, clock_canvas.width-(radius+17)-65* radius/225,clock_canvas.height/2+35* radius/225);
     
     
 }
@@ -310,8 +308,8 @@ function getFont(radius) {
 }
  function resize_canvas(){
 	clock_canvas = document.getElementById("ClockCanvas");
-	clock_canvas.width  = window.innerWidth*0.45;
-	clock_canvas.height = window.innerHeight*0.8;
+	clock_canvas.width  = window.innerWidth*0.895;
+	clock_canvas.height = window.innerHeight*0.25;
 }
 
 
@@ -372,3 +370,5 @@ for (i = 0; i < 8; i++) {
 
 </script>
 
+</body>
+</html>

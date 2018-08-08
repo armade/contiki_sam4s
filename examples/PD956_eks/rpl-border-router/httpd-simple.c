@@ -182,7 +182,7 @@ static const char *http_config_css[] = {
       "font-size:18px;",
       "padding-bottom:7px;",
       "padding-top:7px;",
-      "width: 800px;",
+      "width: 90%%;",
       "text-shadow: 2px 2px black;",
   "}h0{",
   	  "margin:20px;",
@@ -212,7 +212,7 @@ static const char *http_config_css[] = {
       "margin-left:30px;",
       "font-family:Verdana;",
       "border-collapse:collapse;",
-      "width:700px;",
+      "width:80%%;",
       "font-size:12px;",
   "}td,th{",
       "border: 0px solid #dddddd;",
@@ -234,7 +234,7 @@ static const char *http_config_css[] = {
   	  "font-family: Verdana;",
   	  "text-shadow: 2px 2px black;",
   	  "font-size:14px;",
-  	  "width: 870px;",
+  	  "width: 98%%;",
   	  "list-style-type: none;",
   	  "margin: 0; padding: 0;",
   	  "overflow: hidden;background-color: #2196F3;",
@@ -257,7 +257,7 @@ static const char *http_config_css[] = {
 	  "text-shadow: 1px 1px black;",
    "}fieldset{",
 	  "margin:20px;",
-	  "width: 770px;",
+	  "width: 90%%;",
 	  "background-color:#FAFAFF;",
 	  "background: radial-gradient(ellipse at center,  #FfF7FF  0%%, #ffffffff 70%%);",
 	  "border:3px solid #065b9d;",
@@ -700,7 +700,9 @@ PT_THREAD(generate_index(struct httpd_state *s))
   //======================================================================================
 
   //======================================================================================
-
+  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<body onresize=\"resize_canvas()\">"));
+  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<canvas id=\"ClockCanvas\">Your browser doesn't support canvas</canvas>"));
+  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "</body>"));
   PT_WAIT_THREAD(&s->generate_pt, run_java_script(s, clock_js));
   PT_WAIT_THREAD(&s->generate_pt, run_java_script(s, snowflake_js));
   PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 1, http_bottom));

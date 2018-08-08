@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<script src="https://cdn.jsdelivr.net/npm/vue"></script>
+
+<style>
+html,body {
+    height: 100%;
+}
+body {
+    background: #0f3854;
+    background: radial-gradient(ellipse at center,  #0a2e38  0%, #000000 70%);
+    background-size: 100%;
+}
+
+p1{
+	font-size: 24px;
+    letter-spacing: 0.1em;
+}
+
+p2{
+	font-size: 80px;
+}
+#clock {
+    font-family: 'Share Tech Mono', monospace;
+    color: #ffffff;
+    text-align: center;
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    color: #daf6ff;
+    text-shadow: 0 0 20px rgba(10, 175, 230, 1),  0 0 20px rgba(10, 175, 230, 0);
+}
+
+legend {
+    background-color: #000000;
+    color: #fff;
+    padding: 3px 6px;
+	font-size: 24px;
+}
+fieldset {
+
+}
+
+</style>
+<html>
+<body>
+
+<div id="clock">
+
+    <p1 class="date">{{ date }}</p1> <br>
+    <p2 class="time">{{ time }}</p2>
+    <p class="text">DIGITAL CLOCK</p>
+
+</div>
+
+<script>
+var clock = new Vue({
+    el: '#clock',
+    data: {
+        time: '',
+        date: ''
+    }
+});
+
+var week = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
+var timerID = setInterval(updateTime, 1000);
+updateTime();
+function updateTime() {
+    var cd = new Date();
+    clock.time = zeroPadding(cd.getHours(), 2) + ':' + zeroPadding(cd.getMinutes(), 2) + ':' + zeroPadding(cd.getSeconds(), 2);
+    clock.date = zeroPadding(cd.getDate(), 2) + '-' + zeroPadding(cd.getMonth()+1, 2) + '-' + zeroPadding(cd.getFullYear(), 4) + ' ' + week[cd.getDay()];
+};
+
+function zeroPadding(num, digit) {
+    var zero = '';
+    for(var i = 0; i < digit; i++) {
+        zero += '0';
+    }
+    return (zero + num).slice(-digit);
+}
+</script>
+</body>
+</html>

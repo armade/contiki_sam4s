@@ -266,6 +266,10 @@ static int construct_pub_topic(void)
 /*---------------------------------------------------------------------------*/
 static int construct_configs(void)
 {
+	/*for (reading = MQTT_sensor_first(); reading != NULL; reading = reading->next)
+	{
+
+	}*/
 	//--------------------------------------------------------------------------------------------
 	snprintf(MQTT_htu21_interneltmp_config.topic,
 					sizeof(MQTT_htu21_interneltmp_config.topic),

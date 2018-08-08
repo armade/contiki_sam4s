@@ -16,6 +16,8 @@ static const char *clock_js[] = {
 "var ctx = clock_canvas.getContext(\"2d\");",
 "ctx.globalAlpha=1;",
 "setInterval(drawClock, 1000);",
+"resize_canvas();",
+"drawClock();",
 "function degToRad(degree){",
 	"var factor = Math.PI/180;",
 	"return degree*factor;}",
@@ -26,8 +28,6 @@ static const char *clock_js[] = {
 	"var hours = now.getHours();",
 	"var minutes = now.getMinutes();",
 	"var seconds = now.getSeconds();",
-	"var milisec = now.getMilliseconds();",
-	"var new_sec = seconds + (milisec/1000);",
 	"var radius;",
 	"if(clock_canvas.height > clock_canvas.width)",
 		"radius = clock_canvas.width * 0.45; ",
@@ -37,35 +37,35 @@ static const char *clock_js[] = {
 	"ctx.lineWidth = 17*radius/225;",
 	"ctx.shadowBlur = 25;",
 	"ctx.shadowColor = '#2136F3';",
-	"gradient = ctx.createRadialGradient(clock_canvas.width/2,clock_canvas.height/2,5,clock_canvas.width/2,clock_canvas.height/2,clock_canvas.width*0.7);",
+	"gradient = ctx.createRadialGradient(clock_canvas.width-(radius+17),clock_canvas.height-(radius),5,clock_canvas.width-(radius+17),clock_canvas.height-(radius),clock_canvas.width*0.7);",
 	"gradient.addColorStop(0,'#0930a3');",
 	"gradient.addColorStop(1,'black');",
 	"ctx.fillStyle = gradient;",
 	"ctx.fillRect(0,0,clock_canvas.width,clock_canvas.height);",//Background
 	"ctx.beginPath();",//Hours
-	"ctx.arc(clock_canvas.width/2,clock_canvas.height/2,radius,degToRad(270), degToRad((hours*15)-89.9));",
+	"ctx.arc(clock_canvas.width-(radius+17),clock_canvas.height/2,radius,degToRad(270), degToRad((hours*15)-89.9));",
 	"ctx.stroke();",
 	"ctx.beginPath();",//Minutes
-	"ctx.arc(clock_canvas.width/2,clock_canvas.height/2,radius*0.87,degToRad(270), degToRad((minutes*6)-89.9));",
+	"ctx.arc(clock_canvas.width-(radius+17),clock_canvas.height/2,radius*0.87,degToRad(270), degToRad((minutes*6)-89.9));",
 	"ctx.stroke();",
 	"ctx.beginPath();",//seconds
-	"ctx.arc(clock_canvas.width/2,clock_canvas.height/2,radius*0.74,degToRad(270), degToRad((new_sec*6)-89.9));",
+	"ctx.arc(clock_canvas.width-(radius+17),clock_canvas.height/2,radius*0.74,degToRad(270), degToRad((seconds*6)-89.9));",
 	"ctx.stroke();",
 	"ctx.shadowBlur = 15;",
 	"ctx.shadowColor = 'orange';",
 	"ctx.font = getFont(radius);",
 	"ctx.fillStyle = 'silver';",
-	"ctx.fillText(today, clock_canvas.width/2-120* radius/225,clock_canvas.height/2);",
+	"ctx.fillText(today, clock_canvas.width-(radius+17)-135* radius/225,clock_canvas.height/2);",
 	"ctx.font = getFont(radius);",
 	"ctx.fillStyle = 'silver';",
-	"ctx.fillText(time, clock_canvas.width/2-95* radius/225,clock_canvas.height/2+35* radius/225);}",
+	"ctx.fillText(time, clock_canvas.width-(radius+17)-65* radius/225,clock_canvas.height/2+35* radius/225);}",
 "function getFont(radius){",
 	"var size = 35* radius/225;",   // get font size based on current width
 	"return (size|0) + 'px Arial';}", // set font
 "function resize_canvas(){",
-	"canvas = document.getElementById(\"clock_canvas\");",
-	"canvas.width  = window.innerWidth*0.45;",
-	"canvas.height = window.innerHeight*0.8;}",
+	"clock_canvas = document.getElementById(\"ClockCanvas\");",
+	"clock_canvas.width  = window.innerWidth*0.895;",
+	"clock_canvas.height = window.innerHeight*0.25;}",
 "</script>",
 NULL
 };
@@ -107,7 +107,7 @@ static const char *snowflake_js[] = {
 "		ctx_snow.lineTo(origo_x+start_first_flake_x,origo_x+start_first_flake_y);",
 "		stop_first_flake_x = (amp-(amp4+k*amp3))*Math.sin(((i*45+(12+k*3))*Math.PI/180));",// Stop point
 "		stop_first_flake_y = (amp-(amp4+k*amp3))*Math.cos(((i*45+(12+k*3))*Math.PI/180));",
-"		ctx_snow.lineTo(origo_x+stop_first_flake_x,origo_y+stop_first_flake_y);",
+"		ctx_snow.lineTo(origo_x+stop_first_flake_x,origo_y+stop_first_flake_y);",// draw line
 "	}",
 "	ctx_snow.stroke();",
 "}",
