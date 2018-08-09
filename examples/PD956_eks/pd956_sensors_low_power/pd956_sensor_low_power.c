@@ -487,17 +487,18 @@ static void get_GPS_reading()
 {
 	char *buf;
 	float value;
+	double value_d;
 	int ret;
 
 	if(GPS_sensor_LONG_reading.publish){
 		ret = GPS_sensor.value(GPS_SENSOR_TYPE_LONG);
 		buf = GPS_sensor_LONG_reading.converted;
-		value = *(float *)ret;
+		value_d = *(double *)ret;
 		if(ret != SENSOR_ERROR){
 			GPS_sensor_LONG_reading.raw_f = value;
 
 			memset(buf, 0, SENSOR_CONVERTED_LEN);
-			snprintf(buf, SENSOR_CONVERTED_LEN, "%f", value);
+			snprintf(buf, SENSOR_CONVERTED_LEN, "%f", value_d);
 		} else{
 			snprintf(buf, SENSOR_CONVERTED_LEN, "\"N/A\"");
 		}
@@ -506,12 +507,12 @@ static void get_GPS_reading()
 	if(GPS_sensor_LAT_reading.publish){
 		ret = GPS_sensor.value(GPS_SENSOR_TYPE_LAT);
 		buf = GPS_sensor_LAT_reading.converted;
-		value = *(float *)ret;
+		value_d = *(double *)ret;
 		if(ret != SENSOR_ERROR){
 			GPS_sensor_LONG_reading.raw_f = value;
 
 			memset(buf, 0, SENSOR_CONVERTED_LEN);
-			snprintf(buf, SENSOR_CONVERTED_LEN, "%f", value);
+			snprintf(buf, SENSOR_CONVERTED_LEN, "%f", value_d);
 		} else{
 			snprintf(buf, SENSOR_CONVERTED_LEN, "\"N/A\"");
 		}

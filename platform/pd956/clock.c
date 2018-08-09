@@ -78,7 +78,7 @@ void clock_wait(clock_time_t i)
 clock_gpbr_t *clock_gpbr = (clock_gpbr_t *)&CLOCK_FLAGS;
 
 // Soft implementation of time.
-// Ticks is ms an represent time since reset.
+// Ticks is ms and represent time since reset.
 // Apply a time offset and we have a clock.
 void clock_set_unix_time(clock_time_t time, uint8_t hw_save)
 {
@@ -251,7 +251,7 @@ static void Increment_stranum(void *data)
 {
 	if(clock_gpbr->stranum < 15){
 		clock_gpbr->stranum++;
-		if(clock_gpbr->stranum < 15)
+		if(clock_gpbr->stranum < 15) // if we reach absolute rock bottom there is no need to call this again.
 			ctimer_set(&stranum_timer, 1 * 60 * 60 * CLOCK_SECOND, Increment_stranum, NULL); // 1 hr interval
 	}
 }

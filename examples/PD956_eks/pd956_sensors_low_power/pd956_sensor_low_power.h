@@ -118,6 +118,15 @@ extern process_event_t Trig_sensors;
 #define UNIT_ANGLE		"deg"
 #define UNIT_DISTANCE	"m"
 /*---------------------------------------------------------------------------*/
+
+typedef struct MQTT_config_ele
+{
+	struct MQTT_config_ele *next;
+	char topic[64];
+	char arg[64 * 10];
+} MQTT_config_ele_t;
+/*---------------------------------------------------------------------------*/
+
 /* A data type for sensor readings, internally stored in a linked list */
 #define SENSOR_CONVERTED_LEN        12
 
@@ -143,6 +152,7 @@ typedef struct sensor_reading {
    * 	- switch
    */
   char component[15];
+  MQTT_config_ele_t MQTT_config_ele;
 } MQTT_sensor_reading_t;
 /*---------------------------------------------------------------------------*/
 /* Global configuration */

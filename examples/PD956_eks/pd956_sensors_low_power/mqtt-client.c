@@ -13,6 +13,8 @@
 #include "mqtt-client.h"
 #include "httpd-simple.h"
 #include "rf231.h"
+#include "platform-conf.h"
+#include "clock.h"
 
 #include <string.h>
 #include <strings.h>
@@ -86,12 +88,7 @@ LIST(MQTT_subscribe_list);
 //LIST(MQTT_publish_list);
 LIST(MQTT_config_list);
 
-typedef struct MQTT_config_ele
-{
-	struct MQTT_config_ele *next;
-	char topic[BUFFER_SIZE];
-	char arg[BUFFER_SIZE * 10];
-} MQTT_config_ele_t;
+
 
 typedef struct MQTT_sub_ele
 {
@@ -266,17 +263,34 @@ static int construct_pub_topic(void)
 /*---------------------------------------------------------------------------*/
 static int construct_configs(void)
 {
+	// TODO: this will only work for sensors. NEDAFIX.
 	/*for (reading = MQTT_sensor_first(); reading != NULL; reading = reading->next)
 	{
+		snprintf(reading->MQTT_config_ele.topic,
+							sizeof(reading->MQTT_config_ele.topic),
+							"Hass/%s/%s-%s/config", reading->component,reading->descr,
+							device_certificate.crt.snr);
 
+			snprintf(reading->MQTT_config_ele.arg,
+					sizeof(reading->MQTT_config_ele.arg),
+					"{\"name\": \"%s %s\","
+					"\"state_topic\": \"Hass/%s/%s/%s/state\","
+					"\"unit_of_measurement\": \"°C\","
+					"\"value_template\":\"{{ value_json.%s}}\" }",
+					conf->Username,reading->xml_element,
+					reading->component, client_id, conf->Username, reading->descr); // Last must be equal reading->descr
+
+			list_add(MQTT_config_list, &reading->MQTT_config_ele);
 	}*/
+	//reading->descr
+
+
 	//--------------------------------------------------------------------------------------------
+	// TODO: test this
 	snprintf(MQTT_htu21_interneltmp_config.topic,
 					sizeof(MQTT_htu21_interneltmp_config.topic),
-					"Hass/%s/%s%02x%02x%02x%02x%02x%02x/config", "sensor","sensorItemp",
-					linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1],
-					linkaddr_node_addr.u8[2], linkaddr_node_addr.u8[5],
-					linkaddr_node_addr.u8[6], linkaddr_node_addr.u8[7]);
+					"Hass/%s/%s-%s/config", "sensor","Internaltemperature",
+					device_certificate.crt.snr);
 
 	snprintf(MQTT_htu21_interneltmp_config.arg,
 			sizeof(MQTT_htu21_interneltmp_config.arg),
@@ -361,6 +375,8 @@ static int construct_configs(void)
 
 	list_add(MQTT_config_list, &MQTT_bm280_pressure_config);
 #endif
+
+
 	//--------------------------------------------------------------------------------------------
 /*
 	snprintf(MQTT_step_motor_config.topic, sizeof(MQTT_step_motor_config.topic),
@@ -526,8 +542,9 @@ static void publish(void)
 			"\"Name\":\"%s\","
 			"\"Seq #\":%d,"
 			"\"Uptime [s]\":%lu,"
-			"\"Battery state\":%c"
-	,BOARD_STRING, SENSOR_STRING, conf->Username, seq_nr_value, clock_seconds(),RF231_bat_status()+0x30);
+			"\"Battery state\":%c,"
+			"\"Unix [s]\":%lu"
+	,BOARD_STRING, SENSOR_STRING, conf->Username, seq_nr_value, clock_seconds(),RF231_bat_status()+0x30,clock_get_unix_time());
 
 	if (len < 0 || len >= remaining)
 	{

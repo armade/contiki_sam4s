@@ -52,21 +52,21 @@ int parse_sentence(char *line)
 		case MINMEA_SENTENCE_RMC: {
 
 			if (minmea_parse_rmc(&frame_rmc, line)) {
-				printf(INDENT_SPACES "$xxRMC: raw coordinates and speed: (%d/%d,%d/%d) %d/%d\n",
+				PRINTF(INDENT_SPACES "$xxRMC: raw coordinates and speed: (%d/%d,%d/%d) %d/%d\n",
 						frame_rmc.latitude.value, frame_rmc.latitude.scale,
 						frame_rmc.longitude.value, frame_rmc.longitude.scale,
 						frame_rmc.speed.value, frame_rmc.speed.scale);
-				printf(INDENT_SPACES "$xxRMC fixed-point coordinates and speed scaled to three decimal places: (%d,%d) %d\n",
+				PRINTF(INDENT_SPACES "$xxRMC fixed-point coordinates and speed scaled to three decimal places: (%d,%d) %d\n",
 						minmea_rescale(&frame_rmc.latitude, 1000),
 						minmea_rescale(&frame_rmc.longitude, 1000),
 						minmea_rescale(&frame_rmc.speed, 1000));
-				printf(INDENT_SPACES "$xxRMC floating point degree coordinates and speed: (%f,%f) %f\n",
+				PRINTF(INDENT_SPACES "$xxRMC floating point degree coordinates and speed: (%f,%f) %f\n",
 						minmea_tocoord(&frame_rmc.latitude),
 						minmea_tocoord(&frame_rmc.longitude),
 						minmea_tofloat(&frame_rmc.speed));
 			}
 			else {
-				printf(INDENT_SPACES "$xxRMC sentence is not parsed\n");
+				PRINTF(INDENT_SPACES "$xxRMC sentence is not parsed\n");
 			}
 		} break;
 
@@ -76,7 +76,7 @@ int parse_sentence(char *line)
 
 			}
 			else {
-				printf(INDENT_SPACES "$xxGGA sentence is not parsed\n");
+				PRINTF(INDENT_SPACES "$xxGGA sentence is not parsed\n");
 			}
 		} break;
 
@@ -86,24 +86,24 @@ int parse_sentence(char *line)
 
 			}
 			else {
-				printf(INDENT_SPACES "$xxGST sentence is not parsed\n");
+				PRINTF(INDENT_SPACES "$xxGST sentence is not parsed\n");
 			}
 		} break;
 
 		case MINMEA_SENTENCE_GSV: {
 
 			if (minmea_parse_gsv(&frame_gsv, line)) {
-				/*printf(INDENT_SPACES "$xxGSV: message %d of %d\n", frame_gsv.msg_nr, frame_gsv.total_msgs);
-				printf(INDENT_SPACES "$xxGSV: sattelites in view: %d\n", frame_gsv.total_sats);
+				/*PRINTF(INDENT_SPACES "$xxGSV: message %d of %d\n", frame_gsv.msg_nr, frame_gsv.total_msgs);
+				PRINTF(INDENT_SPACES "$xxGSV: sattelites in view: %d\n", frame_gsv.total_sats);
 				for (int i = 0; i < 4; i++)
-					printf(INDENT_SPACES "$xxGSV: sat nr %d, elevation: %d, azimuth: %d, snr: %d dbm\n",
+					PRINTF(INDENT_SPACES "$xxGSV: sat nr %d, elevation: %d, azimuth: %d, snr: %d dbm\n",
 						frame_gsv.sats[i].nr,
 						frame_gsv.sats[i].elevation,
 						frame_gsv.sats[i].azimuth,
 						frame_gsv.sats[i].snr);*/
 			}
 			else {
-				printf(INDENT_SPACES "$xxGSV sentence is not parsed\n");
+				PRINTF(INDENT_SPACES "$xxGSV sentence is not parsed\n");
 			}
 		} break;
 
@@ -113,7 +113,7 @@ int parse_sentence(char *line)
 
 		   }
 		   else {
-				printf(INDENT_SPACES "$xxVTG sentence is not parsed\n");
+				PRINTF(INDENT_SPACES "$xxVTG sentence is not parsed\n");
 		   }
 		} break;
 
@@ -144,7 +144,7 @@ int parse_sentence(char *line)
 				clock_set_unix_time(unixtime,1);
 				clock_quality(GPS_TIME);
 
-				printf(INDENT_SPACES "$xxZDA: %d:%d:%d %02d.%02d.%d UTC%+03d:%02d\n",
+				PRINTF(INDENT_SPACES "$xxZDA: %d:%d:%d %02d.%02d.%d UTC%+03d:%02d\n",
 					   frame_zda.time.hours,
 					   frame_zda.time.minutes,
 					   frame_zda.time.seconds,
@@ -155,16 +155,16 @@ int parse_sentence(char *line)
 					   frame_zda.minute_offset);
 			}
 			else {
-				printf(INDENT_SPACES "$xxZDA sentence is not parsed\n");
+				PRINTF(INDENT_SPACES "$xxZDA sentence is not parsed\n");
 			}
 		} break;
 
 		case MINMEA_INVALID: {
-			printf(INDENT_SPACES "$xxxxx sentence is not valid\n");
+			PRINTF(INDENT_SPACES "$xxxxx sentence is not valid\n");
 		} break;
 
 		default: {
-			printf(INDENT_SPACES "$xxxxx sentence is not parsed\n");
+			PRINTF(INDENT_SPACES "$xxxxx sentence is not parsed\n");
 		} break;
 	}
 
@@ -203,8 +203,8 @@ PROCESS_THREAD(gpsd_process, ev, data)
 {
 	PROCESS_BEGIN();
 	PRINTF("gpsd process started\n");
-	gpsd_arch_init();
 	nmea_event = process_alloc_event();
+	gpsd_arch_init();
 
 	while(1){
 		PROCESS_YIELD();

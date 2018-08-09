@@ -58,6 +58,7 @@
 #define SENSOR_STARTUP_DELAY 1*(1000/CLOCK_SECOND)
 static struct ctimer startup_timer;
 static volatile float Temp_float_val;
+static volatile float Temp_double_val;
 /*---------------------------------------------------------------------------*/
 static int enabled = SENSOR_STATUS_DISABLED;
 /*---------------------------------------------------------------------------*/
@@ -81,20 +82,21 @@ value(int type)
 		return SENSOR_ERROR;
 	}
 
-
+	// We are not going to perform any calculations on any of the parameter.
+	// We should just parse on the raw value. This is only for testing.
 	switch(type){
-		case GPS_SENSOR_TYPE_LAT:	Temp_float_val = minmea_tocoord(&frame_gga.latitude);	break;
-		case GPS_SENSOR_TYPE_LONG:	Temp_float_val = minmea_tocoord(&frame_gga.longitude);	break;
-		case GPS_SENSOR_TYPE_ALT:	Temp_float_val = minmea_tofloat(&frame_gga.altitude);	break;
-		case GPS_SENSOR_TYPE_SPEED:	Temp_float_val = minmea_tofloat(&frame_vtg.speed_kph);	break;
+		case GPS_SENSOR_TYPE_LAT:	Temp_double_val = minmea_tocoord_double(&frame_gga.latitude);	return &Temp_double_val;
+		case GPS_SENSOR_TYPE_LONG:	Temp_double_val = minmea_tocoord_double(&frame_gga.longitude);	return &Temp_double_val;
+		case GPS_SENSOR_TYPE_ALT:	Temp_float_val = minmea_tofloat(&frame_gga.altitude);			return &Temp_float_val;
+		case GPS_SENSOR_TYPE_SPEED:	Temp_float_val = minmea_tofloat(&frame_vtg.speed_kph);			return &Temp_float_val;
 		default:	return SENSOR_ERROR;
 	}
 
-	return &Temp_float_val;
+
 }
 /*---------------------------------------------------------------------------*/
 /**
- * \brief Configuration function for the BMP280 sensor.
+ * \brief Configuration function for the sensor.
  *
  * \param type Activate, enable or disable the sensor. See below
  * \param enable
@@ -113,7 +115,7 @@ configure(int type, int enable)
 
 			break;
 		case SENSORS_ACTIVE:
-			/* Must be initialised first */
+			// Must be initialised first
 			if(enabled == SENSOR_STATUS_DISABLED) {
 			  return SENSOR_STATUS_DISABLED;
 			}
