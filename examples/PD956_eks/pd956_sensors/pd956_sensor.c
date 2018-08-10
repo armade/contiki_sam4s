@@ -76,7 +76,7 @@ struct ctimer Step_motor_timer;
 struct ctimer dht11_temperature_timer;
 struct ctimer dht11_humidity_timer;
 #endif
-#ifdef NODE_PRESSURE
+#ifdef NODE_BMP280
 struct ctimer bmp_timer;
 #endif
 #ifdef NODE_LIGHT
@@ -126,11 +126,11 @@ DEMO_SENSOR(step_motor, PD956_WEB_DEMO_SENSOR_STEP, "Step-Position", "Step-posit
 #endif
 
 #ifdef NODE_LIGHT
-DEMO_SENSOR(RGB_sensor, PD956_WEB_DEMO_SENSOR_RGB, "RGB-light", "RGB-light", "RGB-light", CC26XX_WEB_DEMO_UNIT_NONE,"sensor");
+DEMO_SENSOR(soft_RGB_ctrl_sensor, PD956_WEB_DEMO_SENSOR_RGB, "RGB-light", "RGB-light", "RGB-light", CC26XX_WEB_DEMO_UNIT_NONE,"sensor");
 #endif
 
 #ifdef NODE_HARD_LIGHT
-DEMO_SENSOR(hard_RGB_sensor, PD956_WEB_DEMO_SENSOR_RGB, "RGB-light", "RGB-light", "RGB-light", CC26XX_WEB_DEMO_UNIT_NONE,"sensor");
+DEMO_SENSOR(hard_RGB_ctrl_sensor, PD956_WEB_DEMO_SENSOR_RGB, "RGB-light", "RGB-light", "RGB-light", CC26XX_WEB_DEMO_UNIT_NONE,"sensor");
 #endif
 
 #if defined(NODE_STEP_MOTOR) || defined(NODE_4_ch_relay)
@@ -138,7 +138,7 @@ DEMO_SENSOR(dht11_temperature, PD956_WEB_DEMO_SENSOR_DHT11_TEMP,  "Temperature",
 DEMO_SENSOR(dht11_humidity, PD956_WEB_DEMO_SENSOR_DHT11_HUMIDITY, "Humidity", "Humidity", "Humidity", CC26XX_WEB_DEMO_UNIT_HUMIDITY,"sensor");
 #endif
 
-#ifdef NODE_PRESSURE
+#ifdef NODE_BMP280
 DEMO_SENSOR(bmp_280_sensor_press,PD956_WEB_DEMO_SENSOR_BMP280_PRES, "Pressure", "Pressure", "Pressure",	CC26XX_WEB_DEMO_UNIT_PRES,"sensor");
 DEMO_SENSOR(bmp_280_sensor_temp,PD956_WEB_DEMO_SENSOR_BMP280_TEMP,  "Temperature", "Temperature", "Temperature", CC26XX_WEB_DEMO_UNIT_TEMP,"sensor");
 #endif
@@ -446,7 +446,7 @@ get_RGB_reading(void)
 
 	if(RGB_sensor_reading.publish) {
 
-		value = RGB_sensor.value(SENSOR_ERROR);
+		value = soft_RGB_ctrl_sensor.value(SENSOR_ERROR);
 		if(value != SENSOR_ERROR) {
 			RGB_sensor_reading.raw = value;
 			rgb.all = value;
@@ -546,7 +546,7 @@ get_dht11_temperature_reading(void)
 }
 #endif
 /*---------------------------------------------------------------------------*/
-#ifdef NODE_PRESSURE
+#ifdef NODE_BMP280
 static void
 init_bmp_reading(void *not_used)
 {
@@ -691,12 +691,12 @@ init_sensors(void)
 #endif
 
 #ifdef NODE_LIGHT
-	SENSORS_ACTIVATE(RGB_sensor);
+	SENSORS_ACTIVATE(soft_RGB_ctrl_sensor);
 	snprintf(RGB_sensor_reading.converted, CC26XX_WEB_DEMO_CONVERTED_LEN, "\"N/A\"");
 #endif
 
 #ifdef NODE_HARD_LIGHT
-	SENSORS_ACTIVATE(hard_RGB_sensor);
+	SENSORS_ACTIVATE(hard_RGB_ctrl_sensor);
 	snprintf(hard_RGB_sensor_reading.converted, CC26XX_WEB_DEMO_CONVERTED_LEN, "\"N/A\"");
 #endif
 
@@ -710,7 +710,7 @@ init_sensors(void)
 	SENSORS_ACTIVATE(ch4_relay_PD956);
 #endif
 
-#ifdef NODE_PRESSURE
+#ifdef NODE_BMP280
 	SENSORS_ACTIVATE(bmp_280_sensor);
 	list_add(sensor_list, &bmp_280_sensor_press_reading);
 	list_add(sensor_list, &bmp_280_sensor_temp_reading);
@@ -827,7 +827,7 @@ PROCESS_THREAD(cc26xx_web_demo_process, ev, data)
 #endif
 
 #ifdef NODE_LIGHT
-    } else if(ev == sensors_event && data == &RGB_sensor) {
+    } else if(ev == sensors_event && data == &soft_RGB_ctrl_sensor) {
     	get_RGB_reading();
 #endif
 
@@ -841,7 +841,7 @@ PROCESS_THREAD(cc26xx_web_demo_process, ev, data)
               get_HTU21D_reading();
 #endif
 
-#ifdef NODE_PRESSURE
+#ifdef NODE_BMP280
     } else if(ev == sensors_event && data == &bmp_280_sensor) {
               get_bmp_reading();
 #endif

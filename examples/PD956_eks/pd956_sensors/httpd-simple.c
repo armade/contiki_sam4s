@@ -1106,7 +1106,7 @@ PT_THREAD(generate_light_config(struct httpd_state *s))
 //=====================================================================================
 
   RGB_t RGB;
-  RGB.all = RGB_sensor.value(SENSOR_ERROR);
+  RGB.all = soft_RGB_ctrl_sensor.value(SENSOR_ERROR);
   PT_WAIT_THREAD(&s->generate_pt,
 		  	  enqueue_chunk(s, 0, "%sIntensity:%s", config_div_left, config_div_close));
   PT_WAIT_THREAD(&s->generate_pt,
@@ -1230,7 +1230,7 @@ PT_THREAD(generate_hard_light_config(struct httpd_state *s))
 //=====================================================================================
 
   RGB_hard_t RGB;
-  RGB.all = ((RGB_hard_t *) hard_RGB_sensor.value(SENSOR_ERROR))->all;
+  RGB.all = ((RGB_hard_t *) hard_RGB_ctrl_sensor.value(SENSOR_ERROR))->all;
   PT_WAIT_THREAD(&s->generate_pt,
 		  	  enqueue_chunk(s, 0, "%sIntensity:%s", config_div_left, config_div_close));
   PT_WAIT_THREAD(&s->generate_pt,

@@ -16,8 +16,8 @@ extern "C" {
 #include <stdio.h>
 #include <stdint.h>
 #include <stdbool.h>
-#include <errno.h>
-#include <time.h>
+//#include <errno.h>
+//#include <time.h>
 #include <math.h>
 #ifdef MINMEA_INCLUDE_COMPAT
 #include <minmea_compat.h>

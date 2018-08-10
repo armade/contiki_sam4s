@@ -1,5 +1,5 @@
 DEFINES+=PROJECT_CONF_H=\"project-conf.h\"
-CFLAGS += -DNODE_HTU21D=1  -DLOW_CLOCK=0
+CFLAGS += -DNODE_GPS=1  -DLOW_CLOCK=0
 
 all: pd956_sensor_low_power
 
@@ -15,7 +15,7 @@ PROJECT_SOURCEFILES += httpd_post_handlers.c
 CONTIKI_WITH_IPV6 = 1
 
 # REST Engine shall use Erbium CoAP implementation
-APPS += mqtt servreg-hack ntpd gpsd
+APPS += mqtt servreg-hack ntpd gpsd ftp
 
 CONTIKI=../../..
 include $(CONTIKI)/Makefile.include

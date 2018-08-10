@@ -15,6 +15,9 @@
 #define F_CPU 120000000  	//6.9mA max  + 4mA ADC + 12-14mA radio ~ 25-27mA
 #endif
 
+#define XMEM_ERASE_UNIT_SIZE (64 * 1024L)
+#define CFS_XMEM_CONF_OFFSET    (2 * XMEM_ERASE_UNIT_SIZE)
+#define CFS_XMEM_CONF_SIZE      (1 * XMEM_ERASE_UNIT_SIZE)
 
 // timer 0 is on timestamp dig2 (Not implemented yet) TIOA0
 

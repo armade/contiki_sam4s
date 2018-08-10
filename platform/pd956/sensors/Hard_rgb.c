@@ -303,7 +303,7 @@ value_hard_RGB(uint16_t R,uint16_t G,uint16_t B, uint16_t brightness)
 	PWM->PWM_CH_NUM[2].PWM_CDTYUPD = (uint32_t)(gamma_table[G]*brightness)>>7; // divide by 128
 	PWM->PWM_CH_NUM[3].PWM_CDTYUPD = (uint32_t)(gamma_table[B]*brightness)>>7; // divide by 128
 
-	sensors_changed(&hard_RGB_sensor);
+	sensors_changed(&hard_RGB_ctrl_sensor);
 	return 1;
 }
 
@@ -403,7 +403,7 @@ hard_RGB_status(int type)
 	return Sensor_status;
 }
 /*---------------------------------------------------------------------------*/
-SENSORS_SENSOR(hard_RGB_sensor, "RGB", hard_RGB_set, hard_RGB_init, hard_RGB_status);
+SENSORS_SENSOR(hard_RGB_ctrl_sensor, "RGB", hard_RGB_set, hard_RGB_init, hard_RGB_status);
 /*---------------------------------------------------------------------------*/
 
 struct ctimer RGB_timer;

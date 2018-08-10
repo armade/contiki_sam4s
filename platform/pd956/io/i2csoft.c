@@ -13,7 +13,7 @@ www.eXtremeElectronics.co.in
 #include "platform-conf.h"
 #include "gpio.h"
 #include "pio_handler.h"
-#if defined(NODE_HTU21D) || defined(NODE_PRESSURE) || defined(NODE_LM73)
+#if defined(NODE_HTU21D) || defined(NODE_BMP280) || defined(NODE_LM73)
 Pio *I2C_base = (Pio *)PIOB;
 
 #define NOP(NO, unused)      asm volatile("NOP");

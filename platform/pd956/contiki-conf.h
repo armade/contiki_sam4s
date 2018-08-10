@@ -225,4 +225,15 @@ int strcasecmp(const char*, const char*);
 
 #define BAUD2UBR(x) (x)
 
+#define CH_ULCORNER	          -10
+#define CH_URCORNER	          -11
+#define CH_LLCORNER	          -12
+#define CH_LRCORNER	          -13
+#define CH_ENTER	          '\n'
+#define CH_DEL		          '\b'
+#define CH_CURS_UP  	          -1
+#define CH_CURS_LEFT	          -2
+#define CH_CURS_RIGHT	          -3
+#define CH_CURS_DOWN	          -4
+
 #endif /* CONTIKI_CONF_H_ */

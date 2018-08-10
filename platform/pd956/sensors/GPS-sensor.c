@@ -55,6 +55,11 @@
 #define PRINTF(...)
 #endif
 
+#define SENSOR_STATUS_DISABLED     0
+#define SENSOR_STATUS_INITIALISED  1
+#define SENSOR_STATUS_NOT_READY    2
+#define SENSOR_STATUS_READY        3
+
 #define SENSOR_STARTUP_DELAY 1*(1000/CLOCK_SECOND)
 static struct ctimer startup_timer;
 static volatile float Temp_float_val;
@@ -62,6 +67,14 @@ static volatile float Temp_double_val;
 /*---------------------------------------------------------------------------*/
 static int enabled = SENSOR_STATUS_DISABLED;
 /*---------------------------------------------------------------------------*/
+
+extern struct minmea_sentence_rmc frame_rmc;
+extern struct minmea_sentence_gga frame_gga;
+extern struct minmea_sentence_gst frame_gst;
+extern struct minmea_sentence_gsv frame_gsv;
+extern struct minmea_sentence_vtg frame_vtg;
+extern struct minmea_sentence_zda frame_zda;
+
 static void
 notify_ready(void *not_used)
 {
@@ -75,7 +88,6 @@ notify_ready(void *not_used)
 static int
 value(int type)
 {
-	int rv;
 
 	if(enabled != SENSOR_STATUS_READY) {
 		PRINTF("Sensor disabled or starting up (%d)\n", enabled);
@@ -85,10 +97,10 @@ value(int type)
 	// We are not going to perform any calculations on any of the parameter.
 	// We should just parse on the raw value. This is only for testing.
 	switch(type){
-		case GPS_SENSOR_TYPE_LAT:	Temp_double_val = minmea_tocoord_double(&frame_gga.latitude);	return &Temp_double_val;
-		case GPS_SENSOR_TYPE_LONG:	Temp_double_val = minmea_tocoord_double(&frame_gga.longitude);	return &Temp_double_val;
-		case GPS_SENSOR_TYPE_ALT:	Temp_float_val = minmea_tofloat(&frame_gga.altitude);			return &Temp_float_val;
-		case GPS_SENSOR_TYPE_SPEED:	Temp_float_val = minmea_tofloat(&frame_vtg.speed_kph);			return &Temp_float_val;
+		case GPS_SENSOR_TYPE_LAT:	Temp_double_val = minmea_tocoord_double(&frame_gga.latitude);	return (int)&Temp_double_val;
+		case GPS_SENSOR_TYPE_LONG:	Temp_double_val = minmea_tocoord_double(&frame_gga.longitude);	return (int)&Temp_double_val;
+		case GPS_SENSOR_TYPE_ALT:	Temp_float_val = minmea_tofloat(&frame_gga.altitude);			return (int)&Temp_float_val;
+		case GPS_SENSOR_TYPE_SPEED:	Temp_float_val = minmea_tofloat(&frame_vtg.speed_kph);			return (int)&Temp_float_val;
 		default:	return SENSOR_ERROR;
 	}
 
@@ -108,7 +120,6 @@ value(int type)
 static int
 configure(int type, int enable)
 {
-	uint8_t ID;
 	switch(type) {
 		case SENSORS_HW_INIT:
 			enabled = SENSOR_STATUS_INITIALISED;

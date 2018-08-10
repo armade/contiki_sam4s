@@ -12,14 +12,21 @@
 SENSORS(
 		&SAM4S_ADC_TS_sensor,
 		&button_sensor_PD956,
-		&RGB_sensor
+		&soft_RGB_ctrl_sensor
 );
 #endif
 
 #ifdef NODE_HARD_LIGHT
 SENSORS(
 		&SAM4S_ADC_TS_sensor,
-		&hard_RGB_sensor
+		&hard_RGB_ctrl_sensor
+);
+#endif
+
+#ifdef NODE_DHT11
+SENSORS(
+		&SAM4S_ADC_TS_sensor,
+		&dht11_sensor
 );
 #endif
 
@@ -39,7 +46,7 @@ SENSORS(
 );
 #endif
 
-#ifdef NODE_PRESSURE
+#ifdef NODE_BMP280
 SENSORS(
 		&SAM4S_ADC_TS_sensor,
 		&bmp_280_sensor
@@ -55,8 +62,8 @@ SENSORS(
 
 #ifdef NODE_GPS
 SENSORS(
-		&GPS_sensor,
-		&HTU21D_sensor
+		&SAM4S_ADC_TS_sensor,
+		&GPS_sensor
 );
 #endif
 

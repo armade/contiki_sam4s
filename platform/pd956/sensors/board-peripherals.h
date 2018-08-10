@@ -20,11 +20,15 @@
 //#define NODE_LIGHT
 //#define NODE_HARD_LIGHT
 //#define NODE_STEP_MOTOR
-//#define NODE_PRESSURE
+//#define NODE_BMP280
 //#define NODE_HTU21D
 //#define NODE_GPS
+//#define NODE_DHT11
 
 
+#ifdef NODE_DHT11
+#define SENSOR_STRING 		"DHT11"
+#endif
 
 #ifdef NODE_LIGHT
 #define SENSOR_STRING 		"Light"
@@ -42,12 +46,12 @@
 #define SENSOR_STRING 		"4ch relay"
 #endif
 
-#ifdef NODE_PRESSURE
-#define SENSOR_STRING 		"Pressure"
+#ifdef NODE_BMP280
+#define SENSOR_STRING 		"BMP280"
 #endif
 
 #ifdef NODE_HTU21D
-#define SENSOR_STRING 		"NODE_HTU21D"
+#define SENSOR_STRING 		"HTU21D"
 #endif
 
 #ifdef NODE_GPS

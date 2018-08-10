@@ -96,19 +96,19 @@ DEMO_SENSOR(step_motor, PD956_WEB_DEMO_SENSOR_STEP, "Step_Position", "Step_posit
 #endif
 
 #ifdef NODE_LIGHT
-DEMO_SENSOR(RGB_sensor, PD956_WEB_DEMO_SENSOR_RGB, "RGB_light", "RGB_light", "RGB_light", UNIT_NONE,"sensor");
+DEMO_SENSOR(soft_RGB_ctrl_sensor, PD956_WEB_DEMO_SENSOR_RGB, "RGB_light", "RGB_light", "RGB_light", UNIT_NONE,"sensor");
 #endif
 
 #ifdef NODE_HARD_LIGHT
-DEMO_SENSOR(hard_RGB_sensor, PD956_WEB_DEMO_SENSOR_RGB, "RGB_light", "RGB_light", "RGB_light", UNIT_NONE,"sensor");
+DEMO_SENSOR(hard_RGB_ctrl_sensor, PD956_WEB_DEMO_SENSOR_RGB, "RGB_light", "RGB_light", "RGB_light", UNIT_NONE,"sensor");
 #endif
 
-#if defined(NODE_STEP_MOTOR) || defined(NODE_4_ch_relay)
+#if defined(NODE_STEP_MOTOR) || defined(NODE_4_ch_relay) || defined(NODE_DHT11)
 DEMO_SENSOR(dht11_temperature, PD956_WEB_DEMO_SENSOR_DHT11_TEMP, "Temperature", "Temperature", "Temperature", UNIT_TEMP,"sensor");
 DEMO_SENSOR(dht11_humidity, PD956_WEB_DEMO_SENSOR_DHT11_HUMIDITY, "Humidity", "Humidity", "Humidity", UNIT_HUMIDITY,"sensor");
 #endif
 
-#ifdef NODE_PRESSURE
+#ifdef NODE_BMP280
 DEMO_SENSOR(bmp_280_sensor_press,PD956_WEB_DEMO_SENSOR_BMP280_PRES, "Pressure", "Pressure", "Pressure", UNIT_PRES,"sensor");
 DEMO_SENSOR(bmp_280_sensor_temp,PD956_WEB_DEMO_SENSOR_BMP280_TEMP, "Temperature", "Temperature", "Temperature", UNIT_TEMP,"sensor");
 #endif
@@ -298,7 +298,7 @@ get_RGB_reading(void)
 
 	if(RGB_sensor_reading.publish){
 
-		value = RGB_sensor.value(SENSOR_ERROR);
+		value = soft_RGB_ctrl_sensor.value(SENSOR_ERROR);
 		if(value != SENSOR_ERROR){
 			RGB_sensor_reading.raw = value;
 			rgb.all = value;
@@ -342,7 +342,7 @@ get_step_reading(void)
 }
 #endif
 
-#if defined(NODE_STEP_MOTOR) || defined(NODE_4_ch_relay)
+#if defined(NODE_STEP_MOTOR) || defined(NODE_4_ch_relay) || defined(NODE_4_ch_relay)
 static void
 get_dht11_temperature_reading(void)
 {
@@ -386,7 +386,7 @@ get_dht11_temperature_reading(void)
 }
 #endif
 /*---------------------------------------------------------------------------*/
-#ifdef NODE_PRESSURE
+#ifdef NODE_BMP280
 
 static void
 get_bmp_reading()
@@ -495,7 +495,7 @@ static void get_GPS_reading()
 		buf = GPS_sensor_LONG_reading.converted;
 		value_d = *(double *)ret;
 		if(ret != SENSOR_ERROR){
-			GPS_sensor_LONG_reading.raw_f = value;
+			GPS_sensor_LONG_reading.raw_f = value_d;
 
 			memset(buf, 0, SENSOR_CONVERTED_LEN);
 			snprintf(buf, SENSOR_CONVERTED_LEN, "%f", value_d);
@@ -509,7 +509,7 @@ static void get_GPS_reading()
 		buf = GPS_sensor_LAT_reading.converted;
 		value_d = *(double *)ret;
 		if(ret != SENSOR_ERROR){
-			GPS_sensor_LONG_reading.raw_f = value;
+			GPS_sensor_LONG_reading.raw_f = value_d;
 
 			memset(buf, 0, SENSOR_CONVERTED_LEN);
 			snprintf(buf, SENSOR_CONVERTED_LEN, "%f", value_d);
@@ -576,7 +576,7 @@ static void init_sensors(void)
 	snprintf(hard_RGB_sensor_reading.converted, SENSOR_CONVERTED_LEN, "\"N/A\"");
 #endif
 
-#ifdef NODE_4_ch_relay
+#if defined(NODE_4_ch_relay) || defined(NODE_4_ch_relay)
 	list_add(sensor_list, &dht11_temperature_reading);
 	list_add(sensor_list, &dht11_humidity_reading);
 	snprintf(dht11_temperature_reading.converted, SENSOR_CONVERTED_LEN, "\"N/A\"");
@@ -584,7 +584,7 @@ static void init_sensors(void)
 
 #endif
 
-#ifdef NODE_PRESSURE
+#ifdef NODE_BMP280
 	list_add(sensor_list, &bmp_280_sensor_press_reading);
 	list_add(sensor_list, &bmp_280_sensor_temp_reading);
 	snprintf(bmp_280_sensor_press_reading.converted, SENSOR_CONVERTED_LEN, "\"N/A\"");
@@ -623,11 +623,11 @@ static void trigger_sensors(void)
 #endif
 
 #ifdef NODE_LIGHT
-	SENSORS_ACTIVATE(RGB_sensor);
+	SENSORS_ACTIVATE(soft_RGB_ctrl_sensor);
 #endif
 
 #ifdef NODE_HARD_LIGHT
-	SENSORS_ACTIVATE(hard_RGB_sensor);
+	SENSORS_ACTIVATE(hard_RGB_ctrl_sensor);
 #endif
 
 #ifdef NODE_4_ch_relay
@@ -635,7 +635,11 @@ static void trigger_sensors(void)
 	SENSORS_ACTIVATE(ch4_relay_PD956);
 #endif
 
-#ifdef NODE_PRESSURE
+#ifdef NODE_DHT11
+	SENSORS_ACTIVATE(dht11_sensor);
+#endif
+
+#ifdef NODE_BMP280
 	SENSORS_ACTIVATE(bmp_280_sensor);
 #endif
 
@@ -719,12 +723,12 @@ PROCESS_THREAD(PD956_MAIN_process, ev, data)
 #endif
 
 #ifdef NODE_LIGHT
-		} else if(ev == sensors_event && data == &RGB_sensor){
+		} else if(ev == sensors_event && data == &soft_RGB_ctrl_sensor){
 			get_RGB_reading();
 			sensor_busy &= ~(1ul<<PD956_WEB_DEMO_SENSOR_RGB);
 #endif
 
-#if defined(NODE_STEP_MOTOR) || defined(NODE_4_ch_relay)
+#if defined(NODE_STEP_MOTOR) || defined(NODE_4_ch_relay) || defined(NODE_DHT11)
 		} else if(ev == sensors_event && data == &dht11_sensor){
 			get_dht11_temperature_reading();
 			sensor_busy &= ~(1ul<<PD956_WEB_DEMO_SENSOR_DHT11_TEMP);
@@ -738,7 +742,7 @@ PROCESS_THREAD(PD956_MAIN_process, ev, data)
 			sensor_busy &= ~(1ul << PD956_WEB_DEMO_SENSOR_HTU21D_humid);
 #endif
 
-#ifdef NODE_PRESSURE
+#ifdef NODE_BMP280
 		} else if(ev == sensors_event && data == &bmp_280_sensor){
 			get_bmp_reading();
 			sensor_busy &= ~(1ul<<PD956_WEB_DEMO_SENSOR_BMP280_PRES);

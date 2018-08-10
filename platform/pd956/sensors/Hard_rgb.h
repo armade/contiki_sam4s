@@ -15,6 +15,6 @@ typedef union{
 	uint64_t all;
 }RGB_hard_t;
 /*---------------------------------------------------------------------------*/
-extern const struct sensors_sensor hard_RGB_sensor;
+extern const struct sensors_sensor hard_RGB_ctrl_sensor;
 /*---------------------------------------------------------------------------*/
 #endif

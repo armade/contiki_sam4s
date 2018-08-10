@@ -81,7 +81,7 @@ value_RGB(uint8_t R,uint8_t G,uint8_t B, uint8_t brightness)
 	RGB_reload.led.b = (B*brightness)>>7;
 	RGB_reload.led.brightness = brightness;
 
-	sensors_changed(&RGB_sensor);
+	sensors_changed(&soft_RGB_ctrl_sensor);
 	return 1;
 }
 
@@ -171,7 +171,7 @@ RGB_status(int type)
 	return Sensor_status;
 }
 /*---------------------------------------------------------------------------*/
-SENSORS_SENSOR(RGB_sensor, "RGB", RGB_set, RGB_init, RGB_status);
+SENSORS_SENSOR(soft_RGB_ctrl_sensor, "RGB", RGB_set, RGB_init, RGB_status);
 /*---------------------------------------------------------------------------*/
 #if 0
 struct ctimer RGB_timer;

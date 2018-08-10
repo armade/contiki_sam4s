@@ -20,7 +20,7 @@ I/O Configuration
 #define DEBUGGING 1
 #if DEBUGGING
 
-#ifdef NODE_PRESSURE
+#ifdef NODE_BMP280
 #define SCL            PIO_PB3
 #define SDA            PIO_PB2
 #endif

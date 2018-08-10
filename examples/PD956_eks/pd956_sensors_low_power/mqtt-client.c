@@ -111,9 +111,13 @@ MQTT_sub_ele_t MQTT_step_motor_sub_cmd;
 MQTT_sub_ele_t MQTT_step_motor_sub_tilt;
 #endif
 
-#ifdef NODE_PRESSURE
+#ifdef NODE_BMP280
 MQTT_config_ele_t MQTT_bm280_temperature_config;
 MQTT_config_ele_t MQTT_bm280_pressure_config;
+MQTT_config_ele_t MQTT_htu21_interneltmp_config;
+#endif
+
+#ifdef NODE_GPS
 MQTT_config_ele_t MQTT_htu21_interneltmp_config;
 #endif
 static MQTT_sub_ele_t *subscribe_ele;
@@ -264,6 +268,7 @@ static int construct_pub_topic(void)
 static int construct_configs(void)
 {
 	// TODO: this will only work for sensors. NEDAFIX.
+	// Perhaps move config initialization into sensor definition.
 	/*for (reading = MQTT_sensor_first(); reading != NULL; reading = reading->next)
 	{
 		snprintf(reading->MQTT_config_ele.topic,
@@ -339,7 +344,7 @@ static int construct_configs(void)
 	list_add(MQTT_config_list, &MQTT_htu21_humidity_config);
 #endif
 
-#ifdef NODE_PRESSURE
+#ifdef NODE_BMP280
 	snprintf(MQTT_bm280_temperature_config.topic,
 			sizeof(MQTT_bm280_temperature_config.topic),
 			"Hass/%s/%s%02x%02x%02x%02x%02x%02x/config", "sensor","sensorTemperature",
