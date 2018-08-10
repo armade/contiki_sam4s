@@ -1,0 +1,14 @@
+use remote target: Generic TCP/IP
+IP addr: Localhost
+Port: 2331
+
+______________________________________________________
+
+Image offset (hex): 400000
+set breakpoint: main
+
+Run Commands:
+monitor reset
+set *0x400e1400 = 0xA5000004
+mon reg sp=(0x400000)
+mon reg pc=(0x400004)
