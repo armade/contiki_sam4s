@@ -817,6 +817,7 @@ PROCESS_THREAD(mqtt_client_process, ev, data)
 
 	update_config();
 
+
 	/* Main loop */
 	while (1)
 	{

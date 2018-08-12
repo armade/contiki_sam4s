@@ -97,8 +97,8 @@ value(int type)
 	// We are not going to perform any calculations on any of the parameter.
 	// We should just parse on the raw value. This is only for testing.
 	switch(type){
-		case GPS_SENSOR_TYPE_LAT:	Temp_double_val = minmea_tocoord_double(&frame_gga.latitude);	return (int)&Temp_double_val;
-		case GPS_SENSOR_TYPE_LONG:	Temp_double_val = minmea_tocoord_double(&frame_gga.longitude);	return (int)&Temp_double_val;
+		case GPS_SENSOR_TYPE_LAT:	Temp_float_val = minmea_tocoord(&frame_gga.latitude);	return (int)&Temp_double_val;
+		case GPS_SENSOR_TYPE_LONG:	Temp_float_val = minmea_tocoord(&frame_gga.longitude);	return (int)&Temp_double_val;
 		case GPS_SENSOR_TYPE_ALT:	Temp_float_val = minmea_tofloat(&frame_gga.altitude);			return (int)&Temp_float_val;
 		case GPS_SENSOR_TYPE_SPEED:	Temp_float_val = minmea_tofloat(&frame_vtg.speed_kph);			return (int)&Temp_float_val;
 		default:	return SENSOR_ERROR;

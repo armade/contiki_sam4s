@@ -195,7 +195,7 @@ static uint8_t load_config()
 			if(web_demo_config.sensors_bitmap & (1 << reading->type)){
 				reading->publish = 1;
 			} else{
-				reading->publish = 0;
+				reading->publish = 1; // debug must be 0
 				snprintf(reading->converted, SENSOR_CONVERTED_LEN,
 						"\"N/A\"");
 			}
@@ -487,18 +487,18 @@ static void get_GPS_reading()
 {
 	char *buf;
 	float value;
-	double value_d;
+	//double value_d;
 	int ret;
 
 	if(GPS_sensor_LONG_reading.publish){
 		ret = GPS_sensor.value(GPS_SENSOR_TYPE_LONG);
 		buf = GPS_sensor_LONG_reading.converted;
-		value_d = *(double *)ret;
+		value = *(double *)ret;
 		if(ret != SENSOR_ERROR){
-			GPS_sensor_LONG_reading.raw_f = value_d;
+			GPS_sensor_LONG_reading.raw_f = value;
 
 			memset(buf, 0, SENSOR_CONVERTED_LEN);
-			snprintf(buf, SENSOR_CONVERTED_LEN, "%f", value_d);
+			snprintf(buf, SENSOR_CONVERTED_LEN, "%f", value);
 		} else{
 			snprintf(buf, SENSOR_CONVERTED_LEN, "\"N/A\"");
 		}
@@ -507,12 +507,12 @@ static void get_GPS_reading()
 	if(GPS_sensor_LAT_reading.publish){
 		ret = GPS_sensor.value(GPS_SENSOR_TYPE_LAT);
 		buf = GPS_sensor_LAT_reading.converted;
-		value_d = *(double *)ret;
+		value = *(double *)ret;
 		if(ret != SENSOR_ERROR){
-			GPS_sensor_LONG_reading.raw_f = value_d;
+			GPS_sensor_LONG_reading.raw_f = value;
 
 			memset(buf, 0, SENSOR_CONVERTED_LEN);
-			snprintf(buf, SENSOR_CONVERTED_LEN, "%f", value_d);
+			snprintf(buf, SENSOR_CONVERTED_LEN, "%f", value);
 		} else{
 			snprintf(buf, SENSOR_CONVERTED_LEN, "\"N/A\"");
 		}

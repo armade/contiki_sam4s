@@ -2,24 +2,24 @@
 # Make file for sam4sd32b
 # -- Version 1.0
 ##############################################################################################################
-CC      = arm-none-eabi-gcc
-CPP     = arm-none-eabi-cpp
-LD      = arm-none-eabi-gcc
-AR      = arm-none-eabi-ar
-OBJCOPY = arm-none-eabi-objcopy
-OBJDUMP = arm-none-eabi-objdump
-NM      = arm-none-eabi-nm
-SIZE    = arm-none-eabi-size
+CC      = /home/peter/GNUARM/gcc-arm-none-eabi-7-2017-q4-major-linux/gcc-arm-none-eabi-7-2017-q4-major/bin/arm-none-eabi-gcc
+CPP     = /home/peter/GNUARM/gcc-arm-none-eabi-7-2017-q4-major-linux/gcc-arm-none-eabi-7-2017-q4-major/bin/arm-none-eabi-cpp
+LD      = /home/peter/GNUARM/gcc-arm-none-eabi-7-2017-q4-major-linux/gcc-arm-none-eabi-7-2017-q4-major/bin/arm-none-eabi-gcc
+AR      = /home/peter/GNUARM/gcc-arm-none-eabi-7-2017-q4-major-linux/gcc-arm-none-eabi-7-2017-q4-major/bin/arm-none-eabi-ar
+OBJCOPY = /home/peter/GNUARM/gcc-arm-none-eabi-7-2017-q4-major-linux/gcc-arm-none-eabi-7-2017-q4-major/bin/arm-none-eabi-objcopy
+OBJDUMP = /home/peter/GNUARM/gcc-arm-none-eabi-7-2017-q4-major-linux/gcc-arm-none-eabi-7-2017-q4-major/bin/arm-none-eabi-objdump
+NM      = /home/peter/GNUARM/gcc-arm-none-eabi-7-2017-q4-major-linux/gcc-arm-none-eabi-7-2017-q4-major/bin/arm-none-eabi-nm
+SIZE    = /home/peter/GNUARM/gcc-arm-none-eabi-7-2017-q4-major-linux/gcc-arm-none-eabi-7-2017-q4-major/bin/arm-none-eabi-size
 
 LDSCRIPT = $(CONTIKI_CPU)/flash.ld
 
-CFLAGS += -mcpu=cortex-m4 -mthumb -mlittle-endian -O2 -march=ARMv7E-M
+CFLAGS += -mcpu=cortex-m4 -mthumb -mlittle-endian -O2 
 CFLAGS += -ffunction-sections -fdata-sections
 CFLAGS += -fshort-enums -fomit-frame-pointer -fno-strict-aliasing
 CFLAGS += -Wall -g3 -D __SAM4SD32B__ -D SAM4S
 
 LDFLAGS += -mcpu=cortex-m4 -mthumb -nostartfiles -specs=nosys.specs
-LDFLAGS += -T $(LDSCRIPT) -g3
+LDFLAGS += -T $(LDSCRIPT) -g3 
 LDFLAGS += -Wl,--gc-sections,--sort-section=alignment
 
 OBJCOPY_FLAGS += -O binary --gap-fill 0xff

@@ -20,6 +20,7 @@
 #include "lib/sensors.h"
 #include "board-peripherals.h"
 #include "i2csoft.h"
+#include "gpsd.h"
 
 #include "FLASH_driver.h"
 #include "platform-conf.h"
@@ -107,6 +108,7 @@ int main()
 	csprng_start();
 
 	process_start(&sensors_process, NULL);
+	process_start(&gpsd_process, NULL);
 
 #if NETSTACK_CONF_WITH_IPV6 || NETSTACK_CONF_WITH_IPV4
 	process_start(&tcpip_process, NULL);
@@ -224,10 +226,10 @@ void board_init(void)
 					| (1 << 17) | (1 << 18) | (1 << 19) | (1 << 20) | (1 << 26)
 					| (1 << 27) | (1 << 28) | (1 << 29) | (1 << 30) | (1 << 31),
 			0, 0, 0);
-	pio_set_output(PIOB,
+	/*pio_set_output(PIOB,
 			(1 << 0) | (1 << 1) | (1 << 2)  | (1 << 3)  | (1 << 4)  | (1 << 5)
 					| (1 << 13) | (1 << 14),
-			1, 0, 1);
+			1, 0, 1);*/
 
 #ifdef CONF_BOARD_UART_CONSOLE
 	/* Configure UART pins */

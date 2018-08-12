@@ -10,12 +10,14 @@
 #include "udi_cdc.h"
 #include "uart.h"
 #include "sam4s.h"
+#include "gpio.h"
 extern void gpsd_put_char(uint8_t c);
 
 #ifdef NODE_GPS
 
 void UART1_Handler(void)
 {
+	asm volatile("NOP");
 	if (uart_is_rx_ready(UART1))
 	{
 		uint32_t rx_data = 0;
@@ -36,10 +38,15 @@ void gpsd_arch_init(void)
 
 	// Enabling the peripheral clock
 	sysclk_enable_peripheral_clock(ID_UART1);
+	pio_set_peripheral(PIOB, PIO_PERIPH_A, PIO_PB2);
+	pio_set_peripheral(PIOB, PIO_PERIPH_A, PIO_PB3);
 
 	// Initialize UART
 	uart_init(UART1,&uart_settings);
+	uart_reset((Uart *)UART1);
+	uart_enable((Uart *)UART1);
 
+	NVIC_EnableIRQ((IRQn_Type)ID_UART1); \
 	// Enable UART IRQ
 	uart_enable_interrupt(UART1, US_IER_RXRDY);
 

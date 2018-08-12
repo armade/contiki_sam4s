@@ -36,6 +36,7 @@
 
 process_event_t nmea_event;
 PROCESS(gpsd_process, "gpsd");
+AUTOSTART_PROCESSES(&gpsd_process);
 
 struct minmea_sentence_rmc frame_rmc;
 struct minmea_sentence_gga frame_gga;
@@ -45,6 +46,9 @@ struct minmea_sentence_vtg frame_vtg;
 struct minmea_sentence_zda frame_zda;
 
 #define INDENT_SPACES "  "
+
+volatile float debug1,debug2,debug3;
+tm_t time;
 
 int parse_sentence(char *line)
 {
@@ -64,6 +68,27 @@ int parse_sentence(char *line)
 						minmea_tocoord(&frame_rmc.latitude),
 						minmea_tocoord(&frame_rmc.longitude),
 						minmea_tofloat(&frame_rmc.speed));
+
+				debug1 = minmea_tocoord(&frame_rmc.latitude);
+				debug2 = minmea_tocoord(&frame_rmc.longitude);
+				debug3 = minmea_tofloat(&frame_rmc.speed);
+
+				time.tm_hour = frame_rmc.time.hours;
+				time.tm_min =  frame_rmc.time.minutes;
+				time.tm_sec =  frame_rmc.time.seconds;
+				time.tm_mon =  frame_rmc.date.month;
+				time.tm_mday = frame_rmc.date.day;
+				time.tm_year = frame_rmc.date.year;
+
+				clock_time_t unixtime = RtctoUnix(&time);
+
+
+				clock_set_unix_time(unixtime,1);
+				clock_quality(GPS_TIME);
+
+				asm volatile("NOP");
+				asm volatile("NOP");
+				asm volatile("NOP");
 			}
 			else {
 				PRINTF(INDENT_SPACES "$xxRMC sentence is not parsed\n");
@@ -73,6 +98,13 @@ int parse_sentence(char *line)
 		case MINMEA_SENTENCE_GGA: {
 
 			if (minmea_parse_gga(&frame_gga, line)) {
+				debug1 = minmea_tocoord(&frame_gga.latitude);
+				debug2 = minmea_tocoord(&frame_gga.longitude);
+
+
+				asm volatile("NOP");
+				asm volatile("NOP");
+				asm volatile("NOP");
 
 			}
 			else {
@@ -120,29 +152,12 @@ int parse_sentence(char *line)
 		case MINMEA_SENTENCE_ZDA: {
 
 			if (minmea_parse_zda(&frame_zda, line)) {
-				tm_t time;
+
 
 				if( frame_zda.time.hours == -1)
 					break;
 
-				time.tm_hour = frame_zda.time.hours;
-				time.tm_min =  frame_zda.time.minutes;
-				time.tm_sec =  frame_zda.time.seconds;
-				time.tm_mon =  frame_zda.date.month;
-				time.tm_mday = frame_zda.date.day;
-				time.tm_year = frame_zda.date.year;
 
-				clock_time_t unixtime = RtctoUnix(&time);
-				unixtime += frame_zda.hour_offset*60*60;
-				//Fields 5 and 6 together yield the total offset.
-				//For example, if field 5 is -5 and field 6 is +15,
-				//local time is 5 hours and 15 minutes earlier than GMT
-				if(frame_zda.hour_offset>0)
-					unixtime += frame_zda.minute_offset*60;
-				else
-					unixtime -= frame_zda.minute_offset*60;
-				clock_set_unix_time(unixtime,1);
-				clock_quality(GPS_TIME);
 
 				PRINTF(INDENT_SPACES "$xxZDA: %d:%d:%d %02d.%02d.%d UTC%+03d:%02d\n",
 					   frame_zda.time.hours,
@@ -173,11 +188,14 @@ int parse_sentence(char *line)
 
 uint8_t gpsd_index = 0;
 uint8_t buf_nr = 0;
-uint8_t buf[2][128];
+uint8_t buf[8][128];
 uint8_t start_delimiter_seen=0;
 
 void gpsd_put_char(uint8_t c)
 {
+	if(c == '$'){
+		gpsd_index = 0;
+	}
 	if(start_delimiter_seen)
 		buf[buf_nr][gpsd_index++] = c;
 	else{
@@ -189,8 +207,9 @@ void gpsd_put_char(uint8_t c)
 
 	if((c=='\n') && (buf[buf_nr][gpsd_index-2] == '\r') && start_delimiter_seen)
 	{
+		buf[buf_nr][gpsd_index++] = '\0';
 		process_post(PROCESS_BROADCAST, nmea_event, buf[buf_nr]);
-		buf_nr = (buf_nr+1) & 1;
+		buf_nr = (buf_nr+1) & 7;
 		gpsd_index = 0;
 		start_delimiter_seen = 0;
 	}
