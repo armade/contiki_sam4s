@@ -2,6 +2,8 @@
 # Make file for sam4sd32b
 # -- Version 1.0
 ##############################################################################################################
+# My current version of ubuntu has installed a arm gcc with errors. Point to one that works until they have fixed this.
+ifeq ($(UBUNTUBREAK),1)
 CC      = /home/peter/GNUARM/gcc-arm-none-eabi-7-2017-q4-major-linux/gcc-arm-none-eabi-7-2017-q4-major/bin/arm-none-eabi-gcc
 CPP     = /home/peter/GNUARM/gcc-arm-none-eabi-7-2017-q4-major-linux/gcc-arm-none-eabi-7-2017-q4-major/bin/arm-none-eabi-cpp
 LD      = /home/peter/GNUARM/gcc-arm-none-eabi-7-2017-q4-major-linux/gcc-arm-none-eabi-7-2017-q4-major/bin/arm-none-eabi-gcc
@@ -10,6 +12,17 @@ OBJCOPY = /home/peter/GNUARM/gcc-arm-none-eabi-7-2017-q4-major-linux/gcc-arm-non
 OBJDUMP = /home/peter/GNUARM/gcc-arm-none-eabi-7-2017-q4-major-linux/gcc-arm-none-eabi-7-2017-q4-major/bin/arm-none-eabi-objdump
 NM      = /home/peter/GNUARM/gcc-arm-none-eabi-7-2017-q4-major-linux/gcc-arm-none-eabi-7-2017-q4-major/bin/arm-none-eabi-nm
 SIZE    = /home/peter/GNUARM/gcc-arm-none-eabi-7-2017-q4-major-linux/gcc-arm-none-eabi-7-2017-q4-major/bin/arm-none-eabi-size
+else
+CC      = arm-none-eabi-gcc
+CPP     = arm-none-eabi-cpp
+LD      = arm-none-eabi-gcc
+AR      = arm-none-eabi-ar
+OBJCOPY = arm-none-eabi-objcopy
+OBJDUMP = arm-none-eabi-objdump
+NM      = arm-none-eabi-nm
+SIZE    = arm-none-eabi-size
+endif
+
 
 LDSCRIPT = $(CONTIKI_CPU)/flash.ld
 

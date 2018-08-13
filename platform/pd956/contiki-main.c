@@ -20,7 +20,9 @@
 #include "lib/sensors.h"
 #include "board-peripherals.h"
 #include "i2csoft.h"
+#ifdef NODE_GPS
 #include "gpsd.h"
+#endif
 
 #include "FLASH_driver.h"
 #include "platform-conf.h"
@@ -108,7 +110,10 @@ int main()
 	csprng_start();
 
 	process_start(&sensors_process, NULL);
+#ifdef NODE_GPS
+	//Hotfix: Need to figure out why autostart is not working
 	process_start(&gpsd_process, NULL);
+#endif
 
 #if NETSTACK_CONF_WITH_IPV6 || NETSTACK_CONF_WITH_IPV4
 	process_start(&tcpip_process, NULL);

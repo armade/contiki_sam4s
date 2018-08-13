@@ -44,7 +44,7 @@ uint8_t minmea_checksum(const char *sentence)
 
 bool minmea_check(const char *sentence, bool strict)
 {
-    volatile uint8_t checksum = 0x00;
+    uint8_t checksum = 0x00;
 
     // Sequence length is limited.
     if (strlen(sentence) > MINMEA_MAX_LENGTH + 3)
@@ -58,7 +58,6 @@ bool minmea_check(const char *sentence, bool strict)
     while (*sentence && *sentence != '*' && isprint((unsigned char) *sentence))
         checksum ^= *sentence++;
 
-    asm volatile("NOP");
     // If checksum is present...
     if (*sentence == '*') {
         // Extract checksum.
@@ -80,8 +79,8 @@ bool minmea_check(const char *sentence, bool strict)
     }
 
     // The only stuff allowed at this point is a newline.
-    //if (*sentence && strcmp(sentence, "\n") && strcmp(sentence, "\r\n"))
-    //    return false;
+   // if (*sentence && strcmp(sentence, "\n") && strcmp(sentence, "\r\n"))
+  //      return false;
 
     return true;
 }
@@ -352,8 +351,10 @@ bool minmea_talker_id(char talker[3], const char *sentence)
 
 enum minmea_sentence_id minmea_sentence_id(const char *sentence, bool strict)
 {
-    if (!minmea_check(sentence, strict))
+    if (!minmea_check(sentence, strict)){
+    	printf("checksum failed\n\r");
         return MINMEA_INVALID;
+    }
 
     char type[6];
     if (!minmea_scan(sentence, "t", type))

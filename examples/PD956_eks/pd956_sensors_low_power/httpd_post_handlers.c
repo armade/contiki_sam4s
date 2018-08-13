@@ -557,7 +557,25 @@ timestamp_post_handler(char *key, int key_len, char *val, int val_len)
 
    return HTTPD_SIMPLE_POST_HANDLER_OK;
 }
+/*---------------------------------------------------------------------------*/
+static int
+timezone_post_handler(char *key, int key_len, char *val, int val_len)
+{
+  clock_time_t Timezone;
+  char *endptr;
 
+  if(key_len != strlen("Timezone") ||
+     strncasecmp(key, "Timezone", strlen("Timezone")) != 0) {
+    /* Not ours */
+    return HTTPD_SIMPLE_POST_HANDLER_UNKNOWN;
+  }
+
+  Timezone = strtoul(val,&endptr,10);
+
+  clock_set_unix_timezone(Timezone);
+
+   return HTTPD_SIMPLE_POST_HANDLER_OK;
+}
 /*---------------------------------------------------------------------------*/
 
 static int
@@ -618,6 +636,7 @@ HTTPD_SIMPLE_POST_HANDLER(sensor, sensor_readings_handler);
 HTTPD_SIMPLE_POST_HANDLER(defaults, defaults_post_handler);
 /*---------------------------------------------------------------------------*/
 HTTPD_SIMPLE_POST_HANDLER(timestamp,timestamp_post_handler);
+HTTPD_SIMPLE_POST_HANDLER(timezone,timezone_post_handler);
 
 
 void
@@ -648,4 +667,5 @@ register_http_post_handlers(void)
 	httpd_simple_register_post_handler(&sensor_handler);
 	httpd_simple_register_post_handler(&defaults_handler);
 	httpd_simple_register_post_handler(&timestamp_handler);
+	httpd_simple_register_post_handler(&timezone_handler);
 }

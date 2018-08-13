@@ -641,13 +641,23 @@ PT_THREAD(generate_index(struct httpd_state *s))
   UnixtoRTC(&tb, clk);
 
   PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<p>"));
-  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "d: %d/%d-%d       %d:%d:%d",
+  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "d: %d/%d-%d       %d:%d:%d UTC <br>",
                         		 tb.tm_mday,
     							 tb.tm_mon,
     							 tb.tm_year,
     							 tb.tm_hour,
     							 tb.tm_min,
     							 tb.tm_sec));
+
+  clk = clock_get_unix_localtime();
+    UnixtoRTC(&tb, clk);
+    PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "d: %d/%d-%d       %d:%d:%d local",
+  							 tb.tm_mday,
+  							 tb.tm_mon,
+  							 tb.tm_year,
+  							 tb.tm_hour,
+  							 tb.tm_min,
+  							 tb.tm_sec));
 
   PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "</p>"));
 
@@ -663,13 +673,16 @@ PT_THREAD(generate_index(struct httpd_state *s))
   PT_WAIT_THREAD(&s->top_matter_pt, enqueue_chunk(s, 0, http_head_charset));
 
   PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<input type=\"hidden\" id=\"rc2\" name=\"Timestamp\">"));
+  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<input type=\"hidden\" id=\"rc3\" name=\"Timezone\">"));
   PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<button onclick=\"Get_time()\" type=\"submit\""));
   PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, " value=\"Submit\">Set time from browser</button>"));
 
   PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<script> function Get_time() {"));
-  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "var d = new Date(); var n = d.getTime();"));
-  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "document.getElementById(\"rc2\").value = Math.floor(n/1000);}"));
-  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "</script>"));
+    PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "var d = new Date(); var n = d.getTime();"));
+    PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "var local_d = -d.getTimezoneOffset()*60;"));
+    PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "document.getElementById(\"rc2\").value = Math.floor(n/1000);"));
+    PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "document.getElementById(\"rc3\").value = local_d;}"));
+    PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "</script>"));
 
   PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "</form>"));
     //======================================================================================

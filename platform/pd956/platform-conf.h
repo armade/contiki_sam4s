@@ -40,8 +40,7 @@
 typedef struct {
 		uint8_t stranum;
 		uint8_t RTC_valid;
-		uint8_t Unused1;
-		uint8_t Unused2;
+		uint16_t timezone;
 }clock_gpbr_t;
 
 

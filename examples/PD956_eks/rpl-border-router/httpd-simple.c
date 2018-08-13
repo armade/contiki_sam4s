@@ -434,6 +434,27 @@ timestamp_post_handler(char *key, int key_len, char *val, int val_len)
 }
 HTTPD_SIMPLE_POST_HANDLER(timestamp,timestamp_post_handler);
 /*---------------------------------------------------------------------------*/
+
+static int
+timezone_post_handler(char *key, int key_len, char *val, int val_len)
+{
+  clock_time_t Timezone;
+  char *endptr;
+
+  if(key_len != strlen("Timezone") ||
+     strncasecmp(key, "Timezone", strlen("Timezone")) != 0) {
+    /* Not ours */
+    return HTTPD_SIMPLE_POST_HANDLER_UNKNOWN;
+  }
+
+  Timezone = strtoul(val,&endptr,10);
+
+  clock_set_unix_timezone(Timezone);
+
+   return HTTPD_SIMPLE_POST_HANDLER_OK;
+}
+HTTPD_SIMPLE_POST_HANDLER(timezone,timezone_post_handler);
+/*---------------------------------------------------------------------------*/
 static void
 get_neighbour_state_text(char *buf, uint8_t state)
 {
@@ -666,13 +687,23 @@ PT_THREAD(generate_index(struct httpd_state *s))
   PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<fieldset>"));
   PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<legend>Internal clock</legend>"));
   PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<div class=\"legend1\">"));
-  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "d: %d/%d-%d       %d:%d:%d",
+  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "d: %d/%d-%d       %d:%d:%d UTC",
                       		 tb.tm_mday,
   							 tb.tm_mon,
   							 tb.tm_year,
                              tb.tm_hour,
   							 tb.tm_min,
   							 tb.tm_sec));
+  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<br>"));
+  clk = clock_get_unix_localtime();
+  UnixtoRTC(&tb, clk);
+  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "d: %d/%d-%d       %d:%d:%d local",
+							 tb.tm_mday,
+							 tb.tm_mon,
+							 tb.tm_year,
+							 tb.tm_hour,
+							 tb.tm_min,
+							 tb.tm_sec));
 
   PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "</div></fieldset>"));
 
@@ -686,12 +717,15 @@ PT_THREAD(generate_index(struct httpd_state *s))
   PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "accept-charset=\"UTF-8\">"));
 
   PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<input type=\"hidden\" id=\"rc2\" name=\"Timestamp\">"));
+  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<input type=\"hidden\" id=\"rc3\" name=\"Timezone\">"));
   PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<button onclick=\"Get_time()\" type=\"submit\" value=\"Submit\""));
   PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, " id=\"settimebtn\">Set time from browser</button>"));
 
   PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<script> function Get_time() {"));
   PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "var d = new Date(); var n = d.getTime();"));
-  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "document.getElementById(\"rc2\").value = Math.floor(n/1000);}"));
+  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "var local_d = -d.getTimezoneOffset()*60;"));
+  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "document.getElementById(\"rc2\").value = Math.floor(n/1000);"));
+  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "document.getElementById(\"rc3\").value = local_d;}"));
   PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "</script>"));
 
   PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "</form>"));
@@ -1123,7 +1157,7 @@ init(void)
   list_add(pages_list, &http_index_page);
 
   httpd_simple_register_post_handler(&timestamp_handler);
-
+  httpd_simple_register_post_handler(&timezone_handler);
 }
 /*---------------------------------------------------------------------------*/
 PROCESS_THREAD(httpd_simple_process, ev, data)

@@ -24,14 +24,14 @@ void UnixtoRTC(tm_t *tb, clock_time_t Unix_epoch);
 void Load_time_from_RTC(void);
 
 
-void
-clock_adjust_ticks(clock_time_t howmany);
+void clock_adjust_ticks(clock_time_t howmany);
 
-void
-clock_set_unix_time(clock_time_t time, uint8_t hw_save);
+void clock_set_unix_time(clock_time_t time, uint8_t hw_save);
 
-clock_time_t
-clock_get_unix_time(void);
+clock_time_t clock_get_unix_time(void);
+
+void clock_set_unix_timezone(clock_time_t zone);
+clock_time_t clock_get_unix_localtime(void);
 
 
 #define READ_STRANUM	-1

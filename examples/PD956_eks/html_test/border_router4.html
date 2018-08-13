@@ -210,7 +210,8 @@ style="background-color:#fff">
 		<fieldset>
 		<legend>Internal clock</legend>
 		<div class="legend1">
-		d: 13/04-2018       16:23:17
+		d: 13/04-2018       16:23:17 UTC <br>
+		d: 13/04-2018       18:23:17 local
 		</div>
 	</fieldset>
 
@@ -218,11 +219,14 @@ style="background-color:#fff">
 
 	<form name="input" action=\index\ method="post" enctype="application/x-www-form-urlencoded" accept-charset="UTF-8">
 	<input type="hidden" id="rc2" name="Timestamp">
+	<input type="hidden" id="rc3" name="Timezone">
 	<button onclick="Get_time()" type="submit" value="Submit" id="settimebtn">Set time from browser</button>
 </fieldset>
 <script> function Get_time() {
 var d = new Date(); var n = d.getTime();
-document.getElementById(\"rc2\").value = Math.floor(n/1000);}
+var local_d = -d.getTimezoneOffset()*60;
+document.getElementById("rc2").value = Math.floor(n/1000);
+document.getElementById("rc3").value = local_d;}
 </script>
 
 </form>"
@@ -322,8 +326,8 @@ var ctx_snow = SnowCanvas.getContext("2d");
 ctx_snow.strokeStyle = '#ffffff';
 ctx_snow.lineWidth = 1.2;
 //ctx_snow.lineCap = 'round';
-ctx_snow.shadowBlur = 25;
-ctx_snow.shadowColor = 'grey';
+ctx_snow.shadowBlur = 12;
+ctx_snow.shadowColor = 'black';
 ctx_snow.globalAlpha=1;
 
 var origo_x = SnowCanvas.width/2;

@@ -27,7 +27,7 @@
 
 #include <string.h>
 
-#define _DEBUG_                 0
+#define _DEBUG_                 1
 #if _DEBUG_
 #define PRINTF(...)       printf(__VA_ARGS__)
 #else
@@ -47,31 +47,37 @@ struct minmea_sentence_zda frame_zda;
 
 #define INDENT_SPACES "  "
 
-volatile float debug1,debug2,debug3;
+volatile float lat_f,long_f,spd_m_s;
 tm_t time;
 
 int parse_sentence(char *line)
 {
+	char debug_buf[6];
+	snprintf(debug_buf,sizeof(debug_buf),line+1);
+	printf("%s\n\r",debug_buf);
+
 	switch (minmea_sentence_id(line, false)) {
 		case MINMEA_SENTENCE_RMC: {
 
 			if (minmea_parse_rmc(&frame_rmc, line)) {
-				PRINTF(INDENT_SPACES "$xxRMC: raw coordinates and speed: (%d/%d,%d/%d) %d/%d\n",
+				/*PRINTF(INDENT_SPACES "$xxRMC: raw coordinates and speed: (%d/%d,%d/%d) %d/%d\n",
 						frame_rmc.latitude.value, frame_rmc.latitude.scale,
 						frame_rmc.longitude.value, frame_rmc.longitude.scale,
 						frame_rmc.speed.value, frame_rmc.speed.scale);
 				PRINTF(INDENT_SPACES "$xxRMC fixed-point coordinates and speed scaled to three decimal places: (%d,%d) %d\n",
 						minmea_rescale(&frame_rmc.latitude, 1000),
 						minmea_rescale(&frame_rmc.longitude, 1000),
-						minmea_rescale(&frame_rmc.speed, 1000));
-				PRINTF(INDENT_SPACES "$xxRMC floating point degree coordinates and speed: (%f,%f) %f\n",
-						minmea_tocoord(&frame_rmc.latitude),
-						minmea_tocoord(&frame_rmc.longitude),
-						minmea_tofloat(&frame_rmc.speed));
+						minmea_rescale(&frame_rmc.speed, 1000));*/
 
-				debug1 = minmea_tocoord(&frame_rmc.latitude);
-				debug2 = minmea_tocoord(&frame_rmc.longitude);
-				debug3 = minmea_tofloat(&frame_rmc.speed);
+
+				lat_f = minmea_tocoord(&frame_rmc.latitude);
+				long_f = minmea_tocoord(&frame_rmc.longitude);
+				spd_m_s = minmea_tofloat(&frame_rmc.speed) * 0.514444444f; //m/s
+
+				PRINTF(INDENT_SPACES "$xxRMC floating point degree coordinates and speed: (%f,%f) %f\n",
+						lat_f,
+						long_f,
+						spd_m_s);
 
 				time.tm_hour = frame_rmc.time.hours;
 				time.tm_min =  frame_rmc.time.minutes;
@@ -91,15 +97,15 @@ int parse_sentence(char *line)
 				asm volatile("NOP");
 			}
 			else {
-				PRINTF(INDENT_SPACES "$xxRMC sentence is not parsed\n");
+				PRINTF(INDENT_SPACES "$xxVTG sentence could not be parsed\n");
 			}
 		} break;
 
 		case MINMEA_SENTENCE_GGA: {
 
 			if (minmea_parse_gga(&frame_gga, line)) {
-				debug1 = minmea_tocoord(&frame_gga.latitude);
-				debug2 = minmea_tocoord(&frame_gga.longitude);
+				lat_f = minmea_tocoord(&frame_gga.latitude);
+				long_f = minmea_tocoord(&frame_gga.longitude);
 
 
 				asm volatile("NOP");
@@ -108,7 +114,7 @@ int parse_sentence(char *line)
 
 			}
 			else {
-				PRINTF(INDENT_SPACES "$xxGGA sentence is not parsed\n");
+				PRINTF(INDENT_SPACES "$xxVTG sentence could not be parsed\n");
 			}
 		} break;
 
@@ -118,7 +124,7 @@ int parse_sentence(char *line)
 
 			}
 			else {
-				PRINTF(INDENT_SPACES "$xxGST sentence is not parsed\n");
+				PRINTF(INDENT_SPACES "$xxVTG sentence could not be parsed\n");
 			}
 		} break;
 
@@ -135,7 +141,7 @@ int parse_sentence(char *line)
 						frame_gsv.sats[i].snr);*/
 			}
 			else {
-				PRINTF(INDENT_SPACES "$xxGSV sentence is not parsed\n");
+				PRINTF(INDENT_SPACES "$xxVTG sentence could not be parsed\n");
 			}
 		} break;
 
@@ -145,19 +151,38 @@ int parse_sentence(char *line)
 
 		   }
 		   else {
-				PRINTF(INDENT_SPACES "$xxVTG sentence is not parsed\n");
+				PRINTF(INDENT_SPACES "$xxVTG sentence could not be parsed\n");
 		   }
 		} break;
 
 		case MINMEA_SENTENCE_ZDA: {
 
 			if (minmea_parse_zda(&frame_zda, line)) {
-
+				tm_t time;
+				clock_time_t timezone_offset;
 
 				if( frame_zda.time.hours == -1)
-					break;
+			 		break;
 
+				time.tm_hour = frame_zda.time.hours;
+				time.tm_min =  frame_zda.time.minutes;
+				time.tm_sec =  frame_zda.time.seconds;
+				time.tm_mon =  frame_zda.date.month;
+				time.tm_mday = frame_zda.date.day;
+				time.tm_year = frame_zda.date.year;
 
+				clock_time_t unixtime = RtctoUnix(&time);
+				timezone_offset = frame_zda.hour_offset*60*60;
+				timezone_offset += frame_zda.minute_offset*60;
+				//Fields 5 and 6 together yield the total offset.
+				//For example, if field 5 is -5 and field 6 is +15,
+				//local time is 5 hours and 15 minutes earlier than GMT
+				if(frame_zda.hour_offset<0)
+					timezone_offset *= -1;
+
+				clock_set_unix_timezone(timezone_offset);
+				clock_set_unix_time(unixtime,1);
+				clock_quality(GPS_TIME);
 
 				PRINTF(INDENT_SPACES "$xxZDA: %d:%d:%d %02d.%02d.%d UTC%+03d:%02d\n",
 					   frame_zda.time.hours,
@@ -182,13 +207,16 @@ int parse_sentence(char *line)
 			PRINTF(INDENT_SPACES "$xxxxx sentence is not parsed\n");
 		} break;
 	}
-
+	// release buffer
+	*line = '\0';
     return 0;
 }
 
 uint8_t gpsd_index = 0;
 uint8_t buf_nr = 0;
-uint8_t buf[8][128];
+// NB this is good for debugging not for code size.
+// TODO: rewrite
+volatile uint8_t buf[8][128];
 uint8_t start_delimiter_seen=0;
 
 void gpsd_put_char(uint8_t c)
@@ -200,15 +228,17 @@ void gpsd_put_char(uint8_t c)
 		buf[buf_nr][gpsd_index++] = c;
 	else{
 		if(c == '$'){
-			buf[buf_nr][gpsd_index++] = c;
-			start_delimiter_seen = 1;
+			if(buf[buf_nr][0] == '\0'){
+				buf[buf_nr][gpsd_index++] = c;
+				start_delimiter_seen = 1;
+			}
 		}
 	}
 
-	if((c=='\n') && (buf[buf_nr][gpsd_index-2] == '\r') && start_delimiter_seen)
+	if((c=='\n') && start_delimiter_seen)
 	{
 		buf[buf_nr][gpsd_index++] = '\0';
-		process_post(PROCESS_BROADCAST, nmea_event, buf[buf_nr]);
+		process_post(PROCESS_BROADCAST, nmea_event,  (uint8_t *) buf[buf_nr]);
 		buf_nr = (buf_nr+1) & 7;
 		gpsd_index = 0;
 		start_delimiter_seen = 0;
@@ -228,6 +258,7 @@ PROCESS_THREAD(gpsd_process, ev, data)
 	while(1){
 		PROCESS_YIELD();
 		if(ev == nmea_event){
+			PRINTF("%s",(char *)data);
 			parse_sentence((char *)data);
 		}
 	}

@@ -487,7 +487,6 @@ static void get_GPS_reading()
 {
 	char *buf;
 	float value;
-	//double value_d;
 	int ret;
 
 	if(GPS_sensor_LONG_reading.publish){
