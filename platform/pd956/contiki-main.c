@@ -127,10 +127,10 @@ int main()
 	sleepmgr_lock_mode(SLEEPMGR_SLEEP_WFI);
 	while(1){
 		while(process_run());
-		rtime_old = rtimer_arch_now();
-		sleepmgr_enter_sleep();
-		rtime_now = rtimer_arch_now();
-		clock_adjust_ticks((rtime_now-rtime_old)*CLOCK_CONF_SECOND/RTIMER_ARCH_SECOND);
+		//rtime_old = rtimer_arch_now();
+		//sleepmgr_enter_sleep();
+		//rtime_now = rtimer_arch_now();
+		//clock_adjust_ticks((rtime_now-rtime_old)*CLOCK_CONF_SECOND/RTIMER_ARCH_SECOND);
 		// This will stop the clock.
 		// Not worth it since we power down
 		// when needed.
@@ -231,10 +231,10 @@ void board_init(void)
 					| (1 << 17) | (1 << 18) | (1 << 19) | (1 << 20) | (1 << 26)
 					| (1 << 27) | (1 << 28) | (1 << 29) | (1 << 30) | (1 << 31),
 			0, 0, 0);
-	/*pio_set_output(PIOB,
+	pio_set_output(PIOB,
 			(1 << 0) | (1 << 1) | (1 << 2)  | (1 << 3)  | (1 << 4)  | (1 << 5)
 					| (1 << 13) | (1 << 14),
-			1, 0, 1);*/
+			1, 0, 1);
 
 #ifdef CONF_BOARD_UART_CONSOLE
 	/* Configure UART pins */

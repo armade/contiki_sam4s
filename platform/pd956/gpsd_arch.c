@@ -31,7 +31,7 @@ void UART1_Handler(void)
 			gpsd_put_char(rx_data);
 		}
 	}
-	if(UART1->UART_SR & US_CSR_TXEMPTY){
+	if(UART1->UART_IMR & US_CSR_TXEMPTY){
 		if(*config)
 			uart_write(UART1,*config++);
 		else
@@ -45,7 +45,7 @@ void gpsd_arch_init(void)
 	const sam_uart_opt_t uart_settings = {
 		.ul_mck			= sysclk_get_peripheral_hz(),
 		.ul_baudrate   	= 9600,
-		.ul_mode		= US_MR_CHMODE_NORMAL
+		.ul_mode		= US_MR_CHMODE_NORMAL|US_MR_PAR_NO
 	};
 
 	// Enabling the peripheral clock
@@ -59,6 +59,7 @@ void gpsd_arch_init(void)
 	uart_enable((Uart *)UART1);
 
 	NVIC_EnableIRQ((IRQn_Type)ID_UART1);
+
 	// Enable UART IRQ
 	uart_enable_interrupt(UART1, US_IER_RXRDY | US_IER_TXEMPTY);
 

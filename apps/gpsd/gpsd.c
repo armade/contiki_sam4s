@@ -258,7 +258,6 @@ PROCESS_THREAD(gpsd_process, ev, data)
 	while(1){
 		PROCESS_YIELD();
 		if(ev == nmea_event){
-			PRINTF("%s",(char *)data);
 			parse_sentence((char *)data);
 		}
 	}
