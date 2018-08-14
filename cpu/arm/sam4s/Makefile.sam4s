@@ -29,7 +29,7 @@ LDSCRIPT = $(CONTIKI_CPU)/flash.ld
 CFLAGS += -mcpu=cortex-m4 -mthumb -mlittle-endian -O2 
 CFLAGS += -ffunction-sections -fdata-sections
 CFLAGS += -fshort-enums -fomit-frame-pointer -fno-strict-aliasing
-CFLAGS += -Wall -g3 -D __SAM4SD32B__ -D SAM4S
+CFLAGS += -Wall -g3 -D __SAM4SD32B__ -D SAM4S 
 
 LDFLAGS += -mcpu=cortex-m4 -mthumb -nostartfiles -specs=nosys.specs
 LDFLAGS += -T $(LDSCRIPT) -g3 

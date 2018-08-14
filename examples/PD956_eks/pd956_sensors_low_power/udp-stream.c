@@ -102,7 +102,7 @@ receiver(struct simple_udp_connection *c,
 /*---------------------------------------------------------------------------*/
 PROCESS_THREAD(udpstream_process, ev, data)
 {
-	static uip_ds6_addr_t *ip_addr;
+	//static uip_ds6_addr_t *ip_addr;
 
 	PROCESS_BEGIN();
 

@@ -22,6 +22,7 @@
 #include "contiki.h"
 #include "contiki-lib.h"
 #include "contiki-net.h"
+#include "lib/sensors.h"
 #include "minmea.h"
 #include "clock.h"
 
@@ -49,6 +50,18 @@ struct minmea_sentence_zda frame_zda;
 
 volatile float lat_f,long_f,spd_m_s;
 tm_t time;
+// NOTE:
+// Differens between to coordinates ([km])
+//=ACOS(COS(RADIANS(90-lat1)) * COS(RADIANS(90-lat2)) + SIN(RADIANS(90-lat1)) * SIN(RADIANS(90-lat2)) * COS(RADIANS(long1-long2))) * 6371
+
+// a = COS(PI*(90-lat1)/180.0);
+// b = COS(PI*(90-lat2)/180.0);
+// c = SIN(PI*(90-lat1)/180.0);
+// d = SIN(PI*(90-lat2)/180.0);
+// e = COS(PI*(long1-long2)/180.0);
+// diff = ACOS(a*b + c*d*e) * 6371; [km]
+
+// Vincenty's formulae for more accuracy
 
 int parse_sentence(char *line)
 {
@@ -72,13 +85,15 @@ int parse_sentence(char *line)
 
 				lat_f = minmea_tocoord(&frame_rmc.latitude);
 				long_f = minmea_tocoord(&frame_rmc.longitude);
-				spd_m_s = minmea_tofloat(&frame_rmc.speed) * 0.514444444f; //m/s
+				spd_m_s = minmea_tofloat(&frame_rmc.speed) * 1.852;/////0.514444444f; //m/s   //1.852 * knots -> km/hr
 
 				PRINTF(INDENT_SPACES "$xxRMC floating point degree coordinates and speed: (%f,%f) %f\n",
 						lat_f,
 						long_f,
 						spd_m_s);
 
+				if( frame_rmc.time.hours == -1)
+					break;
 				time.tm_hour = frame_rmc.time.hours;
 				time.tm_min =  frame_rmc.time.minutes;
 				time.tm_sec =  frame_rmc.time.seconds;
@@ -158,7 +173,7 @@ int parse_sentence(char *line)
 		case MINMEA_SENTENCE_ZDA: {
 
 			if (minmea_parse_zda(&frame_zda, line)) {
-				tm_t time;
+				//tm_t time;
 				clock_time_t timezone_offset;
 
 				if( frame_zda.time.hours == -1)
@@ -216,7 +231,7 @@ uint8_t gpsd_index = 0;
 uint8_t buf_nr = 0;
 // NB this is good for debugging not for code size.
 // TODO: rewrite
-volatile uint8_t buf[8][128];
+volatile uint8_t buf[2][128];
 uint8_t start_delimiter_seen=0;
 
 void gpsd_put_char(uint8_t c)

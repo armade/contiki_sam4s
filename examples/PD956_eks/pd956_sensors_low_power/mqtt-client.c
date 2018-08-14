@@ -15,6 +15,8 @@
 #include "rf231.h"
 #include "platform-conf.h"
 #include "clock.h"
+#include "ntpd.h"
+
 
 #include <string.h>
 #include <strings.h>
@@ -132,7 +134,7 @@ static uint16_t seq_nr_value = 0;
 /*---------------------------------------------------------------------------*/
 static uip_ip6addr_t def_route;
 /*---------------------------------------------------------------------------*/
-const static MQTT_sensor_reading_t *reading;
+static MQTT_sensor_reading_t *reading;
 /*---------------------------------------------------------------------------*/
 mqtt_client_config_t *conf;
 process_event_t MQTT_publish_sensor_data_done_event;
@@ -250,6 +252,7 @@ static void mqtt_event(struct mqtt_connection *m, mqtt_event_t event,
 	}
 }
 /*---------------------------------------------------------------------------*/
+// TODO: this will only work for sensors. NEDAFIX.
 static int construct_pub_topic(void)
 {
 	int len = snprintf(pub_topic, BUFFER_SIZE, "Hass/%s/%s/%s/state", "sensor",
@@ -264,29 +267,29 @@ static int construct_pub_topic(void)
 
 	return 1;
 }
+
+
 /*---------------------------------------------------------------------------*/
 static int construct_configs(void)
 {
 	// TODO: this will only work for sensors. NEDAFIX.
 	// Perhaps move config initialization into sensor definition.
-	/*for (reading = MQTT_sensor_first(); reading != NULL; reading = reading->next)
+	for (reading = MQTT_sensor_first(); reading != NULL; reading = reading->next)
 	{
-		snprintf(reading->MQTT_config_ele.topic,
-							sizeof(reading->MQTT_config_ele.topic),
-							"Hass/%s/%s-%s/config", reading->component,reading->descr,
-							device_certificate.crt.snr);
+		snprintf(reading->MQTT_config_ele.topic,sizeof(reading->MQTT_config_ele.topic),
+							reading->component_topic_config,
+							reading->descr,
+							linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1],
+							linkaddr_node_addr.u8[2], linkaddr_node_addr.u8[5],
+							linkaddr_node_addr.u8[6], linkaddr_node_addr.u8[7]);
 
-			snprintf(reading->MQTT_config_ele.arg,
-					sizeof(reading->MQTT_config_ele.arg),
-					"{\"name\": \"%s %s\","
-					"\"state_topic\": \"Hass/%s/%s/%s/state\","
-					"\"unit_of_measurement\": \"°C\","
-					"\"value_template\":\"{{ value_json.%s}}\" }",
+			snprintf(reading->MQTT_config_ele.arg, sizeof(reading->MQTT_config_ele.arg),
+					reading->component_type_config,
 					conf->Username,reading->xml_element,
-					reading->component, client_id, conf->Username, reading->descr); // Last must be equal reading->descr
+					client_id, conf->Username, reading->descr); // Last must be equal reading->descr
 
 			list_add(MQTT_config_list, &reading->MQTT_config_ele);
-	}*/
+	}
 	//reading->descr
 
 
@@ -294,8 +297,10 @@ static int construct_configs(void)
 	// TODO: test this
 	snprintf(MQTT_htu21_interneltmp_config.topic,
 					sizeof(MQTT_htu21_interneltmp_config.topic),
-					"Hass/%s/%s-%s/config", "sensor","Internaltemperature",
-					device_certificate.crt.snr);
+					"Hass/%s/%s%02x%02x%02x%02x%02x%02x/config", "sensor","Internaltemperature",
+					linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1],
+					linkaddr_node_addr.u8[2], linkaddr_node_addr.u8[5],
+					linkaddr_node_addr.u8[6], linkaddr_node_addr.u8[7]);
 
 	snprintf(MQTT_htu21_interneltmp_config.arg,
 			sizeof(MQTT_htu21_interneltmp_config.arg),
@@ -809,12 +814,6 @@ PROCESS_THREAD(mqtt_client_process, ev, data)
 
 	MQTT_publish_sensor_data_done_event = process_alloc_event();
 
-	/*conf = &web_demo_config.mqtt_config;
-	if (init_config() != 1)
-	{
-		PROCESS_EXIT();
-	}*/
-
 	update_config();
 
 
@@ -829,7 +828,7 @@ PROCESS_THREAD(mqtt_client_process, ev, data)
 			// If for some reason the chain breaks we need to just sleep on it.
 			// Timeout_timer makes sure we get here 1s after wake up.
 			etimer_stop(&timeout_timer);
-			if(no_sleep_allowed || !sleep_counter || (ev == PROCESS_EVENT_TIMER && data == &timeout_timer))
+			if(no_sleep_allowed || NTP_status() || !sleep_counter || (ev == PROCESS_EVENT_TIMER && data == &timeout_timer))
 			{
 				if(sleep_counter){
 					sleep_counter = 0;

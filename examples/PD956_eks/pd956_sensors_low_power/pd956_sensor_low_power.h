@@ -151,7 +151,8 @@ typedef struct sensor_reading {
    * 	- sensor
    * 	- switch
    */
-  char component[15];
+  char *component_type_config;
+  char *component_topic_config;
   MQTT_config_ele_t MQTT_config_ele;
 } MQTT_sensor_reading_t;
 /*---------------------------------------------------------------------------*/

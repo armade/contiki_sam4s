@@ -24,7 +24,8 @@ PLATFORM_SENSOR_DRIVER = 	ADC_temp.c \
 							xmem.c
 							
 PLATFORM_IO_DRIVER = i2csoft.c \
-					cfs-coffee.c
+					cfs-coffee.c \
+					ctk.c
 
 PLATFORM_CRYPT_DRIVER = sha256.c \
 						sha512.c \

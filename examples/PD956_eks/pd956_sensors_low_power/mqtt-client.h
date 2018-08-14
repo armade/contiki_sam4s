@@ -67,6 +67,36 @@ typedef struct mqtt_client_config {
 } mqtt_client_config_t;
 
 extern mqtt_client_config_t *conf;
+
+// username + function eg. kontor internal temperature
+//client_id, conf->Username -> Hass/sensor/%s/%s/state
+//reading->descr -> value_json.%s
+static const char sensor_config_payload[] =	"{\"name\": \"%s %s\"," \
+										"\"state_topic\": \"Hass/sensor/%s/%s/state\"," \
+										"\"unit_of_measurement\": \"°C\","\
+										"\"value_template\":\"{{ value_json.%s}}\" }";
+
+static const char sensor_config_topic[] = "Hass/sensor/%s%02x%02x%02x%02x%02x%02x/config";
+
+static const char cover_config_payload[] = "{\"device_class\": \"cover\"," \
+		"\"name\": \"%s %s\"," \
+		"\"command_topic\": \"Hass/cover/%s/%s/set\"," \
+		"\"state_topic\": \"Hass/cover/%s/%s/state\"," \
+		"\"retain\": true," \
+		"\"payload_open\": \"OPEN\"," \
+		"\"payload_close\": \"CLOSE\"," \
+		"\"payload_stop\": \"STOP\"," \
+		"\"state_open\": \"open\"," \
+		"\"state_closed\": \"closed\"," \
+		"\"value_template\": \"{{ value_json.%s}}\"," \
+		"\"tilt_command_topic\": \"Hass/cover/%s/%s/tilt\"," \
+		"\"tilt_status_topic\": \"Hass/cover/%s/%s/tilt-state\"," \
+		"\"tilt_min\": 0," \
+		"\"tilt_max\": 4096," \
+		"\"tilt_closed_value\": 70," \
+		"\"tilt_opened_value\": 4000,}";
+
+static const char cover_config_topic[] = "Hass/cover/%s%02x%02x%02x%02x%02x%02x/config";
 /*---------------------------------------------------------------------------*/
 #endif /* MQTT_CLIENT_H_ */
 /*---------------------------------------------------------------------------*/

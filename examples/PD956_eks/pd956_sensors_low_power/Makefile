@@ -14,7 +14,6 @@ PROJECT_SOURCEFILES += httpd_post_handlers.c
 
 CONTIKI_WITH_IPV6 = 1
 
-# REST Engine shall use Erbium CoAP implementation
 APPS += mqtt servreg-hack ntpd gpsd ftp
 
 CONTIKI=../../..

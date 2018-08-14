@@ -45,7 +45,7 @@ void gpsd_arch_init(void)
 	const sam_uart_opt_t uart_settings = {
 		.ul_mck			= sysclk_get_peripheral_hz(),
 		.ul_baudrate   	= 9600,
-		.ul_mode		= US_MR_CHMODE_NORMAL|US_MR_PAR_NO
+		.ul_mode		= US_MR_CHMODE_NORMAL|US_MR_PAR_NO | US_MR_NBSTOP_1_BIT
 	};
 
 	// Enabling the peripheral clock

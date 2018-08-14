@@ -48,12 +48,16 @@
 #include "pd956_sensor_low_power.h"
 #include "mqtt-client.h"
 #include "ntpd.h"
+#include "ftp.h"
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
 #include "PD_FLASH/FLASH_driver.h"
+#ifdef NODE_GPS
+#include "gpsd.h"
+#endif
 
 /*---------------------------------------------------------------------------*/
 
@@ -82,57 +86,65 @@ Device_config_t web_demo_config;
 LIST(sensor_list);
 /*---------------------------------------------------------------------------*/
 /* The objects representing sensors used in this demo */
-#define DEMO_SENSOR(name, type, descr, xml_element, form_field, units, hass_component) \
+#define DEMO_SENSOR(name, type, descr, xml_element, form_field, units, hass_component_config_payload,hass_component_config_topic) \
 		MQTT_sensor_reading_t name##_reading = \
-  { NULL, 0, 0,0, descr, xml_element, form_field, units, type, 1, 1, hass_component}
+  { NULL, 0, 0,0, descr, xml_element, form_field, units, type, 1, 1, hass_component_config_payload,hass_component_config_topic,NULL}
+#define DEMO_SENSOR2(name,description,unit,type_def,config_payload,config_topic) \
+		MQTT_sensor_reading_t name = {\
+			.next = NULL,\
+			.raw = 0,\
+			.raw_f = 0,\
+			.last = 0,\
+			.descr =  description,\
+			.xml_element = description,\
+			.form_field = description,\
+			.units = unit,\
+			.type = type_def,\
+			.publish = 1,\
+			.changed = 1,\
+			.component_type_config = (char *)config_payload,\
+			.component_topic_config = (char *)config_topic,\
+		};
 
 /*sensors */
-DEMO_SENSOR(temp, PD956_WEB_DEMO_SENSOR_ADC, "Internaltemperature",
-		"Internaltemperature", "Internaltemperature", UNIT_TEMP,
-		"sensor");
+DEMO_SENSOR2(temp_reading,					"Internaltemperature",UNIT_TEMP,PD956_WEB_DEMO_SENSOR_ADC,sensor_config_payload,sensor_config_topic);
 
-#ifdef NODE_STEP_MOTOR
-DEMO_SENSOR(step_motor, PD956_WEB_DEMO_SENSOR_STEP, "Step_Position", "Step_position", "Step_position", UNIT_STEP,"sensor");
+
+#ifdef step_motor_reading
+DEMO_SENSOR2(temp_reading,					"Step_Position",UNIT_STEP,		PD956_WEB_DEMO_SENSOR_STEP,			NULL,NULL);
 #endif
 
 #ifdef NODE_LIGHT
-DEMO_SENSOR(soft_RGB_ctrl_sensor, PD956_WEB_DEMO_SENSOR_RGB, "RGB_light", "RGB_light", "RGB_light", UNIT_NONE,"sensor");
+DEMO_SENSOR2(soft_RGB_ctrl_sensor_reading,	"RGB_light",	UNIT_NONE,		PD956_WEB_DEMO_SENSOR_RGB,			sensor_config_payload,sensor_config_topic);
 #endif
 
 #ifdef NODE_HARD_LIGHT
-DEMO_SENSOR(hard_RGB_ctrl_sensor, PD956_WEB_DEMO_SENSOR_RGB, "RGB_light", "RGB_light", "RGB_light", UNIT_NONE,"sensor");
+DEMO_SENSOR2(hard_RGB_ctrl_sensor_reading,	"RGB_light",	UNIT_NONE,		PD956_WEB_DEMO_SENSOR_RGB,			sensor_config_payload,sensor_config_topic);
 #endif
 
 #if defined(NODE_STEP_MOTOR) || defined(NODE_4_ch_relay) || defined(NODE_DHT11)
-DEMO_SENSOR(dht11_temperature, PD956_WEB_DEMO_SENSOR_DHT11_TEMP, "Temperature", "Temperature", "Temperature", UNIT_TEMP,"sensor");
-DEMO_SENSOR(dht11_humidity, PD956_WEB_DEMO_SENSOR_DHT11_HUMIDITY, "Humidity", "Humidity", "Humidity", UNIT_HUMIDITY,"sensor");
+DEMO_SENSOR2(dht11_temperature_reading,		"Temperature",	UNIT_TEMP,		PD956_WEB_DEMO_SENSOR_DHT11_TEMP,	sensor_config_payload,sensor_config_topic);
+DEMO_SENSOR2(dht11_humidity_reading,		"Humidity",		UNIT_HUMIDITY,	PD956_WEB_DEMO_SENSOR_DHT11_HUMIDITY,sensor_config_payload,sensor_config_topic);
 #endif
 
 #ifdef NODE_BMP280
-DEMO_SENSOR(bmp_280_sensor_press,PD956_WEB_DEMO_SENSOR_BMP280_PRES, "Pressure", "Pressure", "Pressure", UNIT_PRES,"sensor");
-DEMO_SENSOR(bmp_280_sensor_temp,PD956_WEB_DEMO_SENSOR_BMP280_TEMP, "Temperature", "Temperature", "Temperature", UNIT_TEMP,"sensor");
+DEMO_SENSOR2(bmp_280_sensor_press_reading,	"Pressure",		UNIT_PRES,		PD956_WEB_DEMO_SENSOR_BMP280_PRES,	sensor_config_payload,sensor_config_topic);
+DEMO_SENSOR2(bmp_280_sensor_temp_reading,	"Temperature",	UNIT_TEMP,		PD956_WEB_DEMO_SENSOR_BMP280_TEMP,	sensor_config_payload,sensor_config_topic);
 #endif
 
 #ifdef NODE_HTU21D
-DEMO_SENSOR(HTU21D_sensor_humid, PD956_WEB_DEMO_SENSOR_HTU21D_humid, "Humidity",
-		"Humidity", "Humidity", UNIT_HUMIDITY, "sensor");
-DEMO_SENSOR(HTU21D_sensor_temp, PD956_WEB_DEMO_SENSOR_HTU21D_TEMP,
-		"Temperature", "Temperature", "Temperature", UNIT_TEMP,
-		"sensor");
+DEMO_SENSOR2(HTU21D_sensor_humid_reading,	"Humidity",		UNIT_HUMIDITY,	PD956_WEB_DEMO_SENSOR_HTU21D_humid,	sensor_config_payload,sensor_config_topic);
+DEMO_SENSOR2(HTU21D_sensor_temp_reading,	"Temperature",	UNIT_TEMP,		PD956_WEB_DEMO_SENSOR_HTU21D_TEMP,	sensor_config_payload,sensor_config_topic);
 #endif
 
+
 #ifdef NODE_GPS
-	DEMO_SENSOR(GPS_sensor_LONG, PD956_WEB_DEMO_SENSOR_GPS_LONG, "Long", "Longitude", "Longitude", UNIT_ANGLE,"sensor");
-	DEMO_SENSOR(GPS_sensor_LAT,  PD956_WEB_DEMO_SENSOR_GPS_LAT , "Lat", "Latitude", "Latitude", UNIT_ANGLE,"sensor");
-	DEMO_SENSOR(GPS_sensor_ALT, PD956_WEB_DEMO_SENSOR_GPS_ALT, "Alt", "Altitude", "Altitude", UNIT_DISTANCE,"sensor");
-	DEMO_SENSOR(GPS_sensor_SPEED, PD956_WEB_DEMO_SENSOR_GPS_SPEED, "spd", "speed", "speed", UNIT_SPEED,"sensor");
+DEMO_SENSOR2(GPS_sensor_LONG_reading,		"Longitude",	UNIT_ANGLE,		PD956_WEB_DEMO_SENSOR_GPS_LONG,		sensor_config_payload,sensor_config_topic);
+DEMO_SENSOR2(GPS_sensor_LAT_reading,		"Latitude",		UNIT_ANGLE,		PD956_WEB_DEMO_SENSOR_GPS_LAT,		sensor_config_payload,sensor_config_topic);
+DEMO_SENSOR2(GPS_sensor_ALT_reading,		"Altitude",		UNIT_DISTANCE,	PD956_WEB_DEMO_SENSOR_GPS_ALT,		sensor_config_payload,sensor_config_topic);
+DEMO_SENSOR2(GPS_sensor_SPEED_reading,		"speed",		UNIT_SPEED,		PD956_WEB_DEMO_SENSOR_GPS_SPEED,	sensor_config_payload,sensor_config_topic);
 #endif
-/*---------------------------------------------------------------------------*/
-/*static void
- publish_led_off(void *d)
- {
- //leds_off(CC26XX_WEB_DEMO_STATUS_LED);
- }*/
+
 /*---------------------------------------------------------------------------*/
 static void save_config()
 {
@@ -593,10 +605,8 @@ static void init_sensors(void)
 #ifdef NODE_HTU21D
 	list_add(sensor_list, &HTU21D_sensor_humid_reading);
 	list_add(sensor_list, &HTU21D_sensor_temp_reading);
-	snprintf(HTU21D_sensor_humid_reading.converted,
-			SENSOR_CONVERTED_LEN, "\"N/A\"");
-	snprintf(HTU21D_sensor_temp_reading.converted,
-			SENSOR_CONVERTED_LEN, "\"N/A\"");
+	snprintf(HTU21D_sensor_humid_reading.converted,	SENSOR_CONVERTED_LEN, "\"N/A\"");
+	snprintf(HTU21D_sensor_temp_reading.converted,	SENSOR_CONVERTED_LEN, "\"N/A\"");
 #endif
 
 #ifdef NODE_GPS
@@ -604,16 +614,22 @@ static void init_sensors(void)
 	list_add(sensor_list, &GPS_sensor_LONG_reading);
 	list_add(sensor_list, &GPS_sensor_ALT_reading);
 	list_add(sensor_list, &GPS_sensor_SPEED_reading);
-	snprintf(GPS_sensor_LAT_reading.converted, SENSOR_CONVERTED_LEN, "\"N/A\"");
-	snprintf(GPS_sensor_LONG_reading.converted, SENSOR_CONVERTED_LEN, "\"N/A\"");
-	snprintf(GPS_sensor_ALT_reading.converted, SENSOR_CONVERTED_LEN, "\"N/A\"");
-	snprintf(GPS_sensor_SPEED_reading.converted, SENSOR_CONVERTED_LEN, "\"N/A\"");
+	snprintf(GPS_sensor_LAT_reading.converted, SENSOR_CONVERTED_LEN, 	"\"N/A\"");
+	snprintf(GPS_sensor_LONG_reading.converted, SENSOR_CONVERTED_LEN, 	"\"N/A\"");
+	snprintf(GPS_sensor_ALT_reading.converted, SENSOR_CONVERTED_LEN, 	"\"N/A\"");
+	snprintf(GPS_sensor_SPEED_reading.converted, SENSOR_CONVERTED_LEN, 	"\"N/A\"");
 #endif
 }
 
 
 static void trigger_sensors(void)
 {
+	const struct sensors_sensor *sensors_ptr;
+	for (sensors_ptr = sensors_first(); sensors_ptr != NULL; sensors_ptr = sensors_next(sensors_ptr))
+	{
+		sensors_ptr->configure(SENSORS_ACTIVE, 1);
+	}
+/*
 	SENSORS_ACTIVATE(SAM4S_ADC_TS_sensor);
 
 #ifdef NODE_STEP_MOTOR
@@ -648,7 +664,7 @@ static void trigger_sensors(void)
 
 #ifdef NODE_GPS
 	SENSORS_ACTIVATE(GPS_sensor);
-#endif
+#endif*/
 }
 extern void
 register_http_post_handlers(void);
@@ -676,7 +692,11 @@ PROCESS_THREAD(PD956_MAIN_process, ev, data)
 	MQTT_init_config();
 
 	process_start(&ntpd_process, NULL);
-
+#ifdef NODE_GPS
+	process_start(&gpsd_process, NULL);
+#endif
+	// TODO: test if this works now
+	process_start(&ftp_process, NULL);
 	/*
 	 * Now that processes have set their own config default values, set our
 	 * own defaults and restore saved config from flash...

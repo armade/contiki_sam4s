@@ -68,9 +68,9 @@ int
 xmem_pread(void *_p, int size, unsigned long offset)
 {
   ENERGEST_ON(ENERGEST_TYPE_FLASH_READ);
-
+  flash_leave_deep_sleep();
   flash_read_df((uint8_t *)_p, size, offset);
-
+  flash_enter_deep_sleep();
   ENERGEST_OFF(ENERGEST_TYPE_FLASH_READ);
 
   return size;
@@ -82,9 +82,9 @@ xmem_pwrite(const void *_buf, int size, unsigned long addr)
 {
 
   ENERGEST_ON(ENERGEST_TYPE_FLASH_WRITE);
-  
+  flash_leave_deep_sleep();
   flash_write_df(addr, (uint8_t *)_buf, size);
-
+  flash_enter_deep_sleep();
   ENERGEST_OFF(ENERGEST_TYPE_FLASH_WRITE);
 
   return size;
@@ -104,11 +104,11 @@ xmem_erase(long size, unsigned long addr)
     PRINTF("xmem_erase: bad offset\n");
     return -1;
   }
-
+  flash_leave_deep_sleep();
   for (; addr < end; addr += COFFEE_SECTOR_SIZE) {
 	  flash_erase_df(addr,erase_64k_block);
   }
-
+  flash_enter_deep_sleep();
   return size;
 }
 /*---------------------------------------------------------------------------*/
