@@ -28,7 +28,7 @@
 
 #include <string.h>
 
-#define _DEBUG_                 1
+#define _DEBUG_                 0
 #if _DEBUG_
 #define PRINTF(...)       printf(__VA_ARGS__)
 #else
@@ -92,7 +92,7 @@ int parse_sentence(char *line)
 						long_f,
 						spd_m_s);
 
-				if( frame_rmc.time.hours == -1)
+				if( (frame_rmc.time.hours == -1) ||( clock_quality(-1)==GPS_TIME))
 					break;
 				time.tm_hour = frame_rmc.time.hours;
 				time.tm_min =  frame_rmc.time.minutes;
@@ -176,8 +176,8 @@ int parse_sentence(char *line)
 				//tm_t time;
 				clock_time_t timezone_offset;
 
-				if( frame_zda.time.hours == -1)
-			 		break;
+				if( (frame_zda.time.hours == -1) || (clock_quality(-1)==GPS_TIME))
+									break;
 
 				time.tm_hour = frame_zda.time.hours;
 				time.tm_min =  frame_zda.time.minutes;
@@ -231,7 +231,7 @@ uint8_t gpsd_index = 0;
 uint8_t buf_nr = 0;
 // NB this is good for debugging not for code size.
 // TODO: rewrite
-volatile uint8_t buf[2][128];
+volatile uint8_t buf[8][128];
 uint8_t start_delimiter_seen=0;
 
 void gpsd_put_char(uint8_t c)

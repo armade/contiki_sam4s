@@ -498,14 +498,15 @@ static void get_HTU21D_reading()
 static void get_GPS_reading()
 {
 	char *buf;
-	float value;
-	int ret;
+	volatile float value;
+	volatile int ret;
 
 	if(GPS_sensor_LONG_reading.publish){
 		ret = GPS_sensor.value(GPS_SENSOR_TYPE_LONG);
 		buf = GPS_sensor_LONG_reading.converted;
-		value = *(double *)ret;
+
 		if(ret != SENSOR_ERROR){
+			value = *(float *)ret;
 			GPS_sensor_LONG_reading.raw_f = value;
 
 			memset(buf, 0, SENSOR_CONVERTED_LEN);
@@ -518,8 +519,9 @@ static void get_GPS_reading()
 	if(GPS_sensor_LAT_reading.publish){
 		ret = GPS_sensor.value(GPS_SENSOR_TYPE_LAT);
 		buf = GPS_sensor_LAT_reading.converted;
-		value = *(double *)ret;
+
 		if(ret != SENSOR_ERROR){
+			value = *(float *)ret;
 			GPS_sensor_LONG_reading.raw_f = value;
 
 			memset(buf, 0, SENSOR_CONVERTED_LEN);
@@ -532,8 +534,9 @@ static void get_GPS_reading()
 	if(GPS_sensor_ALT_reading.publish){
 		ret = GPS_sensor.value(GPS_SENSOR_TYPE_ALT);
 		buf = GPS_sensor_ALT_reading.converted;
-		value = *(float *)ret;
+
 		if(ret != SENSOR_ERROR){
+			value = *(float *)ret;
 			GPS_sensor_LONG_reading.raw_f = value;
 
 			memset(buf, 0, SENSOR_CONVERTED_LEN);
@@ -546,8 +549,9 @@ static void get_GPS_reading()
 	if(GPS_sensor_SPEED_reading.publish){
 		ret = GPS_sensor.value(GPS_SENSOR_TYPE_SPEED);
 		buf = GPS_sensor_SPEED_reading.converted;
-		value = *(float *)ret;
+
 		if(ret != SENSOR_ERROR){
+			value = *(float *)ret;
 			GPS_sensor_LONG_reading.raw_f = value;
 
 			memset(buf, 0, SENSOR_CONVERTED_LEN);
@@ -696,7 +700,7 @@ PROCESS_THREAD(PD956_MAIN_process, ev, data)
 	process_start(&gpsd_process, NULL);
 #endif
 	// TODO: test if this works now
-	process_start(&ftp_process, NULL);
+	//process_start(&ftp_process, NULL);
 	/*
 	 * Now that processes have set their own config default values, set our
 	 * own defaults and restore saved config from flash...

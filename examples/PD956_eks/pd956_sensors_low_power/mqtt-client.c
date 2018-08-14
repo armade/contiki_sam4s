@@ -138,7 +138,11 @@ static MQTT_sensor_reading_t *reading;
 /*---------------------------------------------------------------------------*/
 mqtt_client_config_t *conf;
 process_event_t MQTT_publish_sensor_data_done_event;
+#ifndef NODE_GPS
 static volatile uint8_t no_sleep_allowed = 0;
+#else
+static volatile uint8_t no_sleep_allowed = 1;
+#endif
 /*---------------------------------------------------------------------------*/
 PROCESS(mqtt_client_process, "PD956 MQTT Client");
 /*---------------------------------------------------------------------------*/
@@ -832,7 +836,7 @@ PROCESS_THREAD(mqtt_client_process, ev, data)
 			{
 				if(sleep_counter){
 					sleep_counter = 0;
-					etimer_set(&sleep_retry_timer, conf->pub_interval*CLOCK_SECOND);
+					etimer_set(&sleep_retry_timer, conf->pub_interval);
 				}else{
 					sleep_counter = 1;
 					etimer_set(&timeout_timer, CLOCK_SECOND);

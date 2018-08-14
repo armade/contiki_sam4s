@@ -47,6 +47,7 @@
 #include <stdint.h>
 #include <string.h>
 #include <stdio.h>
+#include <math.h>
 /*---------------------------------------------------------------------------*/
 #define DEBUG 0
 #if DEBUG
@@ -96,14 +97,30 @@ value(int type)
 	// We are not going to perform any calculations on any of the parameter.
 	// We should just parse on the raw value. This is only for testing.
 	switch(type){
-		case GPS_SENSOR_TYPE_LAT:	Temp_float_val = minmea_tocoord(&frame_gga.latitude);	return (int)&Temp_float_val;
-		case GPS_SENSOR_TYPE_LONG:	Temp_float_val = minmea_tocoord(&frame_gga.longitude);	return (int)&Temp_float_val;
-		case GPS_SENSOR_TYPE_ALT:	Temp_float_val = minmea_tofloat(&frame_gga.altitude);	return (int)&Temp_float_val;
-		case GPS_SENSOR_TYPE_SPEED:	Temp_float_val = minmea_tofloat(&frame_vtg.speed_kph);	return (int)&Temp_float_val;
+		case GPS_SENSOR_TYPE_LAT:
+			if(frame_gga.latitude.scale == 0)
+				return SENSOR_ERROR;
+			Temp_float_val = minmea_tocoord(&frame_gga.latitude);
+			return (int)&Temp_float_val;
+		case GPS_SENSOR_TYPE_LONG:
+			if(frame_gga.longitude.scale == 0)
+				return SENSOR_ERROR;
+			Temp_float_val = minmea_tocoord(&frame_gga.longitude);
+			return (int)&Temp_float_val;
+		case GPS_SENSOR_TYPE_ALT:
+			if(frame_gga.altitude.scale == 0)
+				return SENSOR_ERROR;
+			Temp_float_val = minmea_tofloat(&frame_gga.altitude);
+			return (int)&Temp_float_val;
+		case GPS_SENSOR_TYPE_SPEED:
+			if(frame_vtg.speed_kph.scale == 0)
+				return SENSOR_ERROR;
+			Temp_float_val = minmea_tofloat(&frame_vtg.speed_kph);
+			return (int)&Temp_float_val;
 		default:	return SENSOR_ERROR;
 	}
 
-
+	return SENSOR_ERROR;
 }
 /*---------------------------------------------------------------------------*/
 /**
