@@ -184,6 +184,7 @@ void new_net_config(void)
 void pub_sleep_handler(void *payload)
 {
 #if defined(NODE_GPS) || defined(NODE_4_ch_relay) || defined(NODE_HARD_LIGHT) || defined(NODE_LIGHT) || defined(NODE_STEP_MOTOR)
+	// these nodes can't sleep so i decide to ignore this command
 #else
 	if(!memcmp(payload,"wake",4))
 		no_sleep_allowed = 1;

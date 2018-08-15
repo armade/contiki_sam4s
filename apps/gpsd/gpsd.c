@@ -222,12 +222,12 @@ int parse_sentence(char *line)
 			PRINTF(INDENT_SPACES "$xxxxx sentence is not parsed\n");
 		} break;
 	}
-	// release buffer
-	*line = '\0';
+
+
     return 0;
 }
 
-uint8_t gpsd_index = 0;
+uint8_t gpsd_index = 1;
 uint8_t buf_nr = 0;
 // NB this is good for debugging not for code size.
 // TODO: rewrite
@@ -237,13 +237,13 @@ uint8_t start_delimiter_seen=0;
 void gpsd_put_char(uint8_t c)
 {
 	if(c == '$'){
-		gpsd_index = 0;
+		gpsd_index = 1;
 	}
 	if(start_delimiter_seen)
 		buf[buf_nr][gpsd_index++] = c;
 	else{
 		if(c == '$'){
-			if(buf[buf_nr][0] == '\0'){
+			if(buf[buf_nr][0] == 0){
 				buf[buf_nr][gpsd_index++] = c;
 				start_delimiter_seen = 1;
 			}
@@ -253,9 +253,10 @@ void gpsd_put_char(uint8_t c)
 	if((c=='\n') && start_delimiter_seen)
 	{
 		buf[buf_nr][gpsd_index++] = '\0';
+		buf[buf_nr][0] = 1;
 		process_post(PROCESS_BROADCAST, nmea_event, NULL);
 		buf_nr = (buf_nr+1) & 7;
-		gpsd_index = 0;
+		gpsd_index = 1;
 		start_delimiter_seen = 0;
 	}
 	gpsd_index &= 0x7F;
@@ -268,6 +269,9 @@ PROCESS_THREAD(gpsd_process, ev, data)
 	PROCESS_BEGIN();
 	PRINTF("gpsd process started\n");
 	uint8_t i;
+	for(i=0;i<8;i++){
+		buf[i][0] = 0;
+	}
 	nmea_event = process_alloc_event();
 	gpsd_arch_init();
 
@@ -275,8 +279,10 @@ PROCESS_THREAD(gpsd_process, ev, data)
 		PROCESS_YIELD();
 		if(ev == nmea_event){
 			for(i=0;i<8;i++){
-				if(buf[i][0])
-					parse_sentence((char *)&buf[i][0]);
+				if(buf[i][0]){
+					parse_sentence((char *)&buf[i][0+1]);
+					buf[i][0] = 0;
+				}
 			}
 
 		}
