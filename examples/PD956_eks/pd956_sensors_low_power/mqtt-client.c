@@ -152,7 +152,7 @@ static MQTT_sensor_reading_t *reading;
 mqtt_client_config_t *conf;
 process_event_t MQTT_publish_sensor_data_done_event;
 #if defined(NODE_GPS) || defined(NODE_4_ch_relay) || defined(NODE_HARD_LIGHT) || defined(NODE_LIGHT) || defined(NODE_STEP_MOTOR)
-static volatile uint8_t no_sleep_allowed = 1;
+static const uint8_t no_sleep_allowed = 1;
 #else
 static volatile uint8_t no_sleep_allowed = 0;
 #endif
@@ -244,19 +244,18 @@ static void pub_handler(const char *topic, uint16_t topic_len,
 		return;
 	}*/
 
-	static MQTT_sub_ele_t *sub_topic;
-	sub_topic = list_head(MQTT_subscribe_list);
+	subscribe_ele = list_head(MQTT_subscribe_list);
 
-	while (sub_topic != NULL){
-		if(!memcmp((void *)sub_topic->topic,(void *)topic,topic_len)){
-			if(sub_topic->data_handler)
-				sub_topic->data_handler((void *)chunk);
+	while (subscribe_ele != NULL){
+		if(!memcmp((void *)subscribe_ele->topic,(void *)topic,topic_len)){
+			if(subscribe_ele->data_handler)
+				subscribe_ele->data_handler((void *)chunk);
 			/*if(!memcmp(chunk,"wake",4))
 				no_sleep_allowed = 1;
 			else if(!memcmp((void *)chunk,"sleep",5))
 				no_sleep_allowed = 0;*/
 		}
-		sub_topic = sub_topic->next;
+		subscribe_ele = subscribe_ele->next;
 	}
 
 }
