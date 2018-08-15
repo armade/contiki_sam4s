@@ -342,7 +342,7 @@ static int construct_configs(void)
 {
 	// TODO: this will only work for sensors. NEDAFIX.
 	// Perhaps move config initialization into sensor definition.
-	/*for (reading = MQTT_sensor_first(); reading != NULL; reading = reading->next)
+	for (reading = MQTT_sensor_first(); reading != NULL; reading = reading->next)
 	{
 		snprintf(reading->MQTT_config_ele.topic,sizeof(reading->MQTT_config_ele.topic),
 							reading->component_topic_config,
@@ -352,24 +352,24 @@ static int construct_configs(void)
 							linkaddr_node_addr.u8[6], linkaddr_node_addr.u8[7]);
 
 
-		if(reading->component_topic_config == sensor_config_payload){
+		/*if(reading->component_topic_config == &sensor_config_payload){*/
 
 			snprintf(reading->MQTT_config_ele.arg, sizeof(reading->MQTT_config_ele.arg),
 					reading->component_type_config,
 					conf->Username,reading->descr,
 					client_id, conf->Username, reading->descr); // Last must be equal reading->descr
-		}
+		/*}
 		else
-		if(reading->component_topic_config == switch_config_payload){
+		if(reading->component_topic_config == &switch_config_payload){
 			snprintf(reading->MQTT_config_ele.arg, sizeof(reading->MQTT_config_ele.arg),
 					reading->component_type_config,
 					conf->Username,reading->descr,
 					client_id, conf->Username, reading->descr,
 					client_id,conf->Username, reading->descr); // Last must be equal reading->descr
-		}
+		}*/
 
 		list_add(MQTT_config_list, &reading->MQTT_config_ele);
-	}*/
+	}
 	//reading->descr
 
 
@@ -687,7 +687,7 @@ static void publish(void)
 			"\"Node\":\"%s\","
 			"\"Name\":\"%s\","
 			"\"Seq #\":%d,"
-			"\"Uptime [s]\":%lu,"
+			"\"Uptime [s]\":%lu"
 			/*"\"Battery state\":%c,"
 			"\"Unix [s]\":%lu"*/
 	,BOARD_STRING, SENSOR_STRING, conf->Username, seq_nr_value, clock_seconds()/*,RF231_bat_status()+0x30,clock_get_unix_time()*/);

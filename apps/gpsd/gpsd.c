@@ -247,6 +247,10 @@ void gpsd_put_char(uint8_t c)
 				buf[buf_nr][gpsd_index++] = c;
 				start_delimiter_seen = 1;
 			}
+			else
+			{
+				process_post(PROCESS_BROADCAST, nmea_event, NULL);
+			}
 		}
 	}
 

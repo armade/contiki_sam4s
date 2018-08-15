@@ -505,6 +505,7 @@ static void get_GPS_reading()
 	char *buf;
 	float value;
 	int ret;
+	int low, high;
 
 	if(GPS_sensor_LONG_reading.publish){
 		ret = GPS_sensor.value(GPS_SENSOR_TYPE_LONG);
@@ -515,7 +516,9 @@ static void get_GPS_reading()
 			GPS_sensor_LONG_reading.raw_f = value;
 
 			memset(buf, 0, SENSOR_CONVERTED_LEN);
-			snprintf(buf, SENSOR_CONVERTED_LEN, "%f", value);
+			high = value;
+			low = (value - high) * 10000000;
+			snprintf(buf, SENSOR_CONVERTED_LEN, "%d.%.7d", high, low);
 		} else{
 			snprintf(buf, SENSOR_CONVERTED_LEN, "\"N/A\"");
 		}
@@ -530,7 +533,9 @@ static void get_GPS_reading()
 			GPS_sensor_LONG_reading.raw_f = value;
 
 			memset(buf, 0, SENSOR_CONVERTED_LEN);
-			snprintf(buf, SENSOR_CONVERTED_LEN, "%f", value);
+			high = value;
+			low = (value - high) * 10000000;
+			snprintf(buf, SENSOR_CONVERTED_LEN, "%d.%.7d", high, low);
 		} else{
 			snprintf(buf, SENSOR_CONVERTED_LEN, "\"N/A\"");
 		}
@@ -545,7 +550,9 @@ static void get_GPS_reading()
 			GPS_sensor_LONG_reading.raw_f = value;
 
 			memset(buf, 0, SENSOR_CONVERTED_LEN);
-			snprintf(buf, SENSOR_CONVERTED_LEN, "%f", value);
+			high = value;
+			low = (value - high) * 10000;
+			snprintf(buf, SENSOR_CONVERTED_LEN, "%d.%.4d", high, low);
 		} else{
 			snprintf(buf, SENSOR_CONVERTED_LEN, "\"N/A\"");
 		}
@@ -560,7 +567,9 @@ static void get_GPS_reading()
 			GPS_sensor_LONG_reading.raw_f = value;
 
 			memset(buf, 0, SENSOR_CONVERTED_LEN);
-			snprintf(buf, SENSOR_CONVERTED_LEN, "%f", value);
+			high = value;
+			low = (value - high) * 10000;
+			snprintf(buf, SENSOR_CONVERTED_LEN, "%d.%d", high, low);
 		} else{
 			snprintf(buf, SENSOR_CONVERTED_LEN, "\"N/A\"");
 		}
@@ -735,6 +744,9 @@ PROCESS_THREAD(PD956_MAIN_process, ev, data)
 	PROCESS_BEGIN();
 
 	printf("PD956 MQTT Process\n");
+#ifdef NODE_GPS
+	process_start(&gpsd_process, NULL);
+#endif
 
 	init_sensors();
 
@@ -750,9 +762,7 @@ PROCESS_THREAD(PD956_MAIN_process, ev, data)
 	MQTT_init_config();
 
 	process_start(&ntpd_process, NULL);
-#ifdef NODE_GPS
-	process_start(&gpsd_process, NULL);
-#endif
+
 	// TODO: test if this works now
 	//process_start(&ftp_process, NULL);
 	/*
