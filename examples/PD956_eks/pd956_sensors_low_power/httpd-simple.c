@@ -190,24 +190,33 @@ static const char *http_config_css2[] = {
   ".left{padding-left:30px;float:left;text-align:right}",
   ".right{margin-left:345px;}",
   "h1{",
-  	  "font-family:Vardana;",
+  	  "font-family:Verdana;",
   	  "border-radius:5px;",
-  	  "background-color: #2196F3;",
+  	  "background-color:#2196F3;",
   	  "color: white;",
   	  "padding-left:30px;",
-  "p{",
+  	  "font-size:18px;",
+  	  "padding-bottom:7px;",
+  	  "padding-top:7px;",
+  	  "width: 90%%;",
+  	  "text-shadow: 2px 2px black;",
+  "}p{",
   	  "font-family:Verdana;",
   	  "padding-left:50px;",
   "}body{",
-  	  "font-family:Verdana;",
+  	  "background: #595959;",
+      "background-size: 1000px;",
+      "font-size:12px;",
   "}ul{",
-  	  "list-style-type:none;",
-  	  "margin:0;",
-  	  "padding:0;",
-  	  "overflow:hidden;",
-  	  "background-color:#2196F3;",
+  	  "font-family: Verdana;",
+      "text-shadow: 2px 2px black;",
+      "font-size:14px;",
+      "width: 98%%;",
+      "list-style-type: none;",
+      "margin: 0; padding: 0;",
+      "overflow: hidden;background-color: #2196F3;",
   "}li{",
-  	  "float:left;"
+  	  "float:left;",
   	  "border-right:1px solid #bbb;",
   "}li a{",
   	  "display:block;",
@@ -215,6 +224,27 @@ static const char *http_config_css2[] = {
   	  "text-align:center;",
   	  "padding:14px 16px;",
   	  "text-decoration:none;",
+  "}legend{",
+  	  "background: radial-gradient(ellipse at center,  #aed6f4  10%%, #065b9d 100%%);",
+  	  "text-shadow: 1px 1px black;",
+  	  "font-family: Verdana;",
+  	  "color: white;",
+  	  "padding: 2px 5px;",
+  	  "font-size: 16px;",
+  	  "font-weight:bold;",
+  	  "text-shadow: 1px 1px black;",
+  "}fieldset{",
+      "margin:20px;",
+  	  "width: 90%%;",
+  	  "background-color:#FAFAFF;",
+  	  "background: radial-gradient(ellipse at center,  #FfF7FF  0%%, #ffffffff 70%%);",
+  	  "border:3px solid #065b9d;",
+  	  "-moz-border-radius:8px;",
+  	  "-webkit-border-radius:8px;",
+  	  "border-radius:12px;",
+  	  "display : inline-block;",
+  "}.legend1:hover{",
+  	  "font-size: 26px;",
   "}li a:hover{background-color:#111;}",
   "</style>",
   NULL
@@ -529,7 +559,7 @@ PT_THREAD(generate_index(struct httpd_state *s))
                                       http_config_css2));
 //======================================================================================
   /* ND Cache */
-
+   PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<fieldset>"));
   PT_WAIT_THREAD(&s->generate_pt,
                    enqueue_chunk(s, 0, "<h1>Neighbors</h1>"));
 
@@ -552,9 +582,10 @@ PT_THREAD(generate_index(struct httpd_state *s))
 
   PT_WAIT_THREAD(&s->generate_pt,
                        enqueue_chunk(s, 0, "</p>"));
-
+  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "</fieldset>"));
 //======================================================================================
   /* Default Route */
+  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<fieldset>"));
   PT_WAIT_THREAD(&s->generate_pt,
                     enqueue_chunk(s, 0, "<h1>Default Route</h1>"));
   PT_WAIT_THREAD(&s->generate_pt,
@@ -565,9 +596,10 @@ PT_THREAD(generate_index(struct httpd_state *s))
   PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "%s", ipaddr_buf));
   PT_WAIT_THREAD(&s->generate_pt,
                       enqueue_chunk(s, 0, "</p>"));
+  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "</fieldset>"));
 //======================================================================================
   /* Routes */
-
+  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<fieldset>"));
   PT_WAIT_THREAD(&s->generate_pt,
                       enqueue_chunk(s, 0, "<h1>Routes</h1>"));
 
@@ -597,9 +629,10 @@ PT_THREAD(generate_index(struct httpd_state *s))
 
   PT_WAIT_THREAD(&s->generate_pt,
                       enqueue_chunk(s, 0, "</p>"));
-
+  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "</fieldset>"));
 //======================================================================================
   /* Sensors */
+  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<fieldset>"));
   PT_WAIT_THREAD(&s->generate_pt,
                        enqueue_chunk(s, 0, "<h1>Sensor readings</h1>"));
 
@@ -614,77 +647,76 @@ PT_THREAD(generate_index(struct httpd_state *s))
   }
   PT_WAIT_THREAD(&s->generate_pt,
                       enqueue_chunk(s, 0, "</p>"));
-
+  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "</fieldset>"));
   //======================================================================================
   /* Footer */
-  PT_WAIT_THREAD(&s->generate_pt,
-                      enqueue_chunk(s, 0, "<h1>Statistic</h1>"));
+  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<fieldset>"));
 
-  PT_WAIT_THREAD(&s->generate_pt,
-                      enqueue_chunk(s, 0, "<p>"));
-  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "Page hits: %u<br>",
-                                                numtimes));
-  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "Uptime: %lu secs<br>",
-                                                clock_seconds()));
-  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "Current time: %lu secs<br>",
-		  	  	  	  	  	  	  	  	  	    clock_get_unix_time()));
+   PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<fieldset>"));
+   PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<legend>Statistic</legend>"));
+   PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<div class=\"legend1\">"));
 
-  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "Stranum: %lu <br>", clock_quality(READ_STRANUM)));
+   PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "Page hits: %u<br>", numtimes));
+   PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "Uptime: %lu secs<br>", clock_seconds()));
+   PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "Current time: %lu secs<br>", clock_get_unix_time()));
+   PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "Stranum: %lu <br>", clock_quality(READ_STRANUM)));
 
-  PT_WAIT_THREAD(&s->generate_pt,
-                      enqueue_chunk(s, 0, "</p>"));
+   PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "</div></fieldset>"));
 
   //======================================================================================
   // Internal clock
-  clock_time_t clk = clock_get_unix_time();
-  tm_t tb;
-  UnixtoRTC(&tb, clk);
+   clock_time_t clk = clock_get_unix_time();
+     tm_t tb;
+     UnixtoRTC(&tb, clk);
 
-  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<p>"));
-  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "d: %d/%d-%d       %d:%d:%d UTC <br>",
-                        		 tb.tm_mday,
-    							 tb.tm_mon,
-    							 tb.tm_year,
-    							 tb.tm_hour,
-    							 tb.tm_min,
-    							 tb.tm_sec));
+     PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<fieldset>"));
+     PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<legend>Internal clock</legend>"));
+     PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<div class=\"legend1\">"));
+     PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "d: %d/%d-%d       %d:%d:%d UTC",
+                         		 tb.tm_mday,
+     							 tb.tm_mon,
+     							 tb.tm_year,
+                                tb.tm_hour,
+     							 tb.tm_min,
+     							 tb.tm_sec));
+     PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<br>"));
+     clk = clock_get_unix_localtime();
+     UnixtoRTC(&tb, clk);
+     PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "d: %d/%d-%d       %d:%d:%d local",
+   							 tb.tm_mday,
+   							 tb.tm_mon,
+   							 tb.tm_year,
+   							 tb.tm_hour,
+   							 tb.tm_min,
+   							 tb.tm_sec));
 
-  clk = clock_get_unix_localtime();
-    UnixtoRTC(&tb, clk);
-    PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "d: %d/%d-%d       %d:%d:%d local",
-  							 tb.tm_mday,
-  							 tb.tm_mon,
-  							 tb.tm_year,
-  							 tb.tm_hour,
-  							 tb.tm_min,
-  							 tb.tm_sec));
-
-  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "</p>"));
+     PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "</div></fieldset>"));
 
 
   //======================================================================================
   //Set the time on the device. Javascript asks for the time and pass it on to the device
   // as a Timestamp handle.
 
-  PT_WAIT_THREAD(&s->generate_pt,	enqueue_chunk(s, 0,"<form name=\"input\" action=\"%s\" ",
-		  	  	  	  	  	  	  http_index_page.filename));
-  PT_WAIT_THREAD(&s->generate_pt,	enqueue_chunk(s, 0, "method=\"post\" enctype=\""));
-  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "application/x-www-form-urlencoded"));
-  PT_WAIT_THREAD(&s->top_matter_pt, enqueue_chunk(s, 0, http_head_charset));
+     PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<form name=\"input\" action=\"%s\" ", http_index_page.filename));
+      PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "method=\"post\" enctype=\""));
+      PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "application/x-www-form-urlencoded\" "));
+      PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "accept-charset=\"UTF-8\">"));
 
-  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<input type=\"hidden\" id=\"rc2\" name=\"Timestamp\">"));
-  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<input type=\"hidden\" id=\"rc3\" name=\"Timezone\">"));
-  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<button onclick=\"Get_time()\" type=\"submit\""));
-  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, " value=\"Submit\">Set time from browser</button>"));
+      PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<input type=\"hidden\" id=\"rc2\" name=\"Timestamp\">"));
+      PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<input type=\"hidden\" id=\"rc3\" name=\"Timezone\">"));
+      PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<button onclick=\"Get_time()\" type=\"submit\" value=\"Submit\""));
+      PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, " id=\"settimebtn\">Set time from browser</button>"));
 
-  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<script> function Get_time() {"));
-    PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "var d = new Date(); var n = d.getTime();"));
-    PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "var local_d = -d.getTimezoneOffset()*60;"));
-    PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "document.getElementById(\"rc2\").value = Math.floor(n/1000);"));
-    PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "document.getElementById(\"rc3\").value = local_d;}"));
-    PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "</script>"));
+      PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<script> function Get_time() {"));
+      PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "var d = new Date(); var n = d.getTime();"));
+      PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "var local_d = -d.getTimezoneOffset()*60;"));
+      PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "document.getElementById(\"rc2\").value = Math.floor(n/1000);"));
+      PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "document.getElementById(\"rc3\").value = local_d;}"));
+      PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "</script>"));
 
-  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "</form>"));
+      PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "</form>"));
+
+      PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "</fieldset><br>"));
     //======================================================================================
   PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 1, http_bottom));
 
@@ -701,6 +733,7 @@ PT_THREAD(generate_config(struct httpd_state *s))
                  generate_top_matter(s, http_dev_cfg_page.title,
                                      http_config_css2));
 
+  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<fieldset>"));
   /* Sensor Settings */
   PT_WAIT_THREAD(&s->generate_pt,
                  enqueue_chunk(s, 0, "<h1>Sensors</h1>"));
@@ -753,9 +786,9 @@ PT_THREAD(generate_config(struct httpd_state *s))
   PT_WAIT_THREAD(&s->generate_pt,
                  enqueue_chunk(s, 0, "</form>"));
 
+  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "</fieldset>"));
 
-
-
+  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<fieldset>"));
 
   /* Actions */
   PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<h1>Actions</h1>"));
@@ -783,6 +816,8 @@ PT_THREAD(generate_config(struct httpd_state *s))
   PT_WAIT_THREAD(&s->generate_pt,
                  enqueue_chunk(s, 0, "</form>"));
 
+  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "</fieldset>"));
+
   PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 1, http_bottom));
 
   PT_END(&s->generate_pt);
@@ -798,6 +833,7 @@ PT_THREAD(generate_mqtt_config(struct httpd_state *s))
                  generate_top_matter(s, http_mqtt_cfg_page.title,
                                      http_config_css2));
 
+  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<fieldset>"));
   /* MQTT client settings */
   PT_WAIT_THREAD(&s->generate_pt,
                  enqueue_chunk(s, 0, "<h1>%s</h1>", http_mqtt_cfg_page.title));
@@ -962,6 +998,8 @@ PT_THREAD(generate_mqtt_config(struct httpd_state *s))
   PT_WAIT_THREAD(&s->generate_pt,
                  enqueue_chunk(s, 0, "</form>"));
 
+  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "</fieldset>"));
+
   PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 1, http_bottom));
 
   PT_END(&s->generate_pt);
@@ -979,7 +1017,7 @@ PT_THREAD(generate_step_motor_config(struct httpd_state *s))
                  generate_top_matter(s, http_motor_cfg_page.title,
                                      http_config_css2));
 
-
+  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<fieldset>"));
   PT_WAIT_THREAD(&s->generate_pt,
                  enqueue_chunk(s, 0, "<h1>%s</h1>", http_motor_cfg_page.title));
 
@@ -1013,6 +1051,7 @@ PT_THREAD(generate_step_motor_config(struct httpd_state *s))
   PT_WAIT_THREAD(&s->generate_pt,
                     enqueue_chunk(s, 0, CONTENT_CLOSE SECTION_CLOSE));
 
+  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "</fieldset>"));
     //=====================================================================================
   PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 1, http_bottom));
 
@@ -1033,7 +1072,7 @@ PT_THREAD(generate_light_config(struct httpd_state *s))
                  generate_top_matter(s, http_light_cfg_page.title,
                                      http_config_css2));
 
-
+  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<fieldset>"));
 
   PT_WAIT_THREAD(&s->generate_pt,
                  enqueue_chunk(s, 0, "<h1>%s</h1>", http_light_cfg_page.title));
@@ -1114,7 +1153,7 @@ PT_THREAD(generate_light_config(struct httpd_state *s))
 
   PT_WAIT_THREAD(&s->generate_pt,
                     enqueue_chunk(s, 0, CONTENT_CLOSE SECTION_CLOSE));
-
+  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "</fieldset>"));
     //=====================================================================================
   PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 1, http_bottom));
 
@@ -1135,7 +1174,7 @@ PT_THREAD(generate_hard_light_config(struct httpd_state *s))
                  generate_top_matter(s, http_hard_light_cfg_page.title,
                                      http_config_css2));
 
-
+  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<fieldset>"));
 
   PT_WAIT_THREAD(&s->generate_pt,
                  enqueue_chunk(s, 0, "<h1>%s</h1>", http_hard_light_cfg_page.title));
@@ -1217,7 +1256,7 @@ PT_THREAD(generate_hard_light_config(struct httpd_state *s))
   PT_WAIT_THREAD(&s->generate_pt,
                     enqueue_chunk(s, 0, CONTENT_CLOSE SECTION_CLOSE));
 
-
+  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "</fieldset>"));
     //=====================================================================================
   PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 1, http_bottom));
 
@@ -1237,6 +1276,7 @@ PT_THREAD(generate_relay4_config(struct httpd_state *s))
                  generate_top_matter(s, http_relay4_cfg_page.title,
                                      http_config_css2));
 
+  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<fieldset>"));
   /* Sensor Settings */
   PT_WAIT_THREAD(&s->generate_pt,
                  enqueue_chunk(s, 0, "<h1>Relays</h1>"));
@@ -1295,7 +1335,7 @@ PT_THREAD(generate_relay4_config(struct httpd_state *s))
 
 
       //=====================================================================================
-
+  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "</fieldset>"));
   PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 1, http_bottom));
 
   PT_END(&s->generate_pt);

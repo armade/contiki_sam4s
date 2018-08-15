@@ -63,7 +63,7 @@
 
 #define SENSOR_STARTUP_DELAY 1*(1000/CLOCK_SECOND)
 static struct ctimer startup_timer;
-static volatile float Temp_float_val;
+static float Temp_float_val;
 /*---------------------------------------------------------------------------*/
 static int enabled = SENSOR_STATUS_DISABLED;
 /*---------------------------------------------------------------------------*/

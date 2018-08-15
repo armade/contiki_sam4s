@@ -72,7 +72,7 @@ extern mqtt_client_config_t *conf;
 //client_id, conf->Username -> Hass/sensor/%s/%s/state
 //reading->descr -> value_json.%s
 static const char sensor_config_payload[] =	"{\"name\": \"%s %s\"," \
-										"\"state_topic\": \"Hass/sensor/%s/%s/state\"," \
+										"\"state_topic\": \"Hass/common/%s/%s/state\"," \
 										"\"unit_of_measurement\": \"°C\","\
 										"\"value_template\":\"{{ value_json.%s}}\" }";
 
@@ -80,7 +80,7 @@ static const char sensor_config_topic[] = "Hass/sensor/%s%02x%02x%02x%02x%02x%02
 
 static const char cover_config_payload[] = "{\"device_class\": \"cover\"," \
 		"\"name\": \"%s %s\"," \
-		"\"command_topic\": \"Hass/cover/%s/%s/set\"," \
+		"\"command_topic\": \"Hass/common/%s/%s/set\"," \
 		"\"state_topic\": \"Hass/cover/%s/%s/state\"," \
 		"\"retain\": true," \
 		"\"payload_open\": \"OPEN\"," \
@@ -97,6 +97,13 @@ static const char cover_config_payload[] = "{\"device_class\": \"cover\"," \
 		"\"tilt_opened_value\": 4000,}";
 
 static const char cover_config_topic[] = "Hass/cover/%s%02x%02x%02x%02x%02x%02x/config";
+
+static const char switch_config_payload[] = "{\"name\": \"%s %s\"," \
+				"\"state_topic\": \"Hass/common/%s/%s/state\"," \
+				"\"value_template\":\"{{ value_json.%s}}\"," \
+				"\"command_topic\": \"Hass/switch/%s/%s/%s/set\"}";
+
+static const char switch_config_topic[] = "Hass/switch/%s%02x%02x%02x%02x%02x%02x/config";
 /*---------------------------------------------------------------------------*/
 #endif /* MQTT_CLIENT_H_ */
 /*---------------------------------------------------------------------------*/

@@ -99,6 +99,11 @@
 #define PD956_WEB_DEMO_SENSOR_GPS_LAT	  			2
 #define PD956_WEB_DEMO_SENSOR_GPS_ALT	  			3
 #define PD956_WEB_DEMO_SENSOR_GPS_SPEED  			4
+
+#define PD956_WEB_DEMO_SENSOR_RELAY1	  			5
+#define PD956_WEB_DEMO_SENSOR_RELAY2	  			6
+#define PD956_WEB_DEMO_SENSOR_RELAY3	  			7
+#define PD956_WEB_DEMO_SENSOR_RELAY4	  			8
 /*---------------------------------------------------------------------------*/
 extern process_event_t MQTT_publish_sensor_data_event;
 extern process_event_t config_loaded_event;
@@ -136,7 +141,6 @@ typedef struct sensor_reading {
   float raw_f;
   int last;
   const char *descr;
-  const char *xml_element;
   const char *form_field;
   char *units;
   uint8_t type;

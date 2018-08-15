@@ -253,7 +253,7 @@ void gpsd_put_char(uint8_t c)
 	if((c=='\n') && start_delimiter_seen)
 	{
 		buf[buf_nr][gpsd_index++] = '\0';
-		process_post(PROCESS_BROADCAST, nmea_event,  (uint8_t *) buf[buf_nr]);
+		process_post(PROCESS_BROADCAST, nmea_event, NULL);
 		buf_nr = (buf_nr+1) & 7;
 		gpsd_index = 0;
 		start_delimiter_seen = 0;
@@ -267,13 +267,18 @@ PROCESS_THREAD(gpsd_process, ev, data)
 {
 	PROCESS_BEGIN();
 	PRINTF("gpsd process started\n");
+	uint8_t i;
 	nmea_event = process_alloc_event();
 	gpsd_arch_init();
 
 	while(1){
 		PROCESS_YIELD();
 		if(ev == nmea_event){
-			parse_sentence((char *)data);
+			for(i=0;i<8;i++){
+				if(buf[i][0])
+					parse_sentence((char *)&buf[i][0]);
+			}
+
 		}
 	}
 

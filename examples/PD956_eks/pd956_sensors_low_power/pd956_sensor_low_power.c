@@ -83,12 +83,10 @@ process_event_t Trig_sensors;
 Device_config_t web_demo_config;
 /*---------------------------------------------------------------------------*/
 /* A cache of sensor values. Updated periodically or upon key press */
-LIST(sensor_list);
+LIST(MQTT_sensor_list);
 /*---------------------------------------------------------------------------*/
 /* The objects representing sensors used in this demo */
-#define DEMO_SENSOR(name, type, descr, xml_element, form_field, units, hass_component_config_payload,hass_component_config_topic) \
-		MQTT_sensor_reading_t name##_reading = \
-  { NULL, 0, 0,0, descr, xml_element, form_field, units, type, 1, 1, hass_component_config_payload,hass_component_config_topic,NULL}
+
 #define DEMO_SENSOR2(name,description,unit,type_def,config_payload,config_topic) \
 		MQTT_sensor_reading_t name = {\
 			.next = NULL,\
@@ -96,7 +94,6 @@ LIST(sensor_list);
 			.raw_f = 0,\
 			.last = 0,\
 			.descr =  description,\
-			.xml_element = description,\
 			.form_field = description,\
 			.units = unit,\
 			.type = type_def,\
@@ -145,6 +142,14 @@ DEMO_SENSOR2(GPS_sensor_ALT_reading,		"Altitude",		UNIT_DISTANCE,	PD956_WEB_DEMO
 DEMO_SENSOR2(GPS_sensor_SPEED_reading,		"speed",		UNIT_SPEED,		PD956_WEB_DEMO_SENSOR_GPS_SPEED,	sensor_config_payload,sensor_config_topic);
 #endif
 
+#ifdef NODE_4_ch_relay
+DEMO_SENSOR2(NODE_4_ch_relay1_reading,		"relay1",		UNIT_NONE,		PD956_WEB_DEMO_SENSOR_RELAY1,		switch_config_payload,switch_config_topic);
+DEMO_SENSOR2(NODE_4_ch_relay2_reading,		"relay2",		UNIT_NONE,		PD956_WEB_DEMO_SENSOR_RELAY2,		switch_config_payload,switch_config_topic);
+DEMO_SENSOR2(NODE_4_ch_relay3_reading,		"relay3",		UNIT_NONE,		PD956_WEB_DEMO_SENSOR_RELAY3,		switch_config_payload,switch_config_topic);
+DEMO_SENSOR2(NODE_4_ch_relay4_reading,		"relay4",		UNIT_NONE,		PD956_WEB_DEMO_SENSOR_RELAY4,		switch_config_payload,switch_config_topic);
+#endif
+
+
 /*---------------------------------------------------------------------------*/
 static void save_config()
 {
@@ -163,7 +168,7 @@ static void save_config()
 		web_demo_config.len = sizeof(Device_config_t);
 		web_demo_config.sensors_bitmap = 0;
 
-		for (reading = list_head(sensor_list); reading != NULL ; reading =
+		for (reading = list_head(MQTT_sensor_list); reading != NULL ; reading =
 				list_item_next(reading)){
 			if(reading->publish){
 				web_demo_config.sensors_bitmap |= (1 << reading->type);
@@ -202,7 +207,7 @@ static uint8_t load_config()
 	if(tmp_cfg.magic == CONFIG_MAGIC && tmp_cfg.len == sizeof(tmp_cfg)){
 		memcpy(&web_demo_config, &tmp_cfg, sizeof(web_demo_config));
 
-		for (reading = list_head(sensor_list); reading != NULL ; reading =
+		for (reading = list_head(MQTT_sensor_list); reading != NULL ; reading =
 				list_item_next(reading)){
 			if(web_demo_config.sensors_bitmap & (1 << reading->type)){
 				reading->publish = 1;
@@ -255,14 +260,14 @@ int ipaddr_sprintf(char *buf, uint8_t buf_len,
 MQTT_sensor_reading_t *
 MQTT_sensor_first()
 {
-	return list_head(sensor_list);
+	return list_head(MQTT_sensor_list);
 }
 /*---------------------------------------------------------------------------*/
 void Restore_defaults(void)
 {
 	MQTT_sensor_reading_t *reading = NULL;
 
-	for (reading = list_head(sensor_list); reading != NULL ; reading =
+	for (reading = list_head(MQTT_sensor_list); reading != NULL ; reading =
 			list_item_next(reading)){
 		reading->publish = 1;
 	}
@@ -498,8 +503,8 @@ static void get_HTU21D_reading()
 static void get_GPS_reading()
 {
 	char *buf;
-	volatile float value;
-	volatile int ret;
+	float value;
+	int ret;
 
 	if(GPS_sensor_LONG_reading.publish){
 		ret = GPS_sensor.value(GPS_SENSOR_TYPE_LONG);
@@ -565,20 +570,94 @@ static void get_GPS_reading()
 
 }
 #endif
+
+#ifdef NODE_4_ch_relay
+static void get_relay_reading()
+{
+	char *buf;
+	int ret;
+
+	if(NODE_4_ch_relay1_reading.publish){
+		ret = ch4_relay_PD956.value(STATUS_CH1);
+		buf = NODE_4_ch_relay1_reading.converted;
+
+		if(ret != SENSOR_ERROR){
+			NODE_4_ch_relay1_reading.raw = ret;
+			memset(buf, 0, SENSOR_CONVERTED_LEN);
+			if(ret)
+				snprintf(buf, SENSOR_CONVERTED_LEN, "ON");
+			else
+				snprintf(buf, SENSOR_CONVERTED_LEN, "OFF");
+		} else{
+			snprintf(buf, SENSOR_CONVERTED_LEN, "\"N/A\"");
+		}
+	}
+
+	if(NODE_4_ch_relay2_reading.publish){
+		ret = ch4_relay_PD956.value(STATUS_CH2);
+		buf = NODE_4_ch_relay2_reading.converted;
+
+		if(ret != SENSOR_ERROR){
+			NODE_4_ch_relay2_reading.raw = ret;
+			memset(buf, 0, SENSOR_CONVERTED_LEN);
+			if(ret)
+				snprintf(buf, SENSOR_CONVERTED_LEN, "ON");
+			else
+				snprintf(buf, SENSOR_CONVERTED_LEN, "OFF");
+		} else{
+			snprintf(buf, SENSOR_CONVERTED_LEN, "\"N/A\"");
+		}
+	}
+
+	if(NODE_4_ch_relay3_reading.publish){
+		ret = ch4_relay_PD956.value(STATUS_CH3);
+		buf = NODE_4_ch_relay3_reading.converted;
+
+		if(ret != SENSOR_ERROR){
+			NODE_4_ch_relay3_reading.raw = ret;
+			memset(buf, 0, SENSOR_CONVERTED_LEN);
+			if(ret)
+				snprintf(buf, SENSOR_CONVERTED_LEN, "ON");
+			else
+				snprintf(buf, SENSOR_CONVERTED_LEN, "OFF");
+		} else{
+			snprintf(buf, SENSOR_CONVERTED_LEN, "\"N/A\"");
+		}
+	}
+
+	if(NODE_4_ch_relay4_reading.publish){
+		ret = ch4_relay_PD956.value(STATUS_CH4);
+		buf = NODE_4_ch_relay4_reading.converted;
+
+		if(ret != SENSOR_ERROR){
+			NODE_4_ch_relay4_reading.raw = ret;
+			memset(buf, 0, SENSOR_CONVERTED_LEN);
+			if(ret)
+				snprintf(buf, SENSOR_CONVERTED_LEN, "ON");
+			else
+				snprintf(buf, SENSOR_CONVERTED_LEN, "OFF");
+		} else{
+			snprintf(buf, SENSOR_CONVERTED_LEN, "\"N/A\"");
+		}
+	}
+
+	SENSORS_DEACTIVATE(GPS_sensor);
+}
+#endif
 /*---------------------------------------------------------------------------*/
 
 /*---------------------------------------------------------------------------*/
 static void init_sensors(void)
 {
-	list_add(sensor_list, &temp_reading);
+	list_add(MQTT_sensor_list, &temp_reading);
 	snprintf(temp_reading.converted, SENSOR_CONVERTED_LEN, "\"N/A\"");
 
 #ifdef NODE_STEP_MOTOR
-	list_add(sensor_list, &step_motor_reading);
+	list_add(MQTT_sensor_list, &step_motor_reading);
 	snprintf(step_motor_reading.converted, SENSOR_CONVERTED_LEN, "\"N/A\"");
 
-	list_add(sensor_list, &dht11_temperature_reading);
-	list_add(sensor_list, &dht11_humidity_reading);
+	list_add(MQTT_sensor_list, &dht11_temperature_reading);
+	list_add(MQTT_sensor_list, &dht11_humidity_reading);
 	snprintf(dht11_temperature_reading.converted, SENSOR_CONVERTED_LEN, "\"N/A\"");
 	snprintf(dht11_humidity_reading.converted, SENSOR_CONVERTED_LEN, "\"N/A\"");
 #endif
@@ -592,36 +671,47 @@ static void init_sensors(void)
 #endif
 
 #if defined(NODE_4_ch_relay) || defined(NODE_4_ch_relay)
-	list_add(sensor_list, &dht11_temperature_reading);
-	list_add(sensor_list, &dht11_humidity_reading);
+	list_add(MQTT_sensor_list, &dht11_temperature_reading);
+	list_add(MQTT_sensor_list, &dht11_humidity_reading);
 	snprintf(dht11_temperature_reading.converted, SENSOR_CONVERTED_LEN, "\"N/A\"");
 	snprintf(dht11_humidity_reading.converted, SENSOR_CONVERTED_LEN, "\"N/A\"");
 
 #endif
 
 #ifdef NODE_BMP280
-	list_add(sensor_list, &bmp_280_sensor_press_reading);
-	list_add(sensor_list, &bmp_280_sensor_temp_reading);
+	list_add(MQTT_sensor_list, &bmp_280_sensor_press_reading);
+	list_add(MQTT_sensor_list, &bmp_280_sensor_temp_reading);
 	snprintf(bmp_280_sensor_press_reading.converted, SENSOR_CONVERTED_LEN, "\"N/A\"");
 	snprintf(bmp_280_sensor_temp_reading.converted, SENSOR_CONVERTED_LEN, "\"N/A\"");
 #endif
 
 #ifdef NODE_HTU21D
-	list_add(sensor_list, &HTU21D_sensor_humid_reading);
-	list_add(sensor_list, &HTU21D_sensor_temp_reading);
+	list_add(MQTT_sensor_list, &HTU21D_sensor_humid_reading);
+	list_add(MQTT_sensor_list, &HTU21D_sensor_temp_reading);
 	snprintf(HTU21D_sensor_humid_reading.converted,	SENSOR_CONVERTED_LEN, "\"N/A\"");
 	snprintf(HTU21D_sensor_temp_reading.converted,	SENSOR_CONVERTED_LEN, "\"N/A\"");
 #endif
 
 #ifdef NODE_GPS
-	list_add(sensor_list, &GPS_sensor_LAT_reading);
-	list_add(sensor_list, &GPS_sensor_LONG_reading);
-	list_add(sensor_list, &GPS_sensor_ALT_reading);
-	list_add(sensor_list, &GPS_sensor_SPEED_reading);
+	list_add(MQTT_sensor_list, &GPS_sensor_LAT_reading);
+	list_add(MQTT_sensor_list, &GPS_sensor_LONG_reading);
+	list_add(MQTT_sensor_list, &GPS_sensor_ALT_reading);
+	list_add(MQTT_sensor_list, &GPS_sensor_SPEED_reading);
 	snprintf(GPS_sensor_LAT_reading.converted, SENSOR_CONVERTED_LEN, 	"\"N/A\"");
 	snprintf(GPS_sensor_LONG_reading.converted, SENSOR_CONVERTED_LEN, 	"\"N/A\"");
 	snprintf(GPS_sensor_ALT_reading.converted, SENSOR_CONVERTED_LEN, 	"\"N/A\"");
 	snprintf(GPS_sensor_SPEED_reading.converted, SENSOR_CONVERTED_LEN, 	"\"N/A\"");
+#endif
+
+#ifdef NODE_4_ch_relay
+	list_add(MQTT_sensor_list, &NODE_4_ch_relay1_reading);
+	list_add(MQTT_sensor_list, &NODE_4_ch_relay2_reading);
+	list_add(MQTT_sensor_list, &NODE_4_ch_relay3_reading);
+	list_add(MQTT_sensor_list, &NODE_4_ch_relay4_reading);
+	snprintf(NODE_4_ch_relay1_reading.converted, SENSOR_CONVERTED_LEN, 	"\"N/A\"");
+	snprintf(NODE_4_ch_relay2_reading.converted, SENSOR_CONVERTED_LEN, 	"\"N/A\"");
+	snprintf(NODE_4_ch_relay3_reading.converted, SENSOR_CONVERTED_LEN, 	"\"N/A\"");
+	snprintf(NODE_4_ch_relay4_reading.converted, SENSOR_CONVERTED_LEN, 	"\"N/A\"");
 #endif
 }
 
@@ -633,42 +723,6 @@ static void trigger_sensors(void)
 	{
 		sensors_ptr->configure(SENSORS_ACTIVE, 1);
 	}
-/*
-	SENSORS_ACTIVATE(SAM4S_ADC_TS_sensor);
-
-#ifdef NODE_STEP_MOTOR
-	SENSORS_ACTIVATE(step_sensor);
-	SENSORS_ACTIVATE(dht11_sensor);
-#endif
-
-#ifdef NODE_LIGHT
-	SENSORS_ACTIVATE(soft_RGB_ctrl_sensor);
-#endif
-
-#ifdef NODE_HARD_LIGHT
-	SENSORS_ACTIVATE(hard_RGB_ctrl_sensor);
-#endif
-
-#ifdef NODE_4_ch_relay
-	SENSORS_ACTIVATE(dht11_sensor);
-	SENSORS_ACTIVATE(ch4_relay_PD956);
-#endif
-
-#ifdef NODE_DHT11
-	SENSORS_ACTIVATE(dht11_sensor);
-#endif
-
-#ifdef NODE_BMP280
-	SENSORS_ACTIVATE(bmp_280_sensor);
-#endif
-
-#ifdef NODE_HTU21D
-	SENSORS_ACTIVATE(HTU21D_sensor);
-#endif
-
-#ifdef NODE_GPS
-	SENSORS_ACTIVATE(GPS_sensor);
-#endif*/
 }
 extern void
 register_http_post_handlers(void);
@@ -779,6 +833,15 @@ PROCESS_THREAD(PD956_MAIN_process, ev, data)
 			sensor_busy &= ~(1ul << PD956_WEB_DEMO_SENSOR_GPS_LAT);
 			sensor_busy &= ~(1ul << PD956_WEB_DEMO_SENSOR_GPS_ALT);
 			sensor_busy &= ~(1ul << PD956_WEB_DEMO_SENSOR_GPS_SPEED);
+#endif
+
+#ifdef NODE_4_ch_relay
+		} else if(ev == sensors_event && data == &GPS_sensor){
+			get_GPS_reading();
+			sensor_busy &= ~(1ul << NODE_4_ch_relay1_reading);
+			sensor_busy &= ~(1ul << NODE_4_ch_relay2_reading);
+			sensor_busy &= ~(1ul << NODE_4_ch_relay3_reading);
+			sensor_busy &= ~(1ul << NODE_4_ch_relay4_reading);
 #endif
 
 		}

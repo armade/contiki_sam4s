@@ -94,11 +94,17 @@ receiver(struct simple_udp_connection *c,
 		switch(NTP->mode)
 		{
 			case 4: // We got a reply for the request
-				if(clock_quality(READ_STRANUM) > NTP->stratum )
+				PRINTF("ntpd response received\n");
+				if((clock_quality(READ_STRANUM) > NTP->stratum ) && (NTP->ver == 3))
 				{
 					CurrTime = uip_ntohl(NTP->tx_Time_s) - NTP_EPOCH; //UNIX time
 					if(CurrTime < 1514764800) { //Monday, 01/01-2018 00:00:00 UTC
 						return;
+					}
+					// Debug
+					if(CurrTime > 1546300800) //Tuesday, 01/01-2019 00:00:00 UTC
+					{
+						__BKPT(CurrTime);
 					}
 					clock_set_unix_time(CurrTime,1);
 					StartTime = clock_seconds();
@@ -110,6 +116,7 @@ receiver(struct simple_udp_connection *c,
 				break;
 
 			case 3: // Someone is asking us for the time
+				PRINTF("ntpd request received\n");
 				time = clock_get_unix_time();
 				if(time){
 					memset(&NTP_server,0,sizeof(NTP_server));
@@ -135,6 +142,7 @@ receiver(struct simple_udp_connection *c,
 static void Send_NTP_request(uip_ipaddr_t *ipaddr)
 {
 	if(!NTP_BUSY){
+		PRINTF("ntpd requesting time from parent\n");
 		NTP_BUSY = 1;
 		ntpmsg.mode = 3;
 		ntpmsg.ver = 3;
@@ -147,10 +155,11 @@ static void Send_NTP_request(uip_ipaddr_t *ipaddr)
 	}
 }
 /*---------------------------------------------------------------------------*/
-static void Send_NTP_time_to_parrent(uip_ipaddr_t *ipaddr)
+static void Send_NTP_time_to_parent(uip_ipaddr_t *ipaddr)
 {
 	ntp_packet_t NTP_server = { .li = 0, .ver = 3, .mode = 4, 0 };
 	clock_time_t time;
+	PRINTF("ntpd sending time to parent\n");
 	time = clock_get_unix_time();
 	if(time && !NTP_BUSY){
 		NTP_BUSY = 1;
@@ -198,18 +207,18 @@ PROCESS_THREAD(ntpd_process, ev, data)
                       NULL, NTPD_PORT, receiver);
 
 	etimer_set(&Send_NTP_request_timer, 10 * CLOCK_SECOND);
-	etimer_set(&Update_parrent_timer, SEND_INTERVAL * CLOCK_SECOND);
+	etimer_set(&Update_parrent_timer, 25 * CLOCK_SECOND);
 	while(1){
 		PROCESS_YIELD();
 		stranum_val = clock_quality(READ_STRANUM);
 		if(etimer_expired(&Send_NTP_request_timer)){
 			Send_NTP_request(&ipaddr);
 			if(stranum_val == 15)
-				etimer_set(&Send_NTP_request_timer, 10*SEND_INTERVAL); // 10sec
+				etimer_set(&Send_NTP_request_timer, 10*CLOCK_SECOND); // 10sec
 			else
 				etimer_set(&Send_NTP_request_timer, SEND_INTERVAL * CLOCK_SECOND/stranum_val); // 1hr - 4min
 		}else if(etimer_expired(&Update_parrent_timer)){
-			Send_NTP_time_to_parrent(&ipaddr);
+			Send_NTP_time_to_parent(&ipaddr);
 			etimer_set(&Update_parrent_timer, SEND_INTERVAL * CLOCK_SECOND * (stranum_val/15));
 		}
 		

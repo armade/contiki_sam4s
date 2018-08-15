@@ -61,6 +61,17 @@ unsigned pin_array[] = {
 
 static int sensor_status = SENSOR_STATUS_DISABLED;
 
+#define SENSOR_SWITCH_DELAY 10 //~10ms
+static struct ctimer switch_timer;
+
+static void
+notify_ready(void *not_used)
+{
+
+	sensor_status = SENSOR_STATUS_READY;
+	sensors_changed(&ch4_relay_PD956);
+}
+
 /*---------------------------------------------------------------------------*/
 static int
 relay_state_value(int type)
@@ -73,7 +84,8 @@ relay_state_value(int type)
 	else
 		PIOA->PIO_CODR = pin_array[(type-14)>>1];//pio_set_pin_group_low(PIOA,pin_array[type]); //RELAY_ON
 
-
+	sensor_status = SENSOR_STATUS_NOT_READY;
+	ctimer_set(&switch_timer, SENSOR_SWITCH_DELAY, notify_ready, NULL);
 	return 0; // Active low
 }
 /*---------------------------------------------------------------------------*/
