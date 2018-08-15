@@ -195,8 +195,8 @@ void pub_sleep_handler(void *payload)
 void pub_reset_handler(void *payload)
 {
 	if(!memcmp(payload,"reset",5)){
-		__DMB();
-		__ISB();
+		asm volatile ("dmb 0xF":::"memory");
+		asm volatile ("isb 0xF":::"memory");
 		*((uint32_t *)0x400E1400) = 0xa500000D;
 	}
 }
@@ -249,7 +249,7 @@ static void pub_handler(const char *topic, uint16_t topic_len,
 	while (sub_topic != NULL){
 		if(!memcmp((void *)sub_topic->topic,(void *)topic,topic_len)){
 			if(sub_topic->data_handler)
-				sub_topic->data_handler(chunk);
+				sub_topic->data_handler((void *)chunk);
 			/*if(!memcmp(chunk,"wake",4))
 				no_sleep_allowed = 1;
 			else if(!memcmp((void *)chunk,"sleep",5))

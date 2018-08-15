@@ -104,7 +104,7 @@ receiver(struct simple_udp_connection *c,
 					// Debug
 					if(CurrTime > 1546300800) //Tuesday, 01/01-2019 00:00:00 UTC
 					{
-						__BKPT(CurrTime);
+						asm volatile("NOP");
 					}
 					clock_set_unix_time(CurrTime,1);
 					StartTime = clock_seconds();

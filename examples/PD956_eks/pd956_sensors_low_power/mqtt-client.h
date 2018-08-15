@@ -101,6 +101,7 @@ static const char cover_config_topic[] = "Hass/cover/%s%02x%02x%02x%02x%02x%02x/
 static const char switch_config_payload[] = "{\"name\": \"%s %s\"," \
 				"\"state_topic\": \"Hass/common/%s/%s/state\"," \
 				"\"value_template\":\"{{ value_json.%s}}\"," \
+				"\"mdi\":\"lightbulb\"," \
 				"\"command_topic\": \"Hass/switch/%s/%s/%s/set\"}";
 
 static const char switch_config_topic[] = "Hass/switch/%s%02x%02x%02x%02x%02x%02x/config";
