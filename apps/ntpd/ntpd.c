@@ -157,7 +157,7 @@ static void Send_NTP_request(uip_ipaddr_t *ipaddr)
 /*---------------------------------------------------------------------------*/
 static void Send_NTP_time_to_parent(uip_ipaddr_t *ipaddr)
 {
-	ntp_packet_t NTP_server = { .li = 0, .ver = 3, .mode = 4, 0 };
+	ntp_packet_t NTP_server;
 	clock_time_t time;
 	PRINTF("ntpd sending time to parent\n");
 	time = clock_get_unix_time();
@@ -165,6 +165,8 @@ static void Send_NTP_time_to_parent(uip_ipaddr_t *ipaddr)
 		NTP_BUSY = 1;
 		NTP_server.stratum = clock_quality(READ_STRANUM);
 		NTP_server.tx_Time_s = uip_ntohl(time + NTP_EPOCH);
+		NTP_server.ver = 3;
+		NTP_server.mode = 4;
 		simple_udp_sendto(&unicast_connection, &NTP_server, 48, ipaddr);
 		// Wait 50 ms so we have time to send packet
 		ctimer_set(&delay_timer, 50*CLOCK_SECOND/1000, notify_ready, NULL);

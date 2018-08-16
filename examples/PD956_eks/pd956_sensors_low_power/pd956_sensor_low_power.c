@@ -87,66 +87,65 @@ LIST(MQTT_sensor_list);
 /*---------------------------------------------------------------------------*/
 /* The objects representing sensors used in this demo */
 
-#define DEMO_SENSOR2(name,description,unit,type_def,config_payload,config_topic) \
+#define DEMO_SENSOR2(name,description,unit,type_def,HASS_CLASS,config_topic) \
 		MQTT_sensor_reading_t name = {\
 			.next = NULL,\
 			.raw = 0,\
-			.raw_f = 0,\
 			.last = 0,\
 			.descr =  description,\
 			.form_field = description,\
 			.units = unit,\
 			.type = type_def,\
+			.HASS_class = HASS_CLASS,\
 			.publish = 1,\
 			.changed = 1,\
-			.component_type_config = (char *)config_payload,\
 			.component_topic_config = (char *)config_topic,\
 		};
 
 /*sensors */
-DEMO_SENSOR2(temp_reading,					"Internaltemperature",UNIT_TEMP,PD956_WEB_DEMO_SENSOR_ADC,sensor_config_payload,sensor_config_topic);
+DEMO_SENSOR2(temp_reading,					"CPUtemperature",UNIT_TEMP,		PD956_WEB_DEMO_SENSOR_ADC,				sensor_class,		sensor_config_topic);
 
 
 #ifdef step_motor_reading
-DEMO_SENSOR2(temp_reading,					"Step_Position",UNIT_STEP,		PD956_WEB_DEMO_SENSOR_STEP,			NULL,NULL);
+DEMO_SENSOR2(temp_reading,					"Step_Position",UNIT_STEP,		PD956_WEB_DEMO_SENSOR_STEP,				cover_class,		NULL);
 #endif
 
 #ifdef NODE_LIGHT
-DEMO_SENSOR2(soft_RGB_ctrl_sensor_reading,	"RGB_light",	UNIT_NONE,		PD956_WEB_DEMO_SENSOR_RGB,			sensor_config_payload,sensor_config_topic);
+DEMO_SENSOR2(soft_RGB_ctrl_sensor_reading,	"RGB_light",	UNIT_NONE,		PD956_WEB_DEMO_SENSOR_RGB,				light_class,		sensor_config_topic);
 #endif
 
 #ifdef NODE_HARD_LIGHT
-DEMO_SENSOR2(hard_RGB_ctrl_sensor_reading,	"RGB_light",	UNIT_NONE,		PD956_WEB_DEMO_SENSOR_RGB,			sensor_config_payload,sensor_config_topic);
+DEMO_SENSOR2(hard_RGB_ctrl_sensor_reading,	"RGB_light",	UNIT_NONE,		PD956_WEB_DEMO_SENSOR_RGB,				light_class,		sensor_config_topic);
 #endif
 
 #if defined(NODE_STEP_MOTOR) || defined(NODE_4_ch_relay) || defined(NODE_DHT11)
-DEMO_SENSOR2(dht11_temperature_reading,		"Temperature",	UNIT_TEMP,		PD956_WEB_DEMO_SENSOR_DHT11_TEMP,	sensor_config_payload,sensor_config_topic);
-DEMO_SENSOR2(dht11_humidity_reading,		"Humidity",		UNIT_HUMIDITY,	PD956_WEB_DEMO_SENSOR_DHT11_HUMIDITY,sensor_config_payload,sensor_config_topic);
+DEMO_SENSOR2(dht11_temperature_reading,		"Temperature",	UNIT_TEMP,		PD956_WEB_DEMO_SENSOR_DHT11_TEMP,		sensor_class,		sensor_config_topic);
+DEMO_SENSOR2(dht11_humidity_reading,		"Humidity",		UNIT_HUMIDITY,	PD956_WEB_DEMO_SENSOR_DHT11_HUMIDITY,	sensor_class, 		sensor_config_topic);
 #endif
 
 #ifdef NODE_BMP280
-DEMO_SENSOR2(bmp_280_sensor_press_reading,	"Pressure",		UNIT_PRES,		PD956_WEB_DEMO_SENSOR_BMP280_PRES,	sensor_config_payload,sensor_config_topic);
-DEMO_SENSOR2(bmp_280_sensor_temp_reading,	"Temperature",	UNIT_TEMP,		PD956_WEB_DEMO_SENSOR_BMP280_TEMP,	sensor_config_payload,sensor_config_topic);
+DEMO_SENSOR2(bmp_280_sensor_press_reading,	"Pressure",		UNIT_PRES,		PD956_WEB_DEMO_SENSOR_BMP280_PRES,		sensor_class,		sensor_config_topic);
+DEMO_SENSOR2(bmp_280_sensor_temp_reading,	"Temperature",	UNIT_TEMP,		PD956_WEB_DEMO_SENSOR_BMP280_TEMP,		sensor_class,		sensor_config_topic);
 #endif
 
 #ifdef NODE_HTU21D
-DEMO_SENSOR2(HTU21D_sensor_humid_reading,	"Humidity",		UNIT_HUMIDITY,	PD956_WEB_DEMO_SENSOR_HTU21D_humid,	sensor_config_payload,sensor_config_topic);
-DEMO_SENSOR2(HTU21D_sensor_temp_reading,	"Temperature",	UNIT_TEMP,		PD956_WEB_DEMO_SENSOR_HTU21D_TEMP,	sensor_config_payload,sensor_config_topic);
+DEMO_SENSOR2(HTU21D_sensor_humid_reading,	"Humidity",		UNIT_HUMIDITY,	PD956_WEB_DEMO_SENSOR_HTU21D_humid,		sensor_class,		sensor_config_topic);
+DEMO_SENSOR2(HTU21D_sensor_temp_reading,	"Temperature",	UNIT_TEMP,		PD956_WEB_DEMO_SENSOR_HTU21D_TEMP,		sensor_class,		sensor_config_topic);
 #endif
 
 
 #ifdef NODE_GPS
-DEMO_SENSOR2(GPS_sensor_LONG_reading,		"Longitude",	UNIT_ANGLE,		PD956_WEB_DEMO_SENSOR_GPS_LONG,		sensor_config_payload,sensor_config_topic);
-DEMO_SENSOR2(GPS_sensor_LAT_reading,		"Latitude",		UNIT_ANGLE,		PD956_WEB_DEMO_SENSOR_GPS_LAT,		sensor_config_payload,sensor_config_topic);
-DEMO_SENSOR2(GPS_sensor_ALT_reading,		"Altitude",		UNIT_DISTANCE,	PD956_WEB_DEMO_SENSOR_GPS_ALT,		sensor_config_payload,sensor_config_topic);
-DEMO_SENSOR2(GPS_sensor_SPEED_reading,		"speed",		UNIT_SPEED,		PD956_WEB_DEMO_SENSOR_GPS_SPEED,	sensor_config_payload,sensor_config_topic);
+DEMO_SENSOR2(GPS_sensor_LONG_reading,		"Lon",			UNIT_ANGLE,		PD956_WEB_DEMO_SENSOR_GPS_LONG,			sensor_class,		sensor_config_topic);
+DEMO_SENSOR2(GPS_sensor_LAT_reading,		"Lat",			UNIT_ANGLE,		PD956_WEB_DEMO_SENSOR_GPS_LAT,			sensor_class,		sensor_config_topic);
+DEMO_SENSOR2(GPS_sensor_ALT_reading,		"Alt",			UNIT_DISTANCE,	PD956_WEB_DEMO_SENSOR_GPS_ALT,			sensor_class,		sensor_config_topic);
+DEMO_SENSOR2(GPS_sensor_SPEED_reading,		"spd",			UNIT_SPEED,		PD956_WEB_DEMO_SENSOR_GPS_SPEED,		sensor_class,		sensor_config_topic);
 #endif
 
 #ifdef NODE_4_ch_relay
-DEMO_SENSOR2(NODE_4_ch_relay1_reading,		"relay1",		UNIT_NONE,		PD956_WEB_DEMO_SENSOR_RELAY1,		switch_config_payload,switch_config_topic);
-DEMO_SENSOR2(NODE_4_ch_relay2_reading,		"relay2",		UNIT_NONE,		PD956_WEB_DEMO_SENSOR_RELAY2,		switch_config_payload,switch_config_topic);
-DEMO_SENSOR2(NODE_4_ch_relay3_reading,		"relay3",		UNIT_NONE,		PD956_WEB_DEMO_SENSOR_RELAY3,		switch_config_payload,switch_config_topic);
-DEMO_SENSOR2(NODE_4_ch_relay4_reading,		"relay4",		UNIT_NONE,		PD956_WEB_DEMO_SENSOR_RELAY4,		switch_config_payload,switch_config_topic);
+DEMO_SENSOR2(NODE_4_ch_relay1_reading,		"relay1",		UNIT_NONE,		PD956_WEB_DEMO_SENSOR_RELAY1,			switch_class,		switch_config_topic);
+DEMO_SENSOR2(NODE_4_ch_relay2_reading,		"relay2",		UNIT_NONE,		PD956_WEB_DEMO_SENSOR_RELAY2,			switch_class,		switch_config_topic);
+DEMO_SENSOR2(NODE_4_ch_relay3_reading,		"relay3",		UNIT_NONE,		PD956_WEB_DEMO_SENSOR_RELAY3,			switch_class,		switch_config_topic);
+DEMO_SENSOR2(NODE_4_ch_relay4_reading,		"relay4",		UNIT_NONE,		PD956_WEB_DEMO_SENSOR_RELAY4,			switch_class,		switch_config_topic);
 #endif
 
 
@@ -513,7 +512,6 @@ static void get_GPS_reading()
 
 		if(ret != SENSOR_ERROR){
 			value = *(float *)ret;
-			GPS_sensor_LONG_reading.raw_f = value;
 
 			memset(buf, 0, SENSOR_CONVERTED_LEN);
 			high = value;
@@ -530,7 +528,6 @@ static void get_GPS_reading()
 
 		if(ret != SENSOR_ERROR){
 			value = *(float *)ret;
-			GPS_sensor_LONG_reading.raw_f = value;
 
 			memset(buf, 0, SENSOR_CONVERTED_LEN);
 			high = value;
@@ -547,7 +544,6 @@ static void get_GPS_reading()
 
 		if(ret != SENSOR_ERROR){
 			value = *(float *)ret;
-			GPS_sensor_LONG_reading.raw_f = value;
 
 			memset(buf, 0, SENSOR_CONVERTED_LEN);
 			high = value;
@@ -564,7 +560,6 @@ static void get_GPS_reading()
 
 		if(ret != SENSOR_ERROR){
 			value = *(float *)ret;
-			GPS_sensor_LONG_reading.raw_f = value;
 
 			memset(buf, 0, SENSOR_CONVERTED_LEN);
 			high = value;

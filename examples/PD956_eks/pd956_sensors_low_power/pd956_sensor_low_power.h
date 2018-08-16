@@ -110,7 +110,7 @@ extern process_event_t config_loaded_event;
 extern process_event_t load_config_defaults;
 extern process_event_t Trig_sensors;
 /*---------------------------------------------------------------------------*/
-#define UNIT_TEMP		"C"
+#define UNIT_TEMP		"°C"
 #define UNIT_VOLT		"V"
 #define UNIT_PRES		"hPa"
 #define UNIT_HUMIDITY	"%RH"
@@ -132,18 +132,26 @@ typedef struct MQTT_config_ele
 } MQTT_config_ele_t;
 /*---------------------------------------------------------------------------*/
 
+typedef enum{
+	sensor_class,
+	cover_class,
+	switch_class,
+	binary_sensor_class,
+	light_class
+}HASS_class_t;
+
 /* A data type for sensor readings, internally stored in a linked list */
 #define SENSOR_CONVERTED_LEN        12
 
 typedef struct sensor_reading {
   struct sensor_reading *next;
   int raw;
-  float raw_f;
   int last;
   const char *descr;
   const char *form_field;
   char *units;
   uint8_t type;
+  HASS_class_t HASS_class;
   uint8_t publish;
   uint8_t changed;
   char converted[SENSOR_CONVERTED_LEN];
@@ -155,7 +163,7 @@ typedef struct sensor_reading {
    * 	- sensor
    * 	- switch
    */
-  char *component_type_config;
+  //char *component_type_config;
   char *component_topic_config;
   MQTT_config_ele_t MQTT_config_ele;
 } MQTT_sensor_reading_t;

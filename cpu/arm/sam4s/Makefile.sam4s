@@ -25,7 +25,7 @@ endif
 
 
 LDSCRIPT = $(CONTIKI_CPU)/flash.ld
-
+#-march=armv7-m
 CFLAGS += -mcpu=cortex-m4 -mthumb -mlittle-endian -O2 
 CFLAGS += -ffunction-sections -fdata-sections
 CFLAGS += -fshort-enums -fomit-frame-pointer -fno-strict-aliasing

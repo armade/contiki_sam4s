@@ -48,7 +48,6 @@ struct minmea_sentence_zda frame_zda;
 
 #define INDENT_SPACES "  "
 
-volatile float lat_f,long_f,spd_m_s;
 tm_t time;
 // NOTE:
 // Differens between to coordinates ([km])
@@ -83,14 +82,6 @@ int parse_sentence(char *line)
 						minmea_rescale(&frame_rmc.speed, 1000));*/
 
 
-				lat_f = minmea_tocoord(&frame_rmc.latitude);
-				long_f = minmea_tocoord(&frame_rmc.longitude);
-				spd_m_s = minmea_tofloat(&frame_rmc.speed) * 1.852;/////0.514444444f; //m/s   //1.852 * knots -> km/hr
-
-				PRINTF(INDENT_SPACES "$xxRMC floating point degree coordinates and speed: (%f,%f) %f\n",
-						lat_f,
-						long_f,
-						spd_m_s);
 
 				if( (frame_rmc.time.hours == -1) ||( clock_quality(-1)==GPS_TIME))
 					break;
@@ -103,13 +94,9 @@ int parse_sentence(char *line)
 
 				clock_time_t unixtime = RtctoUnix(&time);
 
-
 				clock_set_unix_time(unixtime,1);
 				clock_quality(GPS_TIME);
 
-				asm volatile("NOP");
-				asm volatile("NOP");
-				asm volatile("NOP");
 			}
 			else {
 				PRINTF(INDENT_SPACES "$xxVTG sentence could not be parsed\n");
@@ -119,13 +106,7 @@ int parse_sentence(char *line)
 		case MINMEA_SENTENCE_GGA: {
 
 			if (minmea_parse_gga(&frame_gga, line)) {
-				lat_f = minmea_tocoord(&frame_gga.latitude);
-				long_f = minmea_tocoord(&frame_gga.longitude);
 
-
-				asm volatile("NOP");
-				asm volatile("NOP");
-				asm volatile("NOP");
 
 			}
 			else {
@@ -177,7 +158,7 @@ int parse_sentence(char *line)
 				clock_time_t timezone_offset;
 
 				if( (frame_zda.time.hours == -1) || (clock_quality(-1)==GPS_TIME))
-									break;
+					break;
 
 				time.tm_hour = frame_zda.time.hours;
 				time.tm_min =  frame_zda.time.minutes;

@@ -475,7 +475,6 @@ memcpy(&data[1],payload,templen);
   #if NULLRDC_CONF_802154_AUTOACK_HW
   if(radio_status == STATE_BUSY_RX_AACK || radio_status == STATE_BUSY_TX_ARET) {
 	  PRINTF("RF231: TRX buffer unavailable: prep when %s\n", radio_status == STATE_BUSY_RX_AACK ? "rx" : "tx");
-	  asm volatile("NOP");
   #else
    if(radio_status == STATE_BUSY_RX || radio_status == STATE_BUSY_TX) {
 	   PRINTF("RF231: TRX buffer unavailable: prep when %s\n", radio_status == STATE_BUSY_RX? "rx" : "tx");

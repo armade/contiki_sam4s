@@ -73,7 +73,7 @@ extern mqtt_client_config_t *conf;
 //reading->descr -> value_json.%s
 static const char sensor_config_payload[] =	"{\"name\": \"%s %s\"," \
 										"\"state_topic\": \"Hass/common/%s/%s/state\"," \
-										"\"unit_of_measurement\": \"°C\","\
+										"\"unit_of_measurement\": \"%s\","\
 										"\"value_template\":\"{{ value_json.%s}}\" }";
 
 static const char sensor_config_topic[] = "Hass/sensor/%s%02x%02x%02x%02x%02x%02x/config";

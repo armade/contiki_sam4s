@@ -58,7 +58,6 @@ bool minmea_check(const char *sentence, bool strict)
     while (*sentence && *sentence != '*' && isprint((unsigned char) *sentence))
         checksum ^= *sentence++;
 
-    asm volatile("NOP");
     // If checksum is present...
     if (*sentence == '*') {
         // Extract checksum.
