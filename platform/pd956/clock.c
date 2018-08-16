@@ -7,7 +7,7 @@
 
 static volatile clock_time_t ticks;
 static volatile clock_time_t offset = 0;
-#define timezone clock_gpbr->timezone
+#define timezone_local clock_gpbr->timezone
 /* sleepseconds is the number of seconds sleeping since startup, available globally */
 clock_time_t sleepseconds;			// Holds whole seconds
 clock_time_t sleepticks = 0; 	// Holds ticks (less then 1 sec)
@@ -100,14 +100,17 @@ clock_time_t clock_get_unix_time(void)
 
 void clock_set_unix_timezone(clock_time_t zone)
 {
-	timezone = zone;
+	volatile clock_gpbr_t tmp = *clock_gpbr;
+		tmp.timezone = zone;
+		*clock_gpbr = tmp;
+	//timezone = zone;
 }
 /*
  * unix time as local time UTC + timezone
  */
 clock_time_t clock_get_unix_localtime(void)
 {
-	return clock_get_unix_time() + timezone;
+	return clock_get_unix_time() + timezone_local;
 }
 
 /// Interface to RTC so we can store/load time
@@ -248,7 +251,10 @@ static void Store_time_to_RTC(void *data)
 
 	rtc_settime(RTC,&timer);
 
-	clock_gpbr->RTC_valid = 0xA7;
+	volatile clock_gpbr_t tmp = *clock_gpbr;
+
+	tmp.RTC_valid = 0xA7;
+	*clock_gpbr = tmp;
 	// We are using the internal rc 32kHz. This is really bad so update it every 6 hour
 	// from the more accurate systimer.
 	// TODO: When we sleep we run on slow clock the most of the time making this pointless.
@@ -259,7 +265,9 @@ static void Store_time_to_RTC(void *data)
 static void Increment_stranum(void *data)
 {
 	if(clock_gpbr->stranum < 15){
-		clock_gpbr->stranum++;
+		volatile clock_gpbr_t tmp = *clock_gpbr;
+		tmp.stranum++;
+		*clock_gpbr = tmp;
 		if(clock_gpbr->stranum < 15) // if we reach absolute rock bottom there is no need to call this again.
 			ctimer_set(&stranum_timer, 1 * 60 * 60 * CLOCK_SECOND, Increment_stranum, NULL); // 1 hr interval
 	}
@@ -272,7 +280,9 @@ int clock_quality(int stranum_new)
 	else if((stranum_new < 0) || (stranum_new > 15) )
 		stranum_new = 15;
 
-	clock_gpbr->stranum = stranum_new;
+	volatile clock_gpbr_t tmp = *clock_gpbr;
+	tmp.stranum = stranum_new;
+	*clock_gpbr = tmp;
 	if(clock_gpbr->stranum < 15)
 		ctimer_set(&stranum_timer, 1 * 60 * 60 * CLOCK_SECOND, Increment_stranum, NULL); // 1 hr interval
 	return 1;
