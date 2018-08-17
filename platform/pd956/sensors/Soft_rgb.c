@@ -69,7 +69,7 @@ void TC2_Handler(void)
 /**
  * \brief Set value (0-255)
  */
-int
+static int
 value_RGB(uint8_t R,uint8_t G,uint8_t B, uint8_t brightness)
 {
 

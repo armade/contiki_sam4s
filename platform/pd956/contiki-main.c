@@ -77,9 +77,9 @@ int main()
 	}
 
 	// START
-#if defined(NODE_HTU21D) || defined(NODE_BMP280) || defined(NODE_LM73)
-	SoftI2CInit();
-#endif
+//#if defined(NODE_HTU21D) || defined(NODE_BMP280) || defined(NODE_LM73)
+//	SoftI2CInit();
+//#endif
 	flash_init_df();
 
 	// Don't start USB on endnodes

@@ -215,6 +215,7 @@ static int lm73_init(int type, int enable)
 	{
 
 		case SENSORS_HW_INIT:
+			SoftI2CInit();
 			if(lm73_Identification_Register() != 0x0190)
 				return SENSOR_STATUS_DISABLED;
 

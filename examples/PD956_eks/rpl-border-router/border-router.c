@@ -77,7 +77,7 @@ AUTOSTART_PROCESSES(&border_router_process);
 
 
 /*---------------------------------------------------------------------------*/
-static void
+/*static void
 print_local_addresses(void)
 {
   int i;
@@ -93,7 +93,7 @@ print_local_addresses(void)
       PRINTA("\n");
     }
   }
-}
+}*/
 /*---------------------------------------------------------------------------*/
 void
 request_prefix(void)
@@ -137,6 +137,7 @@ PROCESS_THREAD(border_router_process, ev, data)
  */
   prefix_set = 0;
   NETSTACK_MAC.off(0);
+  process_start(&httpd_simple_process, NULL);
 
   PROCESS_PAUSE();
 
@@ -147,9 +148,9 @@ PROCESS_THREAD(border_router_process, ev, data)
     request_prefix();
     PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
   }
-  process_start(&httpd_simple_process, NULL);
-  //ip64_init();
   process_start(&ntpd_process, NULL);
+  //ip64_init();
+
   /* Start the SLIP */
 /*  printf("Initiating SLIP with IP address is 42.10.0.7.\n");
 
@@ -162,7 +163,7 @@ PROCESS_THREAD(border_router_process, ev, data)
    */
   NETSTACK_MAC.off(1);
 
-#if DEBUG || 1
+#if DEBUG || 0
   print_local_addresses();
 #endif
 

@@ -47,6 +47,8 @@
 #include <stdint.h>
 #include <string.h>
 #include <stdio.h>
+
+#ifdef NODE_BMP280
 /*---------------------------------------------------------------------------*/
 #define DEBUG 0
 #if DEBUG
@@ -399,6 +401,7 @@ configure(int type, int enable)
 	uint8_t ID;
 	switch(type) {
 		case SENSORS_HW_INIT:
+			SoftI2CInit();
 			enabled = SENSOR_STATUS_INITIALISED;
 			init();
 			ID = SoftI2Cread_char_register(BMP280_I2C_ADDRESS, ADDR_PROD_ID);
@@ -451,3 +454,4 @@ status(int type)
 SENSORS_SENSOR(bmp_280_sensor, "BMP280", value, configure, status);
 /*---------------------------------------------------------------------------*/
 /** @} */
+#endif

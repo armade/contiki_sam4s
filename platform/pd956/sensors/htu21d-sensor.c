@@ -477,6 +477,7 @@ static int htu21_configure(int type, int enable)
 	switch(type)
 	{
 		case SENSORS_HW_INIT:
+			SoftI2CInit();
 			if(!htu21_is_connected())
 				return SENSOR_STATUS_DISABLED;
 

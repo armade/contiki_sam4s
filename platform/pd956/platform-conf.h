@@ -60,17 +60,17 @@ typedef struct{
 } tCalFactors;
 
 typedef struct {
-		unsigned char public_key[64];
-		  union {
-			   struct {
-					uint16_t typeBE;
-					uint8_t snlen;
-					unsigned char snr[20];
-					unsigned char modul[9];
-			   };
-			   unsigned char payloadfield_size_control[32];
-		  };
-		  unsigned char signature[64];
+	unsigned char public_key[64];
+	union {
+	   struct {
+			uint16_t typeBE;
+			uint8_t snlen;
+			unsigned char snr[20];
+			unsigned char modul[9];
+	   };
+	   unsigned char payloadfield_size_control[32];
+	};
+	unsigned char signature[64];
 }crt_t;
 
 typedef struct {
