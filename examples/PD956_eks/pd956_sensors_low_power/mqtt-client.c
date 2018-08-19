@@ -630,7 +630,7 @@ static void update_config(void)
 		return;
 	}
 
-	construct_configs();
+
 
 	if (construct_sub_topic() == 0)
 	{
@@ -645,7 +645,7 @@ static void update_config(void)
 		state = MQTT_CLIENT_STATE_CONFIG_ERROR;
 		return;
 	}
-
+	construct_configs();
 	/* Reset the counter */
 	seq_nr_value = 0;
 

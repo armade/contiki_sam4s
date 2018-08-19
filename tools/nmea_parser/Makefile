@@ -1,6 +1,6 @@
 CC=gcc
-CFLAGS=-c -Wall -MD
-LDFLAGS=
+CFLAGS=-c -Wall -MD -Wl,--no-as-needed
+LDFLAGS= -lm 
 
 SOURCES=$(shell find . -maxdepth 1 -name "*.c") 
 OBJECTS=$(SOURCES:.c=.o)
@@ -14,7 +14,7 @@ all: $(OBJECTS) $(EXECUTABLE)
 
 $(EXECUTABLE): $(OBJECTS)
 	@echo "ld $@" 
-	@$(CC) $(LDFLAGS) $(OBJECTS) $(INCLUDE) $(OPTIMIZE) -o $@
+	@$(CC)  $(OBJECTS) $(INCLUDE) $(OPTIMIZE) -o $@ $(LDFLAGS)
 
 %.o: %.c
 	@echo "cc $@"

@@ -42,9 +42,6 @@ struct minmea_sentence_zda frame_zda;
 
 int parse_sentence(char *line)
 {
-	uint8_t debug_buf[6];
-	snprintf(debug_buf,sizeof(debug_buf),line+1);
-	printf("%s\n\r",debug_buf);
 
 	switch (minmea_sentence_id(line, false)) {
 		case MINMEA_SENTENCE_RMC: {
@@ -197,7 +194,7 @@ void gpsd_put_char(uint8_t c)
 		}
 	}
 
-	if((c=='\n') && (buf[buf_nr][gpsd_index-2] == '\r') && start_delimiter_seen)
+	if((c=='\n') && start_delimiter_seen)
 	{
 		buf[buf_nr][gpsd_index++] = '\0';
 		pull_event(buf[buf_nr]);//process_post(PROCESS_BROADCAST, nmea_event, buf[buf_nr]);
