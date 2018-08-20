@@ -3,7 +3,10 @@
 #include "platform-conf.h"
 #include "compiler.h"
 #include "lib/sensors.h"
-#include "Soft_rgb.h"
+#include "Neo_Pixel_Ring.h"
+#include "usart.h"
+#include "gpio.h"
+#include "usart_spi.h"
 #include <stdint.h>
 
 #include "board-peripherals.h"
@@ -34,21 +37,16 @@ static int Sensor_status = SENSOR_STATUS_DISABLED;
  * _________________________________________________________________________
  * |g7|g6|g5|g4|g3|g2|g1|g0|r7|r6|r5|r4|r3|r2|r1|r0|b7|b6|b5|b4|b3|b2|b1|b0|
  *
- * 			___  t1
- * 0 code  |t0 |____|    t0 = 350ns +-150ns    t1 = 800ns +- 150ns
+ * 			__  t1
+ * 0 code  |t0|_____|    t0 = 350ns +-150ns    t1 = 800ns +- 150ns
  *
- * 			____ t1
- * 1 code  |t0  |__|     t0 = 700ns +-150ns    t1 = 600ns +- 150ns
+ * 			_____ t1
+ * 1 code  |t0   |__|     t0 = 700ns +-150ns    t1 = 600ns +- 150ns
  *
  *  			t0
  * ret code  |______|    t0 > 50us
  */
-typedef struct{
-	uint8_t green;
-	uint8_t red;
-	uint8_t blue;
-	uint8_t led_nr;
-}Led_element_t;
+
 
 uint8_t LED_chain[NR_OF_LEDS][3];
 
@@ -57,17 +55,17 @@ Neo_Pixel_Ring_sync()
 {
 	// TODO: Setup PDC
 	uint8_t led_cou,i;
-	uint32_t val
+	uint32_t val;
 
 	for(led_cou = 0; led_cou < NR_OF_LEDS; led_cou++)
 	{
-		val = (LED_chain[NR_OF_LEDS][0]<<16) | (LED_chain[NR_OF_LEDS][1]<<8) | (LED_chain[NR_OF_LEDS][2]<<0);
+		val = (LED_chain[led_cou][0]<<16) | (LED_chain[led_cou][1]<<8) | (LED_chain[led_cou][2]<<0);
 
 		for(i=24;i>0;i--){
 			if((val>>i)&1)
-				usart_spi_write_single(&USART0,0x1C); // write 1  (0xE0>>3)
+				usart_spi_write_single(USART0,0x1C); // write 1  (0xE0>>3)
 			else
-				usart_spi_write_single(&USART0,0x10); // write 0  (0x80>>3)
+				usart_spi_write_single(USART0,0x10); // write 0  (0x80>>3)
 		}
 	}
 	// The last bit is alway 0 -- Can't figure out
@@ -88,6 +86,7 @@ Neo_Pixel_Ring_set(int value)
 		LED_chain[LED->led_nr][1] = LED->red;
 		LED_chain[LED->led_nr][2] = LED->blue;
 	}
+	return 0;
 }
 /*---------------------------------------------------------------------------*/
 // Perhaps!!!.
@@ -119,8 +118,8 @@ configure_Neo_Pixel_Ring(void)
 	opt.channel_mode = US_MR_CHMODE_NORMAL;
 
 	/* Initialize the USART module as SPI master. */
-	usart_init_spi_master(&USART0, &opt, sysclk_get_peripheral_hz());
-	usart_enable_tx(&USART0);
+	usart_init_spi_master(USART0, &opt, sysclk_get_peripheral_hz());
+	usart_enable_tx(USART0);
 
 	return 1;
 }

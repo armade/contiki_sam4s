@@ -130,6 +130,13 @@ typedef struct MQTT_config_ele
 	char topic[64];
 	char arg[64 * 10];
 } MQTT_config_ele_t;
+
+typedef struct MQTT_sub_ele
+{
+	struct MQTT_sub_ele *next;
+	char topic[64];
+	void(* data_handler)(uint8_t *,uint16_t);
+} MQTT_sub_ele_t;
 /*---------------------------------------------------------------------------*/
 
 typedef enum{
@@ -165,7 +172,9 @@ typedef struct sensor_reading {
    */
   //char *component_type_config;
   char *component_topic_config;
+  char *component_topic_sub;
   MQTT_config_ele_t MQTT_config_ele;
+  MQTT_sub_ele_t MQTT_subscr_ele;
 } MQTT_sensor_reading_t;
 /*---------------------------------------------------------------------------*/
 /* Global configuration */

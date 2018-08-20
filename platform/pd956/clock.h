@@ -38,6 +38,7 @@ clock_time_t clock_get_unix_localtime(void);
 #define GPS_TIME		1
 #define PC_TIME			6
 #define RTC_TIME		8
+#define UNSYNC_TIME		16
 
 int clock_quality(int stranum_new);
 

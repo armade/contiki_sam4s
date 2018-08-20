@@ -1,5 +1,5 @@
 DEFINES+=PROJECT_CONF_H=\"project-conf.h\"
-CFLAGS += -DNODE_GPS=1  -DLOW_CLOCK=0
+CFLAGS += -DNODE_4_ch_relay=1  -DLOW_CLOCK=0
 
 all: pd956_sensor_low_power
 

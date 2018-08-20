@@ -18,9 +18,11 @@ static const char *clock_js[] = {
 "setInterval(drawClock, 1000);",
 "resize_canvas();",
 "drawClock();",
+
 "function degToRad(degree){",
 	"var factor = Math.PI/180;",
 	"return degree*factor;}",
+
 "function drawClock() {",
 	"var now = new Date();",
 	"var today = now.toDateString();",
@@ -29,10 +31,12 @@ static const char *clock_js[] = {
 	"var minutes = now.getMinutes();",
 	"var seconds = now.getSeconds();",
 	"var radius;",
+
 	"if(clock_canvas.height > clock_canvas.width)",
 		"radius = clock_canvas.width * 0.45; ",
 	"else ",
 		"radius = clock_canvas.height * 0.45;",
+
 	"ctx.strokeStyle = '#CfCfCf';",
 	"ctx.lineWidth = 17*radius/225;",
 	"ctx.shadowBlur = 25;",
@@ -59,13 +63,16 @@ static const char *clock_js[] = {
 	"ctx.font = getFont(radius);",
 	"ctx.fillStyle = 'silver';",
 	"ctx.fillText(time, clock_canvas.width-(radius+17)-65* radius/225,clock_canvas.height/2+35* radius/225);}",
+
 "function getFont(radius){",
 	"var size = 35* radius/225;",   // get font size based on current width
 	"return (size|0) + 'px Arial';}", // set font
+
 "function resize_canvas(){",
 	"clock_canvas = document.getElementById(\"ClockCanvas\");",
 	"clock_canvas.width  = window.innerWidth*0.895;",
-	"clock_canvas.height = window.innerHeight*0.25;}",
+	"clock_canvas.height = window.innerHeight*0.35;}",
+
 "</script>",
 NULL
 };

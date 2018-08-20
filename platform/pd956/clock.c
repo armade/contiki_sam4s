@@ -198,7 +198,7 @@ void Load_time_from_RTC(void)
 	if(clock_gpbr->RTC_valid == 0xA7)
 		clock_quality(clock_gpbr->stranum);
 	else
-		clock_quality(15);
+		clock_quality(UNSYNC_TIME);
 
 	clock_set_unix_time(Unix_time,0);
 	//ctimer_set(&rtc_timer, 1UL * 60UL * 60UL * CLOCK_SECOND, Store_time_to_RTC,
@@ -262,9 +262,9 @@ static void Store_time_to_RTC(void *data)
 
 static void Increment_stranum(void *data)
 {
-	if(clock_gpbr->stranum < 15){
+	if(clock_gpbr->stranum < UNSYNC_TIME){
 		Set_GPBR_val(stranum,tmp.stranum+1);
-		if(clock_gpbr->stranum < 15) // if we reach absolute rock bottom there is no need to call this again.
+		if(clock_gpbr->stranum < UNSYNC_TIME) // if we reach absolute rock bottom there is no need to call this again.
 			ctimer_set(&stranum_timer, 1 * 60 * 60 * CLOCK_SECOND, Increment_stranum, NULL); // 1 hr interval
 	}
 }

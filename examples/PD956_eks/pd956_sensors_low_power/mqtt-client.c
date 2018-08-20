@@ -90,51 +90,6 @@ LIST(MQTT_subscribe_list);
 LIST(MQTT_config_list);
 
 
-
-typedef struct MQTT_sub_ele
-{
-	struct MQTT_sub_ele *next;
-	char topic[BUFFER_SIZE];
-	void(* data_handler)(void *);
-} MQTT_sub_ele_t;
-
-#if 0
-#if defined(NODE_STEP_MOTOR) || defined(NODE_4_ch_relay)
-MQTT_config_ele_t MQTT_dht11_temperature_config;
-MQTT_config_ele_t MQTT_dht11_humidity_config;
-#endif
-#ifdef NODE_HTU21D
-MQTT_config_ele_t MQTT_htu21_temperature_config;
-MQTT_config_ele_t MQTT_htu21_humidity_config;
-MQTT_config_ele_t MQTT_CPU_internaltemp_config;
-#endif
-#ifdef NODE_STEP_MOTOR
-MQTT_config_ele_t MQTT_step_motor_config;
-MQTT_sub_ele_t MQTT_step_motor_sub_cmd;
-MQTT_sub_ele_t MQTT_step_motor_sub_tilt;
-#endif
-
-#ifdef NODE_BMP280
-MQTT_config_ele_t MQTT_bm280_temperature_config;
-MQTT_config_ele_t MQTT_bm280_pressure_config;
-MQTT_config_ele_t MQTT_CPU_internaltemp_config;
-#endif
-
-#ifdef NODE_GPS
-MQTT_config_ele_t MQTT_CPU_internaltemp_config;
-#endif
-#endif
-
-#ifdef NODE_4_ch_relay
-MQTT_sub_ele_t MQTT_ch4_relay1_sub_cmd;
-//MQTT_config_ele_t MQTT_ch4_relay1_config;
-MQTT_sub_ele_t MQTT_ch4_relay2_sub_cmd;
-//MQTT_config_ele_t MQTT_ch4_relay2_config;
-MQTT_sub_ele_t MQTT_ch4_relay3_sub_cmd;
-//MQTT_config_ele_t MQTT_ch4_relay3_config;
-MQTT_sub_ele_t MQTT_ch4_relay4_sub_cmd;
-//MQTT_config_ele_t MQTT_ch4_relay4_config;
-#endif
 static MQTT_sub_ele_t *subscribe_ele;
 MQTT_sub_ele_t MQTT_COMMON_NO_SLEEP_sub_cmd;
 MQTT_sub_ele_t MQTT_COMMON_RESET_sub_cmd;
@@ -182,7 +137,7 @@ void new_net_config(void)
 	mqtt_disconnect(&conn);
 }
 
-void pub_sleep_handler(void *payload)
+void pub_sleep_handler(uint8_t *payload, uint16_t len)
 {
 #if defined(NODE_GPS) || defined(NODE_4_ch_relay) || defined(NODE_HARD_LIGHT) || defined(NODE_LIGHT) || defined(NODE_STEP_MOTOR)
 	// these nodes can't sleep so i decide to ignore this command
@@ -194,37 +149,43 @@ void pub_sleep_handler(void *payload)
 #endif
 }
 
-void pub_reset_handler(void *payload)
+static struct ctimer reset_timer;
+static void
+reset_now(void *not_used){
+	asm volatile ("dmb 0xF":::"memory");
+	asm volatile ("isb 0xF":::"memory");
+	*((uint32_t *)0x400E1400) = 0xa500000D;
+}
+void pub_reset_handler(uint8_t *payload, uint16_t len)
 {
 	if(!memcmp(payload,"reset",5)){
-		asm volatile ("dmb 0xF":::"memory");
-		asm volatile ("isb 0xF":::"memory");
-		*((uint32_t *)0x400E1400) = 0xa500000D;
+		// Wait 5 sec before resetting, to allow broadcast
+		ctimer_set(&reset_timer, 5*CLOCK_SECOND, reset_now, NULL);
 	}
 }
 
-void pub_relay1_handler(void *payload)
+void pub_relay1_handler(uint8_t *payload, uint16_t len)
 {
 	if(!memcmp(payload,"ON",2))
 		ch4_relay_PD956.value(CH1_RELAY_ON);
 	else if(!memcmp(payload,"OFF",3))
 		ch4_relay_PD956.value(CH1_RELAY_OFF);
 }
-void pub_relay2_handler(void *payload)
+void pub_relay2_handler(uint8_t *payload, uint16_t len)
 {
 	if(!memcmp(payload,"ON",2))
 		ch4_relay_PD956.value(CH2_RELAY_ON);
 	else if(!memcmp(payload,"OFF",3))
 		ch4_relay_PD956.value(CH2_RELAY_OFF);
 }
-void pub_relay3_handler(void *payload)
+void pub_relay3_handler(uint8_t *payload, uint16_t len)
 {
 	if(!memcmp(payload,"ON",2))
 		ch4_relay_PD956.value(CH3_RELAY_ON);
 	else if(!memcmp(payload,"OFF",3))
 		ch4_relay_PD956.value(CH3_RELAY_OFF);
 }
-void pub_relay4_handler(void *payload)
+void pub_relay4_handler(uint8_t *payload, uint16_t len)
 {
 	if(!memcmp(payload,"ON",2))
 		ch4_relay_PD956.value(CH4_RELAY_ON);
@@ -250,7 +211,7 @@ static void pub_handler(const char *topic, uint16_t topic_len,
 	while (subscribe_ele != NULL){
 		if(!memcmp((void *)subscribe_ele->topic,(void *)topic,topic_len)){
 			if(subscribe_ele->data_handler)
-				subscribe_ele->data_handler((void *)chunk);
+				subscribe_ele->data_handler((uint8_t *)chunk,chunk_len);
 			/*if(!memcmp(chunk,"wake",4))
 				no_sleep_allowed = 1;
 			else if(!memcmp((void *)chunk,"sleep",5))
@@ -399,138 +360,6 @@ static int construct_configs(void)
 
 
 	//--------------------------------------------------------------------------------------------
-
-#if 0
-	//--------------------------------------------------------------------------------------------
-#ifdef NODE_HTU21D
-	snprintf(MQTT_htu21_temperature_config.topic,
-			sizeof(MQTT_htu21_temperature_config.topic),
-			"Hass/%s/%s%02x%02x%02x%02x%02x%02x/config", "sensor","sensorTemperature",
-			linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1],
-			linkaddr_node_addr.u8[2], linkaddr_node_addr.u8[5],
-			linkaddr_node_addr.u8[6], linkaddr_node_addr.u8[7]);
-
-
-	snprintf(MQTT_htu21_temperature_config.arg,
-			sizeof(MQTT_htu21_temperature_config.arg),
-			"{\"name\": \"%s Temperature\","
-			" \"state_topic\": \"Hass/%s/%s/%s/state\","
-			" \"unit_of_measurement\": \"C\","
-			" \"value_template\": \"{{ value_json.%s}}\" }",
-			conf->Username, "common", client_id, conf->Username, "Temperature"); // Last must be equal reading->descr
-
-	list_add(MQTT_config_list, &MQTT_htu21_temperature_config);
-	//--------------------------------------------------------------------------------------------
-	snprintf(MQTT_htu21_humidity_config.topic,
-				sizeof(MQTT_htu21_temperature_config.topic),
-				"Hass/%s/%s%02x%02x%02x%02x%02x%02x/config", "sensor","sensorHumidity",
-				linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1],
-				linkaddr_node_addr.u8[2], linkaddr_node_addr.u8[5],
-				linkaddr_node_addr.u8[6], linkaddr_node_addr.u8[7]);
-
-	snprintf(MQTT_htu21_humidity_config.arg,
-			sizeof(MQTT_htu21_humidity_config.arg),
-			"{\"name\": \"%s Humidity\","
-			" \"state_topic\": \"Hass/%s/%s/%s/state\","
-			" \"unit_of_measurement\": \"%%\","
-			" \"value_template\": \"{{ value_json.%s}}\" }",
-			conf->Username, "common", client_id, conf->Username, "Humidity"); // Last must be equal reading->descr
-
-	list_add(MQTT_config_list, &MQTT_htu21_humidity_config);
-#endif
-
-#ifdef NODE_BMP280
-	snprintf(MQTT_bm280_temperature_config.topic,
-			sizeof(MQTT_bm280_temperature_config.topic),
-			"Hass/%s/%s%02x%02x%02x%02x%02x%02x/config", "sensor","sensorTemperature",
-			linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1],
-			linkaddr_node_addr.u8[2], linkaddr_node_addr.u8[5],
-			linkaddr_node_addr.u8[6], linkaddr_node_addr.u8[7]);
-
-
-	snprintf(MQTT_bm280_temperature_config.arg,
-			sizeof(MQTT_bm280_temperature_config.arg),
-			"{\"name\": \"%s Temperature\","
-			" \"state_topic\": \"Hass/%s/%s/%s/state\","
-			" \"unit_of_measurement\": \"C\","
-			" \"value_template\": \"{{ value_json.%s}}\" }",
-			conf->Username, "common", client_id, conf->Username, "Temperature"); // Last must be equal reading->descr
-
-	list_add(MQTT_config_list, &MQTT_bm280_temperature_config);
-	//--------------------------------------------------------------------------------------------
-	snprintf(MQTT_bm280_pressure_config.topic,
-				sizeof(MQTT_bm280_pressure_config.topic),
-				"Hass/%s/%s%02x%02x%02x%02x%02x%02x/config", "sensor","sensorPressure",
-				linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1],
-				linkaddr_node_addr.u8[2], linkaddr_node_addr.u8[5],
-				linkaddr_node_addr.u8[6], linkaddr_node_addr.u8[7]);
-
-	snprintf(MQTT_bm280_pressure_config.arg,
-			sizeof(MQTT_bm280_pressure_config.arg),
-			"{\"name\": \"%s Pressure\","
-			" \"state_topic\": \"Hass/%s/%s/%s/state\","
-			" \"unit_of_measurement\": \"hPa\","
-			" \"value_template\": \"{{ value_json.%s}}\" }",
-			conf->Username, "common", client_id, conf->Username, "Pressure"); // Last must be equal reading->descr
-
-	list_add(MQTT_config_list, &MQTT_bm280_pressure_config);
-#endif
-
-#ifdef NODE_4_ch_relay
-	snprintf(MQTT_ch4_relay1_config.topic,
-					sizeof(MQTT_ch4_relay1_config.topic),
-					"Hass/%s/%s%02x%02x%02x%02x%02x%02x/config", "switch","relay1",
-					linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1],
-					linkaddr_node_addr.u8[2], linkaddr_node_addr.u8[5],
-					linkaddr_node_addr.u8[6], linkaddr_node_addr.u8[7]);
-
-		snprintf(MQTT_ch4_relay1_config.arg,
-				sizeof(MQTT_ch4_relay1_config.arg),
-						"{\"name\": \"%s %s\"," \
-						"\"state_topic\": \"Hass/common/%s/%s/state\"," \
-						"\"value_template\":\"{{ value_json.%s}}\"," \
-						"\"command_topic\": \"Hass/switch/%s/%s/%s/set\"}",
-				conf->Username,"relay1",
-				client_id, conf->Username, "relay1",
-				client_id,conf->Username, "relay1");
-
-		list_add(MQTT_config_list, &MQTT_ch4_relay1_config);
-#endif
-	//--------------------------------------------------------------------------------------------
-/*
-	snprintf(MQTT_step_motor_config.topic, sizeof(MQTT_step_motor_config.topic),
-			"Hass/%s/%s/%s/%s/config", "cover", client_id, conf->Username,
-			"Step-Position");
-
-	snprintf(MQTT_step_motor_config.arg, sizeof(MQTT_step_motor_config.arg),
-			"{\"device_class\": \"cover\","
-					"\"name\": \"%s Cover\","
-					"\"command_topic\": \"Hass/%s/%s/%s/%s/set\","
-					"\"state_topic\": \"Hass/%s/%s/%s/%s/state\","
-					"\"retain\": true,"
-					"\"payload_open\": \"OPEN\","
-					"\"payload_close\": \"CLOSE\","
-					"\"payload_stop\": \"STOP\","
-					"\"state_open\": \"open\","
-					"\"state_closed\": \"closed\","
-					//"\"payload_available\": \"online\","
-					//"\"payload_not_available\": \"offline\","
-					"\"value_template\": \"{{ value_json.%s}}\","
-					"\"tilt_command_topic\": \"Hass/%s/%s/%s/%s/tilt\","
-					"\"tilt_status_topic\": \"Hass/%s/%s/%s/%s/tilt-state\","
-					"\"tilt_min\": 0,"
-					"\"tilt_max\": 4096,"
-					"\"tilt_closed_value\": 70,"
-					"\"tilt_opened_value\": 4000,"
-					" }", conf->Username, "cover", client_id, conf->Username,
-			"Step-Position", "cover", client_id, conf->Username,
-			"Step-Position", "Step-Position", "cover", client_id,
-			conf->Username, "Step-Position", "cover", client_id, conf->Username,
-			"Step-Position"); // Last must be equal reading->descr
-
-	list_add(MQTT_config_list, &MQTT_step_motor_config);*/
-
-#endif
 	return 1;
 }
 //--------------------------------------------------------------------------------------------
@@ -550,6 +379,20 @@ static int construct_sub_topic(void)
 	MQTT_COMMON_RESET_sub_cmd.data_handler = pub_reset_handler;
 	list_add(MQTT_subscribe_list, &MQTT_COMMON_RESET_sub_cmd);
 
+	for (reading = MQTT_sensor_first(); reading != NULL; reading = reading->next)
+	{
+		if(reading->component_topic_sub == NULL)
+			continue;
+
+		snprintf(reading->MQTT_config_ele.topic,sizeof(reading->MQTT_config_ele.topic),
+							reading->component_topic_sub,
+							client_id, conf->Username, reading->descr);
+
+		list_add(MQTT_subscribe_list, &reading->MQTT_config_ele);
+	}
+
+
+#if 0
 #ifdef NODE_4_ch_relay
 
 	snprintf(MQTT_ch4_relay1_sub_cmd.topic,
@@ -577,6 +420,7 @@ static int construct_sub_topic(void)
 	list_add(MQTT_subscribe_list, &MQTT_ch4_relay4_sub_cmd);
 
 
+#endif
 #endif
 
 /*

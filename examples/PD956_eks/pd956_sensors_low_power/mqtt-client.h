@@ -105,6 +105,12 @@ static const char switch_config_payload[] = "{\"name\": \"%s %s\"," \
 				"\"command_topic\": \"Hass/switch/%s/%s/%s/set\"}";
 
 static const char switch_config_topic[] = "Hass/switch/%s%02x%02x%02x%02x%02x%02x/config";
+static const char switch_sub_topic[] = "Hass/switch/%s/%s/%s/set";
+
+void pub_relay1_handler(uint8_t *payload, uint16_t len);
+void pub_relay2_handler(uint8_t *payload, uint16_t len);
+void pub_relay3_handler(uint8_t *payload, uint16_t len);
+void pub_relay4_handler(uint8_t *payload, uint16_t len);
 /*---------------------------------------------------------------------------*/
 #endif /* MQTT_CLIENT_H_ */
 /*---------------------------------------------------------------------------*/

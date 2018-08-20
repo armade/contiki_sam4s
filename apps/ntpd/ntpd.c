@@ -220,8 +220,10 @@ PROCESS_THREAD(ntpd_process, ev, data)
 			else
 				etimer_set(&Send_NTP_request_timer, SEND_INTERVAL * CLOCK_SECOND/stranum_val); // 1hr - 4min
 		}else if(etimer_expired(&Update_parrent_timer)){
-			//Send_NTP_time_to_parent(&ipaddr);
-			//etimer_set(&Update_parrent_timer, SEND_INTERVAL * CLOCK_SECOND * (stranum_val/15));
+#ifndef NODE_ROUTER
+			Send_NTP_time_to_parent(&ipaddr);
+			etimer_set(&Update_parrent_timer, SEND_INTERVAL * CLOCK_SECOND * (stranum_val/15));
+#endif
 		}
 		
 	}

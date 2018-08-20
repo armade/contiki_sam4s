@@ -21,7 +21,8 @@ PLATFORM_SENSOR_DRIVER = 	ADC_temp.c \
 							Hard_rgb.c \
 							htu21d-sensor.c \
 							GPS-sensor.c\
-							xmem.c
+							xmem.c \
+							Neo_Pixel_Ring.c
 							
 PLATFORM_IO_DRIVER = i2csoft.c \
 					cfs-coffee.c \
