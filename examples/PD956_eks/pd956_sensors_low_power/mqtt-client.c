@@ -384,11 +384,11 @@ static int construct_sub_topic(void)
 		if(reading->component_topic_sub == NULL)
 			continue;
 
-		snprintf(reading->MQTT_config_ele.topic,sizeof(reading->MQTT_config_ele.topic),
+		snprintf(reading->MQTT_subscr_ele.topic,sizeof(reading->MQTT_subscr_ele.topic),
 							reading->component_topic_sub,
 							client_id, conf->Username, reading->descr);
 
-		list_add(MQTT_subscribe_list, &reading->MQTT_config_ele);
+		list_add(MQTT_subscribe_list, &reading->MQTT_subscr_ele);
 	}
 
 
