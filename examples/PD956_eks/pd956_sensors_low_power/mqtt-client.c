@@ -166,10 +166,13 @@ void pub_reset_handler(uint8_t *payload, uint16_t len)
 
 void pub_relay1_handler(uint8_t *payload, uint16_t len)
 {
+	//TODO: check len so payload ONLINE dos'nt turn on
 	if(!memcmp(payload,"ON",2))
 		ch4_relay_PD956.value(CH1_RELAY_ON);
 	else if(!memcmp(payload,"OFF",3))
 		ch4_relay_PD956.value(CH1_RELAY_OFF);
+
+	process_post(PROCESS_BROADCAST, Trig_sensors, NULL);
 }
 void pub_relay2_handler(uint8_t *payload, uint16_t len)
 {
@@ -177,6 +180,8 @@ void pub_relay2_handler(uint8_t *payload, uint16_t len)
 		ch4_relay_PD956.value(CH2_RELAY_ON);
 	else if(!memcmp(payload,"OFF",3))
 		ch4_relay_PD956.value(CH2_RELAY_OFF);
+
+	process_post(PROCESS_BROADCAST, Trig_sensors, NULL);
 }
 void pub_relay3_handler(uint8_t *payload, uint16_t len)
 {
@@ -184,6 +189,8 @@ void pub_relay3_handler(uint8_t *payload, uint16_t len)
 		ch4_relay_PD956.value(CH3_RELAY_ON);
 	else if(!memcmp(payload,"OFF",3))
 		ch4_relay_PD956.value(CH3_RELAY_OFF);
+
+	process_post(PROCESS_BROADCAST, Trig_sensors, NULL);
 }
 void pub_relay4_handler(uint8_t *payload, uint16_t len)
 {
@@ -191,6 +198,8 @@ void pub_relay4_handler(uint8_t *payload, uint16_t len)
 		ch4_relay_PD956.value(CH4_RELAY_ON);
 	else if(!memcmp(payload,"OFF",3))
 		ch4_relay_PD956.value(CH4_RELAY_OFF);
+
+	process_post(PROCESS_BROADCAST, Trig_sensors, NULL);
 }
 
 static void pub_handler(const char *topic, uint16_t topic_len,
@@ -346,6 +355,17 @@ static int construct_configs(void)
 				break;
 
 			case binary_sensor_class:
+
+				snprintf(reading->MQTT_config_ele.arg, sizeof(reading->MQTT_config_ele.arg),
+									"{\"name\": \"%s %s\","
+									"\"state_topic\": \"%s\","
+									"\"device_class\": \"%s\","
+									"\"value_template\":\"{{ value_json.%s}}\",}",
+									conf->Username,reading->descr, 		//name
+									pub_topic, 							//state_topic
+									DEVICE_CLASS_lookup[reading->device_class],
+									reading->descr);						//value_template
+
 				break;
 
 			case light_class:

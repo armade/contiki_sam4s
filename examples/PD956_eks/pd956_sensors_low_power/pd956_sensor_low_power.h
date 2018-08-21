@@ -175,6 +175,7 @@ typedef struct sensor_reading {
   char *component_topic_sub;
   MQTT_config_ele_t MQTT_config_ele;
   MQTT_sub_ele_t MQTT_subscr_ele;
+  DEVICE_CLASS_t device_class;
 } MQTT_sensor_reading_t;
 /*---------------------------------------------------------------------------*/
 /* Global configuration */

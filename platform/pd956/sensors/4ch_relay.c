@@ -96,14 +96,17 @@ relay_init(int type, int enable)
 	switch(type) {
 
 		case SENSORS_HW_INIT:
-			// Enable PIO to controle the pin
+			pio_set_output(PIOA, CH1_PIN | CH2_PIN | CH3_PIN | CH4_PIN,
+						1, 0, 0);
+			/*
+			// Enable PIO to control the pin
 			PIOA->PIO_PER  = CH1_PIN | CH2_PIN | CH3_PIN | CH4_PIN;
 			// Output and high
 			PIOA->PIO_OER  = CH1_PIN | CH2_PIN | CH3_PIN | CH4_PIN;
 			PIOA->PIO_SODR = CH1_PIN | CH2_PIN | CH3_PIN | CH4_PIN;
-			// Pullup eneble
+			// Pullup enable
 			PIOA->PIO_PUER = CH1_PIN | CH2_PIN | CH3_PIN | CH4_PIN;
-
+			 */
 			enable = SENSOR_STATUS_INITIALISED;
 			break;
 
@@ -113,10 +116,10 @@ relay_init(int type, int enable)
 
 			if(enable) {// Enable the sensor
 				sensor_status = SENSOR_STATUS_READY;
-
+				ctimer_set(&switch_timer, SENSOR_SWITCH_DELAY, notify_ready, NULL);
 			} else {// Disable the sensor
 				sensor_status = SENSOR_STATUS_INITIALISED;
-				PIOA->PIO_SODR = CH1_PIN | CH2_PIN | CH3_PIN | CH4_PIN;
+				//PIOA->PIO_SODR = CH1_PIN | CH2_PIN | CH3_PIN | CH4_PIN;
 			}
 			break;
 	}

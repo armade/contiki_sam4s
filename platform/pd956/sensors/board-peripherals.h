@@ -55,7 +55,7 @@
 #endif
 
 #ifdef NODE_GPS
-#define SENSOR_STRING 		"NODE_GPS"
+#define SENSOR_STRING 		"GPS_mc1010"
 #endif
 /*---------------------------------------------------------------------------*/
 #endif /* BOARD_PERIPHERALS_H_ */

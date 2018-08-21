@@ -110,7 +110,7 @@ static int state;
  * a POST request. We maintain a global lock which is either NULL or points
  * to the http conn which currently has the lock
  */
-static struct httpd_state *lock;
+static struct httpd_state *http_lock;
 /*---------------------------------------------------------------------------*/
 PROCESS(httpd_simple_process, "CC26XX Web Server");
 /*---------------------------------------------------------------------------*/
@@ -1268,7 +1268,7 @@ PT_THREAD(generate_hard_light_config(struct httpd_state *s))
 static
 PT_THREAD(generate_relay4_config(struct httpd_state *s))
 {
-	int i = 0;
+	static int i = 0;
   PT_BEGIN(&s->generate_pt);
 
   /* Generate top matter (doctype, title, nav links etc) */
@@ -1347,16 +1347,16 @@ PT_THREAD(generate_relay4_config(struct httpd_state *s))
 static void
 lock_obtain(struct httpd_state *s)
 {
-  if(lock == NULL) {
-    lock = s;
+  if(http_lock == NULL) {
+    http_lock = s;
   }
 }
 /*---------------------------------------------------------------------------*/
 static void
 lock_release(struct httpd_state *s)
 {
-  if(lock == s) {
-    lock = NULL;
+  if(http_lock == s) {
+    http_lock = NULL;
   }
 }
 /*---------------------------------------------------------------------------*/
@@ -1654,10 +1654,10 @@ PT_THREAD(handle_input(struct httpd_state *s))
     }
 
     if(s->return_code == RETURN_CODE_OK) {
-      /* Acceptable Content Length. Try to obtain a lock */
+      /* Acceptable Content Length. Try to obtain a http_lock */
       lock_obtain(s);
 
-      if(lock == s) {
+      if(http_lock == s) {
         state = PARSE_POST_STATE_INIT;
       } else {
         s->return_code = RETURN_CODE_SU;
@@ -1665,7 +1665,7 @@ PT_THREAD(handle_input(struct httpd_state *s))
     }
 
     /* Parse the message body, unless we have detected an error. */
-    while(s->content_length > 0 && lock == s &&
+    while(s->content_length > 0 && http_lock == s &&
           s->return_code == RETURN_CODE_OK) {
       PSOCK_READBUF_LEN(&s->sin, s->content_length);
       s->content_length -= PSOCK_DATALEN(&s->sin);

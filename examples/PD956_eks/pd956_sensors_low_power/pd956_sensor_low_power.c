@@ -87,7 +87,7 @@ LIST(MQTT_sensor_list);
 /*---------------------------------------------------------------------------*/
 /* The objects representing sensors used in this demo */
 
-#define DEMO_SENSOR2(name,description,unit,type_def,HASS_CLASS,config_topic,sub_topic,sub_handler) \
+#define DEMO_SENSOR2(name,description,unit,type_def,HASS_CLASS,config_topic,sub_topic,sub_handler,class) \
 		MQTT_sensor_reading_t name = {\
 			.next = NULL,\
 			.raw = 0,\
@@ -102,52 +102,53 @@ LIST(MQTT_sensor_list);
 			.component_topic_config = (char *)config_topic,\
 			.component_topic_sub = (char *)sub_topic,\
 			.MQTT_subscr_ele.data_handler = sub_handler,\
+			.device_class =class,\
 		};
 
 /*sensors */
-DEMO_SENSOR2(temp_reading,					"CPUtemperature",UNIT_TEMP,		PD956_WEB_DEMO_SENSOR_ADC,				sensor_class,		sensor_config_topic,NULL,NULL);
+DEMO_SENSOR2(temp_reading,					"CPUtemperature",UNIT_TEMP,		PD956_WEB_DEMO_SENSOR_ADC,				sensor_class,		sensor_config_topic,NULL,NULL,None);
 
 
 #ifdef step_motor_reading
-DEMO_SENSOR2(temp_reading,					"Step_Position",UNIT_STEP,		PD956_WEB_DEMO_SENSOR_STEP,				cover_class,		NULL,NULL,NULL);
+DEMO_SENSOR2(temp_reading,					"Step_Position",UNIT_STEP,		PD956_WEB_DEMO_SENSOR_STEP,				cover_class,		NULL,NULL,NULL,None);
 #endif
 
 #ifdef NODE_LIGHT
-DEMO_SENSOR2(soft_RGB_ctrl_sensor_reading,	"RGB_light",	UNIT_NONE,		PD956_WEB_DEMO_SENSOR_RGB,				light_class,		sensor_config_topic,NULL,NULL);
+DEMO_SENSOR2(soft_RGB_ctrl_sensor_reading,	"RGB_light",	UNIT_NONE,		PD956_WEB_DEMO_SENSOR_RGB,				light_class,		sensor_config_topic,NULL,NULL,None);
 #endif
 
 #ifdef NODE_HARD_LIGHT
-DEMO_SENSOR2(hard_RGB_ctrl_sensor_reading,	"RGB_light",	UNIT_NONE,		PD956_WEB_DEMO_SENSOR_RGB,				light_class,		sensor_config_topic,NULL,NULL);
+DEMO_SENSOR2(hard_RGB_ctrl_sensor_reading,	"RGB_light",	UNIT_NONE,		PD956_WEB_DEMO_SENSOR_RGB,				light_class,		sensor_config_topic,NULL,NULL,None);
 #endif
 
-#if defined(NODE_STEP_MOTOR) || defined(NODE_4_ch_relay) || defined(NODE_DHT11)
-DEMO_SENSOR2(dht11_temperature_reading,		"Temperature",	UNIT_TEMP,		PD956_WEB_DEMO_SENSOR_DHT11_TEMP,		sensor_class,		sensor_config_topic,NULL,NULL);
-DEMO_SENSOR2(dht11_humidity_reading,		"Humidity",		UNIT_HUMIDITY,	PD956_WEB_DEMO_SENSOR_DHT11_HUMIDITY,	sensor_class, 		sensor_config_topic,NULL,NULL);
+#ifdef NODE_DHT11
+DEMO_SENSOR2(dht11_temperature_reading,		"Temperature",	UNIT_TEMP,		PD956_WEB_DEMO_SENSOR_DHT11_TEMP,		sensor_class,		sensor_config_topic,NULL,NULL,None);
+DEMO_SENSOR2(dht11_humidity_reading,		"Humidity",		UNIT_HUMIDITY,	PD956_WEB_DEMO_SENSOR_DHT11_HUMIDITY,	sensor_class, 		sensor_config_topic,NULL,NULL,None);
 #endif
 
 #ifdef NODE_BMP280
-DEMO_SENSOR2(bmp_280_sensor_press_reading,	"Pressure",		UNIT_PRES,		PD956_WEB_DEMO_SENSOR_BMP280_PRES,		sensor_class,		sensor_config_topic,NULL,NULL);
-DEMO_SENSOR2(bmp_280_sensor_temp_reading,	"Temperature",	UNIT_TEMP,		PD956_WEB_DEMO_SENSOR_BMP280_TEMP,		sensor_class,		sensor_config_topic,NULL,NULL);
+DEMO_SENSOR2(bmp_280_sensor_press_reading,	"Pressure",		UNIT_PRES,		PD956_WEB_DEMO_SENSOR_BMP280_PRES,		sensor_class,		sensor_config_topic,NULL,NULL,None);
+DEMO_SENSOR2(bmp_280_sensor_temp_reading,	"Temperature",	UNIT_TEMP,		PD956_WEB_DEMO_SENSOR_BMP280_TEMP,		sensor_class,		sensor_config_topic,NULL,NULL,None);
 #endif
 
 #ifdef NODE_HTU21D
-DEMO_SENSOR2(HTU21D_sensor_humid_reading,	"Humidity",		UNIT_HUMIDITY,	PD956_WEB_DEMO_SENSOR_HTU21D_humid,		sensor_class,		sensor_config_topic,NULL,NULL);
-DEMO_SENSOR2(HTU21D_sensor_temp_reading,	"Temperature",	UNIT_TEMP,		PD956_WEB_DEMO_SENSOR_HTU21D_TEMP,		sensor_class,		sensor_config_topic,NULL,NULL);
+DEMO_SENSOR2(HTU21D_sensor_humid_reading,	"Humidity",		UNIT_HUMIDITY,	PD956_WEB_DEMO_SENSOR_HTU21D_humid,		sensor_class,		sensor_config_topic,NULL,NULL,None);
+DEMO_SENSOR2(HTU21D_sensor_temp_reading,	"Temperature",	UNIT_TEMP,		PD956_WEB_DEMO_SENSOR_HTU21D_TEMP,		sensor_class,		sensor_config_topic,NULL,NULL,None);
 #endif
 
 
 #ifdef NODE_GPS
-DEMO_SENSOR2(GPS_sensor_LONG_reading,		"Lon",			UNIT_ANGLE,		PD956_WEB_DEMO_SENSOR_GPS_LONG,			sensor_class,		sensor_config_topic,NULL,NULL);
-DEMO_SENSOR2(GPS_sensor_LAT_reading,		"Lat",			UNIT_ANGLE,		PD956_WEB_DEMO_SENSOR_GPS_LAT,			sensor_class,		sensor_config_topic,NULL,NULL);
-DEMO_SENSOR2(GPS_sensor_ALT_reading,		"Alt",			UNIT_DISTANCE,	PD956_WEB_DEMO_SENSOR_GPS_ALT,			sensor_class,		sensor_config_topic,NULL,NULL);
-DEMO_SENSOR2(GPS_sensor_SPEED_reading,		"spd",			UNIT_SPEED,		PD956_WEB_DEMO_SENSOR_GPS_SPEED,		sensor_class,		sensor_config_topic,NULL,NULL);
+DEMO_SENSOR2(GPS_sensor_LONG_reading,		"Lon",			UNIT_ANGLE,		PD956_WEB_DEMO_SENSOR_GPS_LONG,			sensor_class,		sensor_config_topic,NULL,NULL,None);
+DEMO_SENSOR2(GPS_sensor_LAT_reading,		"Lat",			UNIT_ANGLE,		PD956_WEB_DEMO_SENSOR_GPS_LAT,			sensor_class,		sensor_config_topic,NULL,NULL,None);
+DEMO_SENSOR2(GPS_sensor_ALT_reading,		"Alt",			UNIT_DISTANCE,	PD956_WEB_DEMO_SENSOR_GPS_ALT,			sensor_class,		sensor_config_topic,NULL,NULL,None);
+DEMO_SENSOR2(GPS_sensor_SPEED_reading,		"spd",			UNIT_SPEED,		PD956_WEB_DEMO_SENSOR_GPS_SPEED,		sensor_class,		sensor_config_topic,NULL,NULL,None);
 #endif
 
 #ifdef NODE_4_ch_relay
-DEMO_SENSOR2(NODE_4_ch_relay1_reading,		"relay1",		UNIT_NONE,		PD956_WEB_DEMO_SENSOR_RELAY1,			switch_class,		switch_config_topic,switch_sub_topic,pub_relay1_handler);
-DEMO_SENSOR2(NODE_4_ch_relay2_reading,		"relay2",		UNIT_NONE,		PD956_WEB_DEMO_SENSOR_RELAY2,			switch_class,		switch_config_topic,switch_sub_topic,pub_relay2_handler);
-DEMO_SENSOR2(NODE_4_ch_relay3_reading,		"relay3",		UNIT_NONE,		PD956_WEB_DEMO_SENSOR_RELAY3,			switch_class,		switch_config_topic,switch_sub_topic,pub_relay3_handler);
-DEMO_SENSOR2(NODE_4_ch_relay4_reading,		"relay4",		UNIT_NONE,		PD956_WEB_DEMO_SENSOR_RELAY4,			switch_class,		switch_config_topic,switch_sub_topic,pub_relay4_handler);
+DEMO_SENSOR2(NODE_4_ch_relay1_reading,		"relay1",		UNIT_NONE,		PD956_WEB_DEMO_SENSOR_RELAY1,			switch_class,		switch_config_topic,switch_sub_topic,pub_relay1_handler,None);
+DEMO_SENSOR2(NODE_4_ch_relay2_reading,		"relay2",		UNIT_NONE,		PD956_WEB_DEMO_SENSOR_RELAY2,			switch_class,		switch_config_topic,switch_sub_topic,pub_relay2_handler,None);
+DEMO_SENSOR2(NODE_4_ch_relay3_reading,		"relay3",		UNIT_NONE,		PD956_WEB_DEMO_SENSOR_RELAY3,			switch_class,		switch_config_topic,switch_sub_topic,pub_relay3_handler,None);
+DEMO_SENSOR2(NODE_4_ch_relay4_reading,		"relay4",		UNIT_NONE,		PD956_WEB_DEMO_SENSOR_RELAY4,			switch_class,		switch_config_topic,switch_sub_topic,pub_relay4_handler,None);
 #endif
 
 
@@ -360,7 +361,7 @@ get_step_reading(void)
 }
 #endif
 
-#if defined(NODE_STEP_MOTOR) || defined(NODE_4_ch_relay) || defined(NODE_4_ch_relay)
+#ifdef NODE_DHT11
 static void
 get_dht11_temperature_reading(void)
 {
@@ -647,7 +648,7 @@ static void get_relay_reading()
 		}
 	}
 
-	SENSORS_DEACTIVATE(GPS_sensor);
+	SENSORS_DEACTIVATE(ch4_relay_PD956);
 }
 #endif
 /*---------------------------------------------------------------------------*/
@@ -676,7 +677,7 @@ static void init_sensors(void)
 	snprintf(hard_RGB_sensor_reading.converted, SENSOR_CONVERTED_LEN, "\"N/A\"");
 #endif
 
-#if defined(NODE_4_ch_relay) || defined(NODE_4_ch_relay)
+#ifdef NODE_DHT11
 	list_add(MQTT_sensor_list, &dht11_temperature_reading);
 	list_add(MQTT_sensor_list, &dht11_humidity_reading);
 	snprintf(dht11_temperature_reading.converted, SENSOR_CONVERTED_LEN, "\"N/A\"");
@@ -812,7 +813,7 @@ PROCESS_THREAD(PD956_MAIN_process, ev, data)
 			sensor_busy &= ~(1ul<<PD956_WEB_DEMO_SENSOR_RGB);
 #endif
 
-#if defined(NODE_STEP_MOTOR) || defined(NODE_4_ch_relay) || defined(NODE_DHT11)
+#ifdef NODE_DHT11
 		} else if(ev == sensors_event && data == &dht11_sensor){
 			get_dht11_temperature_reading();
 			sensor_busy &= ~(1ul<<PD956_WEB_DEMO_SENSOR_DHT11_TEMP);
@@ -843,7 +844,7 @@ PROCESS_THREAD(PD956_MAIN_process, ev, data)
 #endif
 
 #ifdef NODE_4_ch_relay
-		} else if(ev == sensors_event && data == &GPS_sensor){
+		} else if(ev == sensors_event && data == &ch4_relay_PD956){
 			get_relay_reading();
 			sensor_busy &= ~(1ul << PD956_WEB_DEMO_SENSOR_RELAY1);
 			sensor_busy &= ~(1ul << PD956_WEB_DEMO_SENSOR_RELAY2);
