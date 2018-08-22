@@ -35,7 +35,7 @@ ifeq ($(PREFIX),)
 endif
 
 ifeq ($(UUID),)
- UUID = 12345678PD
+ UUID = 20346532PD
 endif
 
 CONTIKI_WITH_IPV6 = 1

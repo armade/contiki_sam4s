@@ -59,7 +59,7 @@ int main()
 
 	// Hotfix to program eeprom. Must be removed
 	get_eeprom(version, version_var);
-	if(version_var != 0x45)
+	if(version_var != 0x44)
 		Setup_EEPROM();
 
 	get_eeprom(masterpublic_key,masterpublic_key_eeprom);
@@ -142,7 +142,7 @@ void Setup_EEPROM(void)
 
 	EEPROM.PANID = IEEE802154_CONF_PANID;
 	EEPROM.channel = 26;
-	EEPROM.version = 0x45;
+	EEPROM.version = 0x44;
 
 	flash_read_unique_id(EEPROM.Flash_unique_id, 4);
 

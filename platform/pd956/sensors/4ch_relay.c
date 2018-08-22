@@ -96,6 +96,7 @@ relay_init(int type, int enable)
 	switch(type) {
 
 		case SENSORS_HW_INIT:
+			pio_set_input(PIOA,PIO_PA3 | PIO_PA28,0); // NB: pa3 and pa28 is connected to pa9 and pa10.
 			pio_set_output(PIOA, CH1_PIN | CH2_PIN | CH3_PIN | CH4_PIN,
 						1, 0, 0);
 			/*
