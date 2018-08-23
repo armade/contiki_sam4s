@@ -76,9 +76,15 @@ notify_ready(void *not_used)
 static int
 relay_state_value(int type)
 {
-	if((type > CH4_RELAY_OFF) || (type < CH1_RELAY_ON))
-		return -1;
+	// Status
+	if((type >= STATUS_CH1) && (type <= STATUS_CH4))
+		return (PIOA->PIO_ODSR & pin_array[type-10])?0:1; // Active low
 
+	// Input validate for set
+	if((type > CH4_RELAY_OFF) || (type < CH1_RELAY_ON))
+		return SENSOR_ERROR;
+
+	// set values
 	if(type&1)
 		PIOA->PIO_SODR = pin_array[(type-15)>>1];//pio_set_pin_group_high(PIOA,pin_array[type-1]); //RELAY_OFF
 	else
@@ -97,17 +103,8 @@ relay_init(int type, int enable)
 
 		case SENSORS_HW_INIT:
 			pio_set_input(PIOA,PIO_PA3 | PIO_PA28,0); // NB: pa3 and pa28 is connected to pa9 and pa10.
-			pio_set_output(PIOA, CH1_PIN | CH2_PIN | CH3_PIN | CH4_PIN,
-						1, 0, 0);
-			/*
-			// Enable PIO to control the pin
-			PIOA->PIO_PER  = CH1_PIN | CH2_PIN | CH3_PIN | CH4_PIN;
-			// Output and high
-			PIOA->PIO_OER  = CH1_PIN | CH2_PIN | CH3_PIN | CH4_PIN;
-			PIOA->PIO_SODR = CH1_PIN | CH2_PIN | CH3_PIN | CH4_PIN;
-			// Pullup enable
-			PIOA->PIO_PUER = CH1_PIN | CH2_PIN | CH3_PIN | CH4_PIN;
-			 */
+			pio_set_output(PIOA, CH1_PIN | CH2_PIN | CH3_PIN | CH4_PIN,	1, 0, 0);
+
 			enable = SENSOR_STATUS_INITIALISED;
 			break;
 
@@ -131,13 +128,13 @@ relay_init(int type, int enable)
 static int
 relay_status(int type)
 {
-	if(type == STATUS_STATE)
+	//if(type == STATUS_STATE)
 		return sensor_status;
 
-	if((type >= STATUS_CH1) && (type <= STATUS_CH4))
+	/*if((type >= STATUS_CH1) && (type <= STATUS_CH4))
 		return (PIOA->PIO_ODSR & pin_array[type-10])?0:1; // Active low
 
-	return SENSOR_ERROR;
+	return SENSOR_ERROR;*/
 }
 /*---------------------------------------------------------------------------*/
 SENSORS_SENSOR(ch4_relay_PD956, "4 Ch relay",relay_state_value, relay_init, relay_status);

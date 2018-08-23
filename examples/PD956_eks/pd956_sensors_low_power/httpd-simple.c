@@ -112,7 +112,7 @@ static int state;
  */
 static struct httpd_state *http_lock;
 /*---------------------------------------------------------------------------*/
-PROCESS(httpd_simple_process, "CC26XX Web Server");
+PROCESS(httpd_simple_process, "PD956 Web Server");
 /*---------------------------------------------------------------------------*/
 #define ISO_nl        0x0A
 #define ISO_space     0x20
@@ -673,22 +673,22 @@ PT_THREAD(generate_index(struct httpd_state *s))
      PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<legend>Internal clock</legend>"));
      PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<div class=\"legend1\">"));
      PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "d: %d/%d-%d       %d:%d:%d UTC",
-                         		 tb.tm_mday,
-     							 tb.tm_mon,
-     							 tb.tm_year,
-                                tb.tm_hour,
-     							 tb.tm_min,
-     							 tb.tm_sec));
+    		 	 tb.tm_mday,
+    		 	 tb.tm_mon,
+    		 	 tb.tm_year,
+    		 	 tb.tm_hour,
+    		 	 tb.tm_min,
+    		 	 tb.tm_sec));
      PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<br>"));
      clk = clock_get_unix_localtime();
      UnixtoRTC(&tb, clk);
      PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "d: %d/%d-%d       %d:%d:%d local",
-   							 tb.tm_mday,
-   							 tb.tm_mon,
-   							 tb.tm_year,
-   							 tb.tm_hour,
-   							 tb.tm_min,
-   							 tb.tm_sec));
+    		 	 tb.tm_mday,
+    		 	 tb.tm_mon,
+    		 	 tb.tm_year,
+    		 	 tb.tm_hour,
+    		 	 tb.tm_min,
+    		 	 tb.tm_sec));
 
      PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "</div></fieldset>"));
 

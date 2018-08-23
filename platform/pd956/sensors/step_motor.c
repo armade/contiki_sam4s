@@ -18,10 +18,10 @@
 #endif
 
 
-#define step1_GPIO            (PIO_PA6) //Conflict with button
-#define step2_GPIO            (PIO_PA8) //Conflict with RGB
-#define step3_GPIO            (PIO_PA9) //Conflict with RGB
-#define step4_GPIO            (PIO_PA10) //Conflict with RGB
+#define step1_GPIO            (PIO_PA6)
+#define step2_GPIO            (PIO_PA8)
+#define step3_GPIO            (PIO_PA9)
+#define step4_GPIO            (PIO_PA10)
 
 Pio *step_base = (Pio *)PIOA;
 
@@ -70,6 +70,8 @@ void driver_StepCounter(uint8_t dir)
 int
 configure_step(void)
 {
+	pio_set_input(PIOA,PIO_PA3 | PIO_PA28,0); // NB: pa3 and pa28 is connected to pa9 and pa10.
+
 	// Enable PIO to controle the pin
 	step_base->PIO_PER  = step1_GPIO | step2_GPIO | step3_GPIO | step4_GPIO;
 	// Output and low

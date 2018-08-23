@@ -68,7 +68,8 @@ PROCESS(PD956_MAIN_process, "PD956 MQTT");
  * ticks + a random interval between 0 and SENSOR_READING_RANDOM ticks
  */
 
-
+#define INSERT_TXT(x,y) memcpy(x,y,sizeof(y))
+#define INSERT_NA(x) 	INSERT_TXT(x,"\"N/A\"")
 
 /*---------------------------------------------------------------------------*/
 process_event_t MQTT_publish_sensor_data_event;
@@ -214,9 +215,9 @@ static uint8_t load_config()
 			if(web_demo_config.sensors_bitmap & (1 << reading->type)){
 				reading->publish = 1;
 			} else{
-				reading->publish = 1; // debug must be 0
-				snprintf(reading->converted, SENSOR_CONVERTED_LEN,
-						"\"N/A\"");
+				reading->publish = 0; // debug must be 0
+				INSERT_NA(reading->converted);
+				//snprintf(reading->converted, SENSOR_CONVERTED_LEN,"\"N/A\"");
 			}
 		}
 	} else{
@@ -300,7 +301,8 @@ static void get_temp_reading(void)
 			low = value - high * 1000;
 			snprintf(buf, SENSOR_CONVERTED_LEN, "%d.%d", high, low);
 		} else{
-			snprintf(buf, SENSOR_CONVERTED_LEN, "\"N/A\"");
+			INSERT_NA(buf);
+			//snprintf(buf, SENSOR_CONVERTED_LEN, "\"N/A\"");
 		}
 	}
 
@@ -329,7 +331,8 @@ get_RGB_reading(void)
 		}
 		else
 		{
-			snprintf(buf, SENSOR_CONVERTED_LEN, "\"N/A\"");
+			INSERT_NA(buf);
+			//snprintf(buf, SENSOR_CONVERTED_LEN, "\"N/A\"");
 		}
 	}
 }
@@ -355,7 +358,8 @@ get_step_reading(void)
 		}
 		else
 		{
-			snprintf(buf, SENSOR_CONVERTED_LEN, "\"N/A\"");
+			INSERT_NA(buf);
+			//snprintf(buf, SENSOR_CONVERTED_LEN, "\"N/A\"");
 		}
 	}
 }
@@ -381,7 +385,8 @@ get_dht11_temperature_reading(void)
 		}
 		else
 		{
-			snprintf(buf, SENSOR_CONVERTED_LEN,  "\"N/A\"");
+			INSERT_NA(buf);
+			//snprintf(buf, SENSOR_CONVERTED_LEN,  "\"N/A\"");
 		}
 	}
 
@@ -398,7 +403,8 @@ get_dht11_temperature_reading(void)
 		}
 		else
 		{
-			snprintf(buf, SENSOR_CONVERTED_LEN, "\"N/A\"");
+			INSERT_NA(buf);
+			//snprintf(buf, SENSOR_CONVERTED_LEN, "\"N/A\"");
 		}
 	}
 	SENSORS_DEACTIVATE(dht11_sensor);
@@ -428,7 +434,8 @@ get_bmp_reading()
 		}
 		else
 		{
-			snprintf(buf, SENSOR_CONVERTED_LEN, "\"N/A\"");
+			INSERT_NA(buf);
+			//snprintf(buf, SENSOR_CONVERTED_LEN, "\"N/A\"");
 		}
 	}
 
@@ -446,7 +453,8 @@ get_bmp_reading()
 		}
 		else
 		{
-			snprintf(buf, SENSOR_CONVERTED_LEN, "\"N/A\"");
+			INSERT_NA(buf);
+			//snprintf(buf, SENSOR_CONVERTED_LEN, "\"N/A\"");
 		}
 	}
 
@@ -475,7 +483,8 @@ static void get_HTU21D_reading()
 			low = value - high * 1000;
 			snprintf(buf, SENSOR_CONVERTED_LEN, "%d.%d", high, low);
 		} else{
-			snprintf(buf, SENSOR_CONVERTED_LEN, "\"N/A\"");
+			INSERT_NA(buf);
+			//snprintf(buf, SENSOR_CONVERTED_LEN, "\"N/A\"");
 		}
 	}
 
@@ -491,7 +500,8 @@ static void get_HTU21D_reading()
 			low = value - high * 1000;
 			snprintf(buf, SENSOR_CONVERTED_LEN, "%d.%d", high, low);
 		} else{
-			snprintf(buf, SENSOR_CONVERTED_LEN, "\"N/A\"");
+			INSERT_NA(buf);
+			//snprintf(buf, SENSOR_CONVERTED_LEN, "\"N/A\"");
 		}
 	}
 
@@ -521,7 +531,8 @@ static void get_GPS_reading()
 			low = (value - high) * 10000000;
 			snprintf(buf, SENSOR_CONVERTED_LEN, "%d.%.7d", high, low);
 		} else{
-			snprintf(buf, SENSOR_CONVERTED_LEN, "\"N/A\"");
+			INSERT_NA(buf);
+			//snprintf(buf, SENSOR_CONVERTED_LEN, "\"N/A\"");
 		}
 	}
 
@@ -537,7 +548,8 @@ static void get_GPS_reading()
 			low = (value - high) * 10000000;
 			snprintf(buf, SENSOR_CONVERTED_LEN, "%d.%.7d", high, low);
 		} else{
-			snprintf(buf, SENSOR_CONVERTED_LEN, "\"N/A\"");
+			INSERT_NA(buf);
+			//snprintf(buf, SENSOR_CONVERTED_LEN, "\"N/A\"");
 		}
 	}
 
@@ -553,7 +565,8 @@ static void get_GPS_reading()
 			low = (value - high) * 10000;
 			snprintf(buf, SENSOR_CONVERTED_LEN, "%d.%.4d", high, low);
 		} else{
-			snprintf(buf, SENSOR_CONVERTED_LEN, "\"N/A\"");
+			INSERT_NA(buf);
+			//snprintf(buf, SENSOR_CONVERTED_LEN, "\"N/A\"");
 		}
 	}
 
@@ -569,7 +582,8 @@ static void get_GPS_reading()
 			low = (value - high) * 10000;
 			snprintf(buf, SENSOR_CONVERTED_LEN, "%d.%d", high, low);
 		} else{
-			snprintf(buf, SENSOR_CONVERTED_LEN, "\"N/A\"");
+			INSERT_NA(buf);
+			//snprintf(buf, SENSOR_CONVERTED_LEN, "\"N/A\"");
 		}
 	}
 
@@ -592,11 +606,12 @@ static void get_relay_reading()
 			NODE_4_ch_relay1_reading.raw = ret;
 			memset(buf, 0, SENSOR_CONVERTED_LEN);
 			if(ret)
-				snprintf(buf, SENSOR_CONVERTED_LEN, "ON");
+				INSERT_TXT(buf,"\"ON\"");//snprintf(buf, SENSOR_CONVERTED_LEN, "\"ON\"");
 			else
-				snprintf(buf, SENSOR_CONVERTED_LEN, "OFF");
+				INSERT_TXT(buf,"\"OFF\"");//snprintf(buf, SENSOR_CONVERTED_LEN, "\"OFF\"");
 		} else{
-			snprintf(buf, SENSOR_CONVERTED_LEN, "\"N/A\"");
+			INSERT_NA(buf);
+			//snprintf(buf, SENSOR_CONVERTED_LEN, "\"N/A\"");
 		}
 	}
 
@@ -608,11 +623,12 @@ static void get_relay_reading()
 			NODE_4_ch_relay2_reading.raw = ret;
 			memset(buf, 0, SENSOR_CONVERTED_LEN);
 			if(ret)
-				snprintf(buf, SENSOR_CONVERTED_LEN, "ON");
+				INSERT_TXT(buf,"\"ON\"");//snprintf(buf, SENSOR_CONVERTED_LEN, "\"ON\"");
 			else
-				snprintf(buf, SENSOR_CONVERTED_LEN, "OFF");
+				INSERT_TXT(buf,"\"OFF\"");//snprintf(buf, SENSOR_CONVERTED_LEN, "\"OFF\"");
 		} else{
-			snprintf(buf, SENSOR_CONVERTED_LEN, "\"N/A\"");
+			INSERT_NA(buf);
+			//snprintf(buf, SENSOR_CONVERTED_LEN, "\"N/A\"");
 		}
 	}
 
@@ -624,11 +640,12 @@ static void get_relay_reading()
 			NODE_4_ch_relay3_reading.raw = ret;
 			memset(buf, 0, SENSOR_CONVERTED_LEN);
 			if(ret)
-				snprintf(buf, SENSOR_CONVERTED_LEN, "ON");
+				INSERT_TXT(buf,"\"ON\"");//snprintf(buf, SENSOR_CONVERTED_LEN, "\"ON\"");
 			else
-				snprintf(buf, SENSOR_CONVERTED_LEN, "OFF");
+				INSERT_TXT(buf,"\"OFF\"");//snprintf(buf, SENSOR_CONVERTED_LEN, "\"OFF\"");
 		} else{
-			snprintf(buf, SENSOR_CONVERTED_LEN, "\"N/A\"");
+			INSERT_NA(buf);
+			//snprintf(buf, SENSOR_CONVERTED_LEN, "\"N/A\"");
 		}
 	}
 
@@ -640,11 +657,12 @@ static void get_relay_reading()
 			NODE_4_ch_relay4_reading.raw = ret;
 			memset(buf, 0, SENSOR_CONVERTED_LEN);
 			if(ret)
-				snprintf(buf, SENSOR_CONVERTED_LEN, "ON");
+				INSERT_TXT(buf,"\"ON\"");//snprintf(buf, SENSOR_CONVERTED_LEN, "\"ON\"");
 			else
-				snprintf(buf, SENSOR_CONVERTED_LEN, "OFF");
+				INSERT_TXT(buf,"\"OFF\"");//snprintf(buf, SENSOR_CONVERTED_LEN, "\"OFF\"");
 		} else{
-			snprintf(buf, SENSOR_CONVERTED_LEN, "\"N/A\"");
+			INSERT_NA(buf);
+			//snprintf(buf, SENSOR_CONVERTED_LEN, "\"N/A\"");
 		}
 	}
 
@@ -657,46 +675,53 @@ static void get_relay_reading()
 static void init_sensors(void)
 {
 	list_add(MQTT_sensor_list, &temp_reading);
-	snprintf(temp_reading.converted, SENSOR_CONVERTED_LEN, "\"N/A\"");
+	INSERT_NA(temp_reading.converted);
+	//snprintf(temp_reading.converted, SENSOR_CONVERTED_LEN, "\"N/A\"");
 
 #ifdef NODE_STEP_MOTOR
 	list_add(MQTT_sensor_list, &step_motor_reading);
-	snprintf(step_motor_reading.converted, SENSOR_CONVERTED_LEN, "\"N/A\"");
-
-	list_add(MQTT_sensor_list, &dht11_temperature_reading);
-	list_add(MQTT_sensor_list, &dht11_humidity_reading);
-	snprintf(dht11_temperature_reading.converted, SENSOR_CONVERTED_LEN, "\"N/A\"");
-	snprintf(dht11_humidity_reading.converted, SENSOR_CONVERTED_LEN, "\"N/A\"");
+	INSERT_NA(step_motor_reading.converted);
+	//snprintf(step_motor_reading.converted, SENSOR_CONVERTED_LEN, "\"N/A\"");
 #endif
 
 #ifdef NODE_LIGHT
-	snprintf(RGB_sensor_reading.converted, SENSOR_CONVERTED_LEN, "\"N/A\"");
+	list_add(MQTT_sensor_list, &RGB_sensor_reading);
+	INSERT_NA(RGB_sensor_reading.converted);
+	//snprintf(RGB_sensor_reading.converted, SENSOR_CONVERTED_LEN, "\"N/A\"");
 #endif
 
 #ifdef NODE_HARD_LIGHT
-	snprintf(hard_RGB_sensor_reading.converted, SENSOR_CONVERTED_LEN, "\"N/A\"");
+	list_add(MQTT_sensor_list, &hard_RGB_sensor_reading);
+	INSERT_NA(hard_RGB_sensor_reading.converted);
+	//snprintf(hard_RGB_sensor_reading.converted, SENSOR_CONVERTED_LEN, "\"N/A\"");
 #endif
 
 #ifdef NODE_DHT11
 	list_add(MQTT_sensor_list, &dht11_temperature_reading);
 	list_add(MQTT_sensor_list, &dht11_humidity_reading);
-	snprintf(dht11_temperature_reading.converted, SENSOR_CONVERTED_LEN, "\"N/A\"");
-	snprintf(dht11_humidity_reading.converted, SENSOR_CONVERTED_LEN, "\"N/A\"");
+	INSERT_NA(dht11_temperature_reading.converted);
+	INSERT_NA(dht11_humidity_reading.converted);
+	//snprintf(dht11_temperature_reading.converted, SENSOR_CONVERTED_LEN, "\"N/A\"");
+	//snprintf(dht11_humidity_reading.converted, SENSOR_CONVERTED_LEN, "\"N/A\"");
 
 #endif
 
 #ifdef NODE_BMP280
 	list_add(MQTT_sensor_list, &bmp_280_sensor_press_reading);
 	list_add(MQTT_sensor_list, &bmp_280_sensor_temp_reading);
-	snprintf(bmp_280_sensor_press_reading.converted, SENSOR_CONVERTED_LEN, "\"N/A\"");
-	snprintf(bmp_280_sensor_temp_reading.converted, SENSOR_CONVERTED_LEN, "\"N/A\"");
+	INSERT_NA(bmp_280_sensor_press_reading.converted);
+	INSERT_NA(bmp_280_sensor_temp_reading.converted);
+	//snprintf(bmp_280_sensor_press_reading.converted, SENSOR_CONVERTED_LEN, "\"N/A\"");
+	//snprintf(bmp_280_sensor_temp_reading.converted, SENSOR_CONVERTED_LEN, "\"N/A\"");
 #endif
 
 #ifdef NODE_HTU21D
 	list_add(MQTT_sensor_list, &HTU21D_sensor_humid_reading);
 	list_add(MQTT_sensor_list, &HTU21D_sensor_temp_reading);
-	snprintf(HTU21D_sensor_humid_reading.converted,	SENSOR_CONVERTED_LEN, "\"N/A\"");
-	snprintf(HTU21D_sensor_temp_reading.converted,	SENSOR_CONVERTED_LEN, "\"N/A\"");
+	INSERT_NA(HTU21D_sensor_humid_reading.converted);
+	INSERT_NA(HTU21D_sensor_temp_reading.converted);
+	//snprintf(HTU21D_sensor_humid_reading.converted,	SENSOR_CONVERTED_LEN, "\"N/A\"");
+	//snprintf(HTU21D_sensor_temp_reading.converted,	SENSOR_CONVERTED_LEN, "\"N/A\"");
 #endif
 
 #ifdef NODE_GPS
@@ -704,10 +729,14 @@ static void init_sensors(void)
 	list_add(MQTT_sensor_list, &GPS_sensor_LONG_reading);
 	list_add(MQTT_sensor_list, &GPS_sensor_ALT_reading);
 	list_add(MQTT_sensor_list, &GPS_sensor_SPEED_reading);
-	snprintf(GPS_sensor_LAT_reading.converted, SENSOR_CONVERTED_LEN, 	"\"N/A\"");
-	snprintf(GPS_sensor_LONG_reading.converted, SENSOR_CONVERTED_LEN, 	"\"N/A\"");
-	snprintf(GPS_sensor_ALT_reading.converted, SENSOR_CONVERTED_LEN, 	"\"N/A\"");
-	snprintf(GPS_sensor_SPEED_reading.converted, SENSOR_CONVERTED_LEN, 	"\"N/A\"");
+	INSERT_NA(GPS_sensor_LAT_reading.converted);
+	INSERT_NA(GPS_sensor_LONG_reading.converted);
+	INSERT_NA(GPS_sensor_ALT_reading.converted);
+	INSERT_NA(GPS_sensor_SPEED_reading.converted);
+	//snprintf(GPS_sensor_LAT_reading.converted, SENSOR_CONVERTED_LEN, 	"\"N/A\"");
+	//snprintf(GPS_sensor_LONG_reading.converted, SENSOR_CONVERTED_LEN, 	"\"N/A\"");
+	//snprintf(GPS_sensor_ALT_reading.converted, SENSOR_CONVERTED_LEN, 	"\"N/A\"");
+	//snprintf(GPS_sensor_SPEED_reading.converted, SENSOR_CONVERTED_LEN, 	"\"N/A\"");
 #endif
 
 #ifdef NODE_4_ch_relay
@@ -715,10 +744,14 @@ static void init_sensors(void)
 	list_add(MQTT_sensor_list, &NODE_4_ch_relay2_reading);
 	list_add(MQTT_sensor_list, &NODE_4_ch_relay3_reading);
 	list_add(MQTT_sensor_list, &NODE_4_ch_relay4_reading);
-	snprintf(NODE_4_ch_relay1_reading.converted, SENSOR_CONVERTED_LEN, 	"\"N/A\"");
-	snprintf(NODE_4_ch_relay2_reading.converted, SENSOR_CONVERTED_LEN, 	"\"N/A\"");
-	snprintf(NODE_4_ch_relay3_reading.converted, SENSOR_CONVERTED_LEN, 	"\"N/A\"");
-	snprintf(NODE_4_ch_relay4_reading.converted, SENSOR_CONVERTED_LEN, 	"\"N/A\"");
+	INSERT_NA(NODE_4_ch_relay1_reading.converted);
+	INSERT_NA(NODE_4_ch_relay2_reading.converted);
+	INSERT_NA(NODE_4_ch_relay3_reading.converted);
+	INSERT_NA(NODE_4_ch_relay4_reading.converted);
+	//snprintf(NODE_4_ch_relay1_reading.converted, SENSOR_CONVERTED_LEN, 	"\"N/A\"");
+	//snprintf(NODE_4_ch_relay2_reading.converted, SENSOR_CONVERTED_LEN, 	"\"N/A\"");
+	//snprintf(NODE_4_ch_relay3_reading.converted, SENSOR_CONVERTED_LEN, 	"\"N/A\"");
+	//snprintf(NODE_4_ch_relay4_reading.converted, SENSOR_CONVERTED_LEN, 	"\"N/A\"");
 #endif
 }
 

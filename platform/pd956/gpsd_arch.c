@@ -14,11 +14,24 @@
 extern void gpsd_put_char(uint8_t c);
 
 
-#ifdef NODE_GPS
-									    //GLL,RMC,VTG,GGA,GSA,GSV			ZDA
-static const uint8_t PMTK314[] = "$PMTK314,0,2,2,2,0,0,0,0,0,0,0,0,0,0,0,0,0,5,0*2F\r\n";
-// this means only RMC,VTG,GGA and ZDA output. ZDA is only send every 5 locks and all other is send ever 2 locks.
-volatile uint8_t *config = (volatile uint8_t *)PMTK314;
+#ifndef NODE_GPS
+
+//https://github.com/f5eng/mt3339-utils
+
+static uint8_t cmd_index = 0;
+static const char *init_cmd[]={
+	"$PMTK301,2*2E\r\n",// Set DGPS mode to SBAS
+	"$PMTK313,1*2E\r\n",// Set SBAS Enabled
+	"$PMTK314,0,2,2,2,0,0,0,0,0,0,0,0,0,0,0,0,0,5,0*2F\r\n",// Set NMEA Sentence Output: GLL,RMC,VTG,GGA,GSA,GSV...........ZDA
+	"$PMTK319,1*24\r\n",// Set SBAS 'Integrity' Mode
+	"$PMTK225,0*2B\r\n",// Disable Periodic Mode
+	"$PMTK286,1*23\r\n",// Enable AIC Mode
+	"$PMTK869,1,1*35\r\n",// Enable EASY Mode
+	NULL
+};
+
+
+volatile char *config = (volatile char *)init_cmd;
 
 
 void UART1_Handler(void)
@@ -32,10 +45,15 @@ void UART1_Handler(void)
 		}
 	}
 	if(UART1->UART_IMR & US_CSR_TXEMPTY){
-		if(*config)
-			uart_write(UART1,*config++);
-		else
-			uart_disable_interrupt(UART1,US_IDR_TXEMPTY);
+
+		UART1->UART_THR = *config++;
+		//uart_write(UART1,*config++);
+
+		if(*config == 0){
+			config = (volatile char *)&init_cmd[++cmd_index];
+			if(config==NULL)
+				uart_disable_interrupt(UART1,US_IDR_TXEMPTY);
+		}
 	}
 }
 
