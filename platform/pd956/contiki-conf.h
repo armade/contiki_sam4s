@@ -129,8 +129,12 @@ typedef unsigned short uip_stats_t;
 
 //#define NETSTACK_CONF_LLSEC XTEAsec_driver
 
-
-//#define UIP_CONF_ROUTER                 1
+// If we sleep we can't route, bom.
+#if defined(NODE_BMP280) || defined(NODE_HTU21D) ||  defined(NODE_DHT11)
+#define UIP_CONF_ROUTER                 0
+#else
+#define UIP_CONF_ROUTER                 1
+#endif
 
 #define SICSLOWPAN_CONF_COMPRESSION             SICSLOWPAN_COMPRESSION_HC06
 #define SICSLOWPAN_CONF_MAXAGE                  8
@@ -149,10 +153,10 @@ typedef unsigned short uip_stats_t;
 
 /* configure number of neighbors and routes */
 
-#define NBR_TABLE_CONF_MAX_NEIGHBORS     30
+#define NBR_TABLE_CONF_MAX_NEIGHBORS     40
 
 
-#define UIP_CONF_MAX_ROUTES   30
+#define UIP_CONF_MAX_ROUTES  			40
 
 
 #define UIP_CONF_ND6_SEND_RA			1

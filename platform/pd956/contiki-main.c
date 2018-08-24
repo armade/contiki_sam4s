@@ -218,7 +218,7 @@ void board_init(void)
 	//wdt_init(WDT, WDT_MR_WDRSTEN|WDT_MR_WDDBGHLT|WDT_MR_WDIDLEHLT, 0xfff, 0xfff);
 	ioport_init();
 
-	/* Configure all unused PIOs as outputs and low to save power */
+	/* Configure all unused PIOs as outputs and high to save power */
 	pio_set_output(PIOA,
 			(1 << 0) | (1 << 2) | (1 << 3)  | (1 << 4)  | (1 << 5)  | (1 << 6)
 					| (1 << 7)  | (1 << 8)  | (1 << 9)  | (1 << 10) | (1 << 16)
@@ -250,10 +250,8 @@ void board_init(void)
 	gpio_configure_pin(AT86RFX_SPI_CS_PIN, AT86RFX_SPI_CS_FLAGS);
 
 	// Initialize TRX_RST and SLP_TR as GPIO.
-	pio_configure_pin(AT86RFX_RST_PIN, PIO_TYPE_PIO_OUTPUT_1);
-	//ioport_set_pin_level(AT86RFX_RST_PIN, IOPORT_PIN_LEVEL_HIGH);
-	pio_configure_pin(AT86RFX_SLP_PIN, PIO_TYPE_PIO_OUTPUT_1);
-	//ioport_set_pin_level(AT86RFX_SLP_PIN, IOPORT_PIN_LEVEL_HIGH);
+	gpio_configure_pin(AT86RFX_RST_PIN, PIO_TYPE_PIO_OUTPUT_1);
+	gpio_configure_pin(AT86RFX_SLP_PIN, PIO_TYPE_PIO_OUTPUT_1);
 	/*------------------------------------------------------------------------------*/
 }
 

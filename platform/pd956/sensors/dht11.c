@@ -75,6 +75,8 @@ dht11_timeout(void *data)
 		dht_state = 77;
 		temperature = SENSOR_ERROR;
 		humidity = SENSOR_ERROR;
+		humidity_split = SENSOR_ERROR;
+		temperature_split = SENSOR_ERROR;
 	}
 
 	sensor_status = SENSOR_STATUS_READY;
@@ -122,11 +124,14 @@ void dht11_data_pin_irq(uint32_t a, uint32_t b)
 
 			if(bitcounter==40)
 			{
-				// After 1 sec from start we timeout and hit 'dht11_timeout()'.
-				// If we have completed dht_state is 3. if state is 2 then we hit a timeout.
-				// if state is 77 we have a data error.
+				// After max 1 sec from start we timeout and hit 'dht11_timeout()'.
+				// If we have completed and no errors detected dht_state is 3.
+				// if state is 2 then we have hit a timeout.
+				// If state is 77 we have a data error.
 				dht_state++;
 				pio_disable_interrupt(PIOB, data_pin);
+				ctimer_stop(&dht_timeout_timer);
+				dht11_timeout(NULL);
 			}
 
 			break;
@@ -185,20 +190,6 @@ dht11_start_measurement(void *ptr)
 	//if(SENSOR_STATUS_READY == sensor_status)
 	//	ctimer_set(&dht11_timer, (15*CLOCK_SECOND), dht11_start_measurement, NULL);
 }
-/*
- * Error:
-{"Board":"PD956-01","Name":"Kontor","Seq #":1198,"Uptime (sec)":35946,"Internal temperature":31.894,"position":0,"Temperature":22.0,"humidity":50.0}
-{"Board":"PD956-01","Name":"Tester","Seq #":25,"Uptime (sec)":724,"Internal temperature":29.332,"position":0,"Temperature":N/A,"humidity":N/A}
-{"Board":"PD956-01","Name":"Kontor","Seq #":1199,"Uptime (sec)":35976,"Internal temperature":32.577,"position":0,"Temperature":22.0,"humidity":50.0}
-{"Board":"PD956-01","Name":"Tester","Seq #":26,"Uptime (sec)":754,"Internal temperature":29.844,"position":0,"Temperature":N/A,"humidity":N/A}
-{"Board":"PD956-01","Name":"Kontor","Seq #":1200,"Uptime (sec)":36006,"Internal temperature":31.894,"position":0,"Temperature":22.0,"humidity":50.0}
-{"Board":"PD956-01","Name":"Tester","Seq #":27,"Uptime (sec)":784,"Internal temperature":29.332,"position":0,"Temperature":N/A,"humidity":N/A}
-{"Board":"PD956-01","Name":"Kontor","Seq #":1201,"Uptime (sec)":36036,"Internal temperature":31.552,"position":0,"Temperature":22.0,"humidity":50.0}
-{"Board":"PD956-01","Name":"Tester","Seq #":28,"Uptime (sec)":814,"Internal temperature":28.990,"position":0,"Temperature":N/A,"humidity":N/A}
-{"Board":"PD956-01","Name":"Tester","Seq #":29,"Uptime (sec)":844,"Internal temperature":29.161,"position":0,"Temperature":N/A,"humidity":N/A}
-{"Board":"PD956-01","Name":"Tester","Seq #":30,"Uptime (sec)":874,"Internal temperature":28.478,"position":0,"Temperature":N/A,"humidity":N/A}
-{"Board":"PD956-01","Name":"Tester","Seq #":31,"Uptime (sec)":904,"Internal temperature":29.332,"position":0,"Temperature":N/A,"humidity":N/A}
- * */
 
 /*---------------------------------------------------------------------------*/
 /**
@@ -220,6 +211,8 @@ dht11_init(int type, int enable)
 			pio_set_input(PIOB,data_pin,PIO_PULLUP);
 
 			pio_handler_set(PIOB, ID_PIOB, data_pin, PIO_IT_FALL_EDGE, dht11_data_pin_irq);
+			// We don't have an input capture at our disposal,
+			// so we have to use high priority interrupt.
 			NVIC_SetPriority((IRQn_Type) ID_PIOB, 0);
 			NVIC_EnableIRQ((IRQn_Type)ID_PIOB);
 
@@ -233,8 +226,8 @@ dht11_init(int type, int enable)
 
 			 if(enable) {
 				 sensor_status = SENSOR_STATUS_NOT_READY;
-				 // Give the sensor some time to stabilize. 5 seconds should be sufficient.
-				 ctimer_set(&dht11_timer, CLOCK_SECOND * 5, dht11_start_measurement, NULL);
+				 // Give the sensor some time to stabilize. 15 milliseconds should be sufficient.
+				 ctimer_set(&dht11_timer,15* CLOCK_SECOND/1000, dht11_start_measurement, NULL);
 			 } else {
 				 ctimer_stop(&dht11_timer);
 				 sensor_status = SENSOR_STATUS_INITIALISED;

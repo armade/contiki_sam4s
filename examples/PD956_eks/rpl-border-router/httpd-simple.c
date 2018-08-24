@@ -174,9 +174,8 @@ static const char *http_header_con_close[] = {
 static const char *http_config_css[] = {
   "<style>",
   "h1 {",
-      "font-family:Verdana;",
       "border-radius:5px;",
-  	  "background-color:#2196F3;",
+  	  "background: radial-gradient(ellipse at right, #aed6f4  10%%, #065b9d 100%%);",
   	  "color: white;",
   	  "padding-left:30px;",
       "font-size:18px;",
@@ -186,7 +185,6 @@ static const char *http_config_css[] = {
       "text-shadow: 2px 2px black;",
   "}h0{",
   	  "margin:20px;",
-  	  "font-family: Verdana;",
   	  "color: white;",
   	  "padding-left:15px;",
   	  "font-size:35px;",
@@ -197,7 +195,6 @@ static const char *http_config_css[] = {
   	  "text-shadow: 2px 2px black;",
    "}h7 {",
   		"margin:20px;",
-  		"font-family: Verdana;",
   		"color: white;",
   		"padding-left:15px;",
   		"font-size:12px;",
@@ -206,11 +203,9 @@ static const char *http_config_css[] = {
   		"top: 125px;",
   		"left: 75px;",
   "}a{",
-      "font-family:Verdana;",
   	  "color: blue;",
   "}table{",
       "margin-left:30px;",
-      "font-family:Verdana;",
       "border-collapse:collapse;",
       "width:80%%;",
       "font-size:12px;",
@@ -231,7 +226,6 @@ static const char *http_config_css[] = {
       "background-color: #2196F3;color:white;",
   "}tr:hover {background-color: #70c0c0;",
   "}ul {"
-  	  "font-family: Verdana;",
   	  "text-shadow: 2px 2px black;",
   	  "font-size:14px;",
   	  "width: 98%%;",
@@ -249,7 +243,6 @@ static const char *http_config_css[] = {
    "}legend{",
 	  "background: radial-gradient(ellipse at center,  #aed6f4  10%%, #065b9d 100%%);",
 	  "text-shadow: 1px 1px black;",
-	  "font-family: Verdana;",
 	  "color: white;",
 	  "padding: 2px 5px;",
 	  "font-size: 16px;",
@@ -272,6 +265,7 @@ static const char *http_config_css[] = {
       "right: 0;",
       "margin:20px;",
    "}body{",
+   	  "font-family: Verdana;",
       "background: #595959;",
       "background-size: 1000px;",
       "font-size:12px;",
@@ -619,7 +613,7 @@ PT_THREAD(generate_index(struct httpd_state *s))
 
     memset(ipaddr_buf, 0, IPADDR_BUF_LEN);
     ipaddr_sprintf(ipaddr_buf, IPADDR_BUF_LEN, &s->nbr->ipaddr);
-    PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<td>%s</td>", ipaddr_buf));
+    PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<td><a href=http://[%s]/index.html> %s </a></td>",ipaddr_buf, ipaddr_buf));
 
     memset(ipaddr_buf, 0, IPADDR_BUF_LEN);
     get_neighbour_state_text(ipaddr_buf, s->nbr->state);
@@ -723,6 +717,7 @@ PT_THREAD(generate_index(struct httpd_state *s))
   PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<button onclick=\"Get_time()\" type=\"submit\" value=\"Submit\""));
   PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, " id=\"settimebtn\">Set time from browser</button>"));
 
+  // This script depends on the id of time input, and is left here.
   PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<script> function Get_time() {"));
   PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "var d = new Date(); var n = d.getTime();"));
   PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "var local_d = -d.getTimezoneOffset()*60;"));

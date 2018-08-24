@@ -13,7 +13,7 @@
 #include "gpio.h"
 extern void gpsd_put_char(uint8_t c);
 
-
+struct ctimer gps_config_timer;
 #ifndef NODE_GPS
 
 //https://github.com/f5eng/mt3339-utils
@@ -57,6 +57,13 @@ void UART1_Handler(void)
 	}
 }
 
+void
+gps_config_init(void *ptr)
+{
+	uart_write(UART1,*config++);
+	uart_enable_interrupt(UART1, US_IER_TXEMPTY);
+}
+
 void gpsd_arch_init(void)
 {
 
@@ -79,9 +86,8 @@ void gpsd_arch_init(void)
 	NVIC_EnableIRQ((IRQn_Type)ID_UART1);
 
 	// Enable UART IRQ
-	uart_enable_interrupt(UART1, US_IER_RXRDY | US_IER_TXEMPTY);
+	uart_enable_interrupt(UART1, US_IER_RXRDY);
 
-	uart_write(UART1,*config++);
-
+	ctimer_set(&gps_config_timer,2* CLOCK_SECOND, gps_config_init, NULL);
 }
 #endif

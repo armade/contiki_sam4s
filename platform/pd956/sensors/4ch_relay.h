@@ -9,6 +9,9 @@
 #define STATUS_CH3		12
 #define STATUS_CH4		13
 
+#define STATUS_MIN		STATUS_CH1
+#define STATUS_MAX		STATUS_CH4
+
 #define CH1_RELAY_ON	14
 #define CH1_RELAY_OFF	15
 #define CH2_RELAY_ON	16
@@ -17,6 +20,9 @@
 #define CH3_RELAY_OFF	19
 #define CH4_RELAY_ON	20
 #define CH4_RELAY_OFF	21
+
+#define CH_RELAY_MIN	CH1_RELAY_ON
+#define CH_RELAY_MAX	CH4_RELAY_OFF
 /*---------------------------------------------------------------------------*/
 extern const struct sensors_sensor ch4_relay_PD956;
 /*---------------------------------------------------------------------------*/

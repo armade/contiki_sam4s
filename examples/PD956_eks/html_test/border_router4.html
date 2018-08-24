@@ -2,9 +2,7 @@
 <style>
 
 h1 {
-	font-family:Verdana;
 	border-radius: 5px;
-	background-color: #2196F3;
 	background: radial-gradient(ellipse at right, #aed6f4  10%, #065b9d 100%);
 	color: white;
 	padding-left:30px;
@@ -16,7 +14,6 @@ h1 {
 }
 h0 {
 	margin:20px;
-	font-family: Verdana;
 	color: white;
 	padding-left:15px;
 	font-size:35px;
@@ -30,7 +27,6 @@ h0 {
 
 h7 {
 	margin:20px;
-	font-family: Verdana;
 	color: white;
 	padding-left:15px;
 	font-size:12px;
@@ -41,12 +37,10 @@ h7 {
 
 }
 a{
-	font-family: Verdana;
 	color: blue;
 }
 table {
 	margin-left: 30px;
-	font-family: Verdana;
 	border-collapse: collapse;
 	width: 80%;
 	font-size:12px;
@@ -70,9 +64,8 @@ tr:nth-child(odd) {
 }
 tr:hover {background-color: #70c0c0}
 ul {
-font-family: Verdana;
-text-shadow: 2px 2px black;
-font-size:14px;
+	text-shadow: 2px 2px black;
+	font-size:14px;
   	width: 98%;
   	list-style-type: none;
   	margin: 0; padding: 0;
@@ -90,7 +83,6 @@ font-size:14px;
 }li b:hover { background-color:#70c0c0;}
 legend {
 	background: radial-gradient(ellipse at center,  #aed6f4  10%, #065b9d 100%); text-shadow: 1px 1px black;
-	font-family: Verdana;
 	color: white;
 	padding: 2px 5px;
 	font-size: 16px;
@@ -119,6 +111,7 @@ fieldset{
 	margin:20px;
 }
 body {
+font-family: Verdana;
 	background: #595959;
 	<!-- background: radial-gradient(ellipse at center,  #1e1e1e  0%, #ffffffff 70%); -->
 	background-size: 1000px;
@@ -146,6 +139,12 @@ Your browser does not support the HTML5 canvas tag.</canvas>
 <canvas id="ClockCanvas" width="850" height="250"
 style="background-color:#fff">
 </canvas>
+
+<!-- <canvas id="VectorCanvas" width="1500" height="150" "> -->
+<!-- Your browser does not support the HTML5 canvas tag.</canvas> -->
+<!-- </canvas> -->
+
+
 <br>
 <fieldset>
 		<h1>Neighbors</h1>
@@ -292,7 +291,6 @@ function drawClock() {
     ctx.arc(clock_canvas.width-(radius+17),clock_canvas.height/2,radius*0.74,degToRad(270), degToRad((seconds*6)-89.9));
     ctx.stroke();
     
-	
 	ctx.shadowBlur = 15;
 	ctx.shadowColor = 'orange';
 	
@@ -318,6 +316,29 @@ function getFont(radius) {
 
 
 </script>
+
+<!-- <script> -->
+
+<!-- var vector_canvas = document.getElementById("VectorCanvas"); -->
+<!-- vector_canvas.setAttribute('style', "position: absolute;  left: -100px; top: 90px"); -->
+<!-- var ctx_vector = vector_canvas.getContext("2d");  -->
+<!-- ctx_vector.strokeStyle = '#CfCfCf'; -->
+<!-- ctx_vector.lineWidth = 2; -->
+	<!-- ctx_vector.shadowColor = 'gold'; -->
+	 <!-- ctx_vector.beginPath(); -->
+	
+	 <!-- var t; -->
+	 <!-- var x_cir; -->
+	 <!-- var y_cir; -->
+	 <!-- for(t=0;t<10;t+=0.1) -->
+	 <!-- { -->
+		<!-- x_cir = 40*Math.sin(2*Math.PI*t*0.5)+25*Math.cos(2*Math.PI*t*0.2); -->
+		<!-- y_cir = 40*Math.cos(2*Math.PI*t*0.5)+25*Math.sin(2*Math.PI*t*0.2); -->
+		
+		<!-- ctx_vector.lineTo(600+x_cir,70+y_cir); -->
+	 <!-- } -->
+	 <!-- ctx_vector.stroke(); -->
+<!-- </script> -->
 
 <script>
 var SnowCanvas = document.getElementById("SnowflakeCanvas");

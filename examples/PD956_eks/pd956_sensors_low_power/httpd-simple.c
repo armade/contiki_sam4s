@@ -46,6 +46,7 @@
 #include "mqtt-client.h"
 #include "board-peripherals.h"
 #include "clock.h"
+#include "platform-conf.h"
 
 #include <stdint.h>
 #include <string.h>
@@ -166,7 +167,8 @@ static const char http_index_html[] = "/index.html";
 static const char http_html_start[] = "<html><head>";
 static const char *http_header_srv_str[] = {
   "Server: Contiki, ",
-  BOARD_STRING "\r\n",
+  BOARD_STRING,
+  "\r\n",
   NULL
 };
 
@@ -190,9 +192,8 @@ static const char *http_config_css2[] = {
   ".left{padding-left:30px;float:left;text-align:right}",
   ".right{margin-left:345px;}",
   "h1{",
-  	  "font-family:Verdana;",
   	  "border-radius:5px;",
-  	  "background-color:#2196F3;",
+  	  "background: radial-gradient(ellipse at right, #aed6f4  10%%, #065b9d 100%%);",
   	  "color: white;",
   	  "padding-left:30px;",
   	  "font-size:18px;",
@@ -201,14 +202,13 @@ static const char *http_config_css2[] = {
   	  "width: 90%%;",
   	  "text-shadow: 2px 2px black;",
   "}p{",
-  	  "font-family:Verdana;",
   	  "padding-left:50px;",
   "}body{",
+      "font-family:Verdana;",
   	  "background: #595959;",
       "background-size: 1000px;",
       "font-size:12px;",
   "}ul{",
-  	  "font-family: Verdana;",
       "text-shadow: 2px 2px black;",
       "font-size:14px;",
       "width: 98%%;",
@@ -227,7 +227,6 @@ static const char *http_config_css2[] = {
   "}legend{",
   	  "background: radial-gradient(ellipse at center,  #aed6f4  10%%, #065b9d 100%%);",
   	  "text-shadow: 1px 1px black;",
-  	  "font-family: Verdana;",
   	  "color: white;",
   	  "padding: 2px 5px;",
   	  "font-size: 16px;",

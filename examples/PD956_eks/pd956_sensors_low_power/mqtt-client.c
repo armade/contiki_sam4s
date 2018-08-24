@@ -566,7 +566,7 @@ static void publish(void)
 			"\"Uptime [s]\":%lu"
 			/*"\"Battery state\":%c,"
 			"\"Unix [s]\":%lu"*/
-	,BOARD_STRING, SENSOR_STRING, conf->Username, seq_nr_value, clock_seconds()/*,RF231_bat_status()+0x30,clock_get_unix_time()*/);
+	,device_certificate.crt.modul, SENSOR_STRING, conf->Username, seq_nr_value, clock_seconds()/*,RF231_bat_status()+0x30,clock_get_unix_time()*/);
 
 	if (len < 0 || len >= remaining)
 	{
@@ -844,7 +844,7 @@ PROCESS_THREAD(mqtt_client_process, ev, data)
 					etimer_set(&sleep_retry_timer, conf->pub_interval);
 				}else{
 					sleep_counter = 1;
-					etimer_set(&timeout_timer, CLOCK_SECOND);
+					etimer_set(&timeout_timer, 3*CLOCK_SECOND);
 					process_post(PROCESS_BROADCAST, Trig_sensors, NULL);
 				}
 

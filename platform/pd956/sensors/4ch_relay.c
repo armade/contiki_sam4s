@@ -61,13 +61,12 @@ unsigned pin_array[] = {
 
 static int sensor_status = SENSOR_STATUS_DISABLED;
 
-#define SENSOR_SWITCH_DELAY 10 //~10ms
+#define SENSOR_SWITCH_DELAY 10 *CLOCK_SECOND/1000//~10ms
 static struct ctimer switch_timer;
 
 static void
 notify_ready(void *not_used)
 {
-
 	sensor_status = SENSOR_STATUS_READY;
 	sensors_changed(&ch4_relay_PD956);
 }
@@ -77,11 +76,11 @@ static int
 relay_state_value(int type)
 {
 	// Status
-	if((type >= STATUS_CH1) && (type <= STATUS_CH4))
+	if((type >= STATUS_MIN) && (type <= STATUS_MAX))
 		return (PIOA->PIO_ODSR & pin_array[type-10])?0:1; // Active low
 
 	// Input validate for set
-	if((type > CH4_RELAY_OFF) || (type < CH1_RELAY_ON))
+	if((type > CH_RELAY_MAX) || (type < CH_RELAY_MIN))
 		return SENSOR_ERROR;
 
 	// set values
@@ -117,7 +116,6 @@ relay_init(int type, int enable)
 				ctimer_set(&switch_timer, SENSOR_SWITCH_DELAY, notify_ready, NULL);
 			} else {// Disable the sensor
 				sensor_status = SENSOR_STATUS_INITIALISED;
-				//PIOA->PIO_SODR = CH1_PIN | CH2_PIN | CH3_PIN | CH4_PIN;
 			}
 			break;
 	}
@@ -128,13 +126,7 @@ relay_init(int type, int enable)
 static int
 relay_status(int type)
 {
-	//if(type == STATUS_STATE)
-		return sensor_status;
-
-	/*if((type >= STATUS_CH1) && (type <= STATUS_CH4))
-		return (PIOA->PIO_ODSR & pin_array[type-10])?0:1; // Active low
-
-	return SENSOR_ERROR;*/
+	return sensor_status;
 }
 /*---------------------------------------------------------------------------*/
 SENSORS_SENSOR(ch4_relay_PD956, "4 Ch relay",relay_state_value, relay_init, relay_status);
