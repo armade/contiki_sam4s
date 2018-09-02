@@ -14,24 +14,24 @@
 extern void gpsd_put_char(uint8_t c);
 
 struct ctimer gps_config_timer;
-#ifndef NODE_GPS
+#ifdef NODE_GPS
 
 //https://github.com/f5eng/mt3339-utils
 
 static uint8_t cmd_index = 0;
-static const char *init_cmd[]={
-	"$PMTK301,2*2E\r\n",// Set DGPS mode to SBAS
-	"$PMTK313,1*2E\r\n",// Set SBAS Enabled
-	"$PMTK314,0,2,2,2,0,0,0,0,0,0,0,0,0,0,0,0,0,5,0*2F\r\n",// Set NMEA Sentence Output: GLL,RMC,VTG,GGA,GSA,GSV...........ZDA
-	"$PMTK319,1*24\r\n",// Set SBAS 'Integrity' Mode
-	"$PMTK225,0*2B\r\n",// Disable Periodic Mode
-	"$PMTK286,1*23\r\n",// Enable AIC Mode
-	"$PMTK869,1,1*35\r\n",// Enable EASY Mode
-	NULL
+static const char init_cmd[]={
+	"$PMTK301,2*2E\r\n"// Set DGPS mode to SBAS
+	"$PMTK313,1*2E\r\n"// Set SBAS Enabled
+	//"$PMTK314,0,2,2,2,0,0,0,0,0,0,0,0,0,0,0,0,0,5,0*2F\r\n"// Set NMEA Sentence Output: GLL,RMC,VTG,GGA,GSA,GSV...........ZDA
+	"$PMTK314,0,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0*28\r\n"
+	"$PMTK319,1*24\r\n"// Set SBAS 'Integrity' Mode
+	"$PMTK225,0*2B\r\n"// Disable Periodic Mode
+	"$PMTK286,1*23\r\n"// Enable AIC Mode
+	"$PMTK869,1,1*35\r\n"// Enable EASY Mode
 };
 
 
-volatile char *config = (volatile char *)init_cmd;
+static volatile char *config_init = (volatile char *)&init_cmd[0];
 
 
 void UART1_Handler(void)
@@ -46,13 +46,11 @@ void UART1_Handler(void)
 	}
 	if(UART1->UART_IMR & US_CSR_TXEMPTY){
 
-		UART1->UART_THR = *config++;
-		//uart_write(UART1,*config++);
+		UART1->UART_THR = init_cmd[++cmd_index];
+		//uart_write(UART1,*config_init++);
 
-		if(*config == 0){
-			config = (volatile char *)&init_cmd[++cmd_index];
-			if(config==NULL)
-				uart_disable_interrupt(UART1,US_IDR_TXEMPTY);
+		if(cmd_index == sizeof(init_cmd)){
+			uart_disable_interrupt(UART1,US_IDR_TXEMPTY);
 		}
 	}
 }
@@ -60,7 +58,7 @@ void UART1_Handler(void)
 void
 gps_config_init(void *ptr)
 {
-	uart_write(UART1,*config++);
+	UART1->UART_THR = init_cmd[++cmd_index];
 	uart_enable_interrupt(UART1, US_IER_TXEMPTY);
 }
 

@@ -91,8 +91,8 @@ LIST(MQTT_config_list);
 
 
 static MQTT_sub_ele_t *subscribe_ele;
-MQTT_sub_ele_t MQTT_COMMON_NO_SLEEP_sub_cmd;
-MQTT_sub_ele_t MQTT_COMMON_RESET_sub_cmd;
+static MQTT_sub_ele_t MQTT_COMMON_NO_SLEEP_sub_cmd;
+static MQTT_sub_ele_t MQTT_COMMON_RESET_sub_cmd;
 /*---------------------------------------------------------------------------*/
 static struct mqtt_message *msg_ptr = 0;
 static struct etimer publish_periodic_timer;
@@ -106,7 +106,7 @@ static uip_ip6addr_t def_route;
 static MQTT_sensor_reading_t *reading;
 /*---------------------------------------------------------------------------*/
 mqtt_client_config_t *conf;
-process_event_t MQTT_publish_sensor_data_done_event;
+static process_event_t MQTT_publish_sensor_data_done_event;
 #if defined(NODE_GPS) || defined(NODE_4_ch_relay) || defined(NODE_HARD_LIGHT) || defined(NODE_LIGHT) || defined(NODE_STEP_MOTOR)
 static const uint8_t no_sleep_allowed = 1;
 #else

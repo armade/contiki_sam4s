@@ -90,7 +90,7 @@ int parse_sentence(char *line)
 				time.tm_sec =  frame_rmc.time.seconds;
 				time.tm_mon =  frame_rmc.date.month;
 				time.tm_mday = frame_rmc.date.day;
-				time.tm_year = frame_rmc.date.year;
+				time.tm_year = frame_rmc.date.year+2000;
 
 				clock_time_t unixtime = RtctoUnix(&time);
 
@@ -195,8 +195,13 @@ int parse_sentence(char *line)
 			}
 		} break;
 
+		case MINMEA_SENTENCE_PMTK:{
+			asm volatile("NOP");
+		}break;
+
 		case MINMEA_INVALID: {
 			PRINTF(INDENT_SPACES "$xxxxx sentence is not valid\n");
+			asm volatile("NOP");
 		} break;
 
 		default: {

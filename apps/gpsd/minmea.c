@@ -374,6 +374,9 @@ enum minmea_sentence_id minmea_sentence_id(const char *sentence, bool strict)
         return MINMEA_SENTENCE_VTG;
     if (!strcmp(type+2, "ZDA"))
         return MINMEA_SENTENCE_ZDA;
+    if (!strcmp(type+1, "PMTK"))
+		return MINMEA_SENTENCE_PMTK;
+
 
     return MINMEA_UNKNOWN;
 }

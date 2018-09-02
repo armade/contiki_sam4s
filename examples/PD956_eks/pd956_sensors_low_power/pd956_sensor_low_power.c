@@ -89,7 +89,7 @@ LIST(MQTT_sensor_list);
 /* The objects representing sensors used in this demo */
 
 #define DEMO_SENSOR2(name,description,unit,type_def,HASS_CLASS,config_topic,sub_topic,sub_handler,class) \
-		MQTT_sensor_reading_t name = {\
+		static MQTT_sensor_reading_t name = {\
 			.next = NULL,\
 			.raw = 0,\
 			.last = 0,\

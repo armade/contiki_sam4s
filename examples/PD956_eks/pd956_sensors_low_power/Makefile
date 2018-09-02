@@ -1,5 +1,14 @@
 DEFINES+=PROJECT_CONF_H=\"project-conf.h\"
-CFLAGS += -DNODE_4_ch_relay=1  -DLOW_CLOCK=0
+CFLAGS += -D NODE_GPS=1  -DLOW_CLOCK=0
+#define NODE_4_ch_relay
+#define NODE_LIGHT
+#define NODE_HARD_LIGHT
+#define NODE_STEP_MOTOR
+#define NODE_BMP280
+#define NODE_HTU21D
+#define NODE_GPS
+#define NODE_DHT11
+
 
 all: pd956_sensor_low_power
 

@@ -32,6 +32,7 @@
 //extern rtimer_arch_sleep(rtimer_clock_t howlong);
 
 void board_init(void);
+void enable_cache(void);
 void init_node_mac(void);
 void set_linkaddr(void);
 void Setup_EEPROM(void);
@@ -59,9 +60,10 @@ int main()
 
 	// Hotfix to program eeprom. Must be removed
 	get_eeprom(version, version_var);
-	if(version_var != 0x44)
+	if(version_var != 0x48)
 		Setup_EEPROM();
 
+	enable_cache();
 	get_eeprom(masterpublic_key,masterpublic_key_eeprom);
 	/*
 	 * we only start the firmware if the public signer key can
@@ -142,7 +144,7 @@ void Setup_EEPROM(void)
 
 	EEPROM.PANID = IEEE802154_CONF_PANID;
 	EEPROM.channel = 26;
-	EEPROM.version = 0x44;
+	EEPROM.version = 0x48;
 
 	flash_read_unique_id(EEPROM.Flash_unique_id, 4);
 
@@ -204,17 +206,6 @@ void board_init(void)
 {
 	/* Disable the watchdog */
 	WDT->WDT_MR = WDT_MR_WDDIS;
-
-	// I'm currently operating on two cpu's. One with cache and one without.
-	/*if((CHIPID->CHIPID_CIDR &0xFFFFFFFE) == 0x29970EE0){
-		printf("I - Found cache. Enabling it.\n\r");
-		// Enable the CMCC module. (cache)
-
-		CMCC->CMCC_MCFG = 2;//CMCC_DHIT_COUNT_MODE;
-		CMCC->CMCC_MEN |= CMCC_MEN_MENABLE;
-
-		CMCC->CMCC_CTRL |= CMCC_CTRL_CEN;
-	}*/
 	//wdt_init(WDT, WDT_MR_WDRSTEN|WDT_MR_WDDBGHLT|WDT_MR_WDIDLEHLT, 0xfff, 0xfff);
 	ioport_init();
 
@@ -255,3 +246,16 @@ void board_init(void)
 	/*------------------------------------------------------------------------------*/
 }
 
+void enable_cache(void)
+{
+// I'm currently operating on two cpu's. One with cache and one without.
+	if((CHIPID->CHIPID_CIDR &0xFFFFFFFE) == 0x29970EE0){
+		printf("I - Found cache. Enabling it.\n\r");
+		// Enable the CMCC module. (cache)
+
+		CMCC->CMCC_MCFG = 2;//CMCC_DHIT_COUNT_MODE;
+		CMCC->CMCC_MEN |= CMCC_MEN_MENABLE;
+
+		CMCC->CMCC_CTRL |= CMCC_CTRL_CEN;
+	}
+}

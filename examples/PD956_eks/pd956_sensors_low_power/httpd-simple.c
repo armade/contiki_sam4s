@@ -664,8 +664,8 @@ PT_THREAD(generate_index(struct httpd_state *s))
 
   //======================================================================================
   // Internal clock
-   clock_time_t clk = clock_get_unix_time();
-     tm_t tb;
+  clock_time_t clk = clock_get_unix_time();
+     static tm_t tb;
      UnixtoRTC(&tb, clk);
 
      PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<fieldset>"));
@@ -1307,7 +1307,7 @@ PT_THREAD(generate_relay4_config(struct httpd_state *s))
      PT_WAIT_THREAD(&s->generate_pt,
                     enqueue_chunk(s, 0, "title=\"On\" name=\"relay%d\"%s>",
                                   i,
-								  ch4_relay_PD956.status(i+STATUS_CH1) ? " Checked" : ""));
+								  ch4_relay_PD956.value(i+STATUS_CH1) ? " Checked" : ""));
      PT_WAIT_THREAD(&s->generate_pt,
                     enqueue_chunk(s, 0, "<input type=\"radio\" value=\"0\" "));
      PT_WAIT_THREAD(&s->generate_pt,
