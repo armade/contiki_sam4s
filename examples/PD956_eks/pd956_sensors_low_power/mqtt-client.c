@@ -151,7 +151,8 @@ void pub_sleep_handler(uint8_t *payload, uint16_t len)
 
 static struct ctimer reset_timer;
 static void
-reset_now(void *not_used){
+reset_now(void *not_used)
+{
 	asm volatile ("dmb 0xF":::"memory");
 	asm volatile ("isb 0xF":::"memory");
 	*((uint32_t *)0x400E1400) = 0xa500000D;
@@ -386,18 +387,20 @@ static int construct_configs(void)
 
 static int construct_sub_topic(void)
 {
+	// Common commands ////////////////////////////////////////////////////////////
 	snprintf(MQTT_COMMON_NO_SLEEP_sub_cmd.topic,
 				sizeof(MQTT_COMMON_NO_SLEEP_sub_cmd.topic), "Hass/%s/%s/%s/set",
 				client_id, conf->Username, "Sleep");
 	MQTT_COMMON_NO_SLEEP_sub_cmd.data_handler = pub_sleep_handler;
 	list_add(MQTT_subscribe_list, &MQTT_COMMON_NO_SLEEP_sub_cmd);
 
-
 	snprintf(MQTT_COMMON_RESET_sub_cmd.topic,
 				sizeof(MQTT_COMMON_RESET_sub_cmd.topic), "Hass/%s/%s/%s/set",
 				client_id, conf->Username, "Reset");
 	MQTT_COMMON_RESET_sub_cmd.data_handler = pub_reset_handler;
 	list_add(MQTT_subscribe_list, &MQTT_COMMON_RESET_sub_cmd);
+
+	//////////////////////////////////////////////////////////////////////////////
 
 	for (reading = MQTT_sensor_first(); reading != NULL; reading = reading->next)
 	{
@@ -411,37 +414,6 @@ static int construct_sub_topic(void)
 		list_add(MQTT_subscribe_list, &reading->MQTT_subscr_ele);
 	}
 
-
-#if 0
-#ifdef NODE_4_ch_relay
-
-	snprintf(MQTT_ch4_relay1_sub_cmd.topic,
-				sizeof(MQTT_ch4_relay1_sub_cmd.topic), "Hass/switch/%s/%s/%s/set",
-				client_id, conf->Username, "relay1");
-	MQTT_ch4_relay1_sub_cmd.data_handler = pub_relay1_handler;
-	list_add(MQTT_subscribe_list, &MQTT_ch4_relay1_sub_cmd);
-
-	snprintf(MQTT_ch4_relay2_sub_cmd.topic,
-				sizeof(MQTT_ch4_relay2_sub_cmd.topic), "Hass/switch/%s/%s/%s/set",
-				client_id, conf->Username, "relay2");
-	MQTT_ch4_relay2_sub_cmd.data_handler = pub_relay2_handler;
-	list_add(MQTT_subscribe_list, &MQTT_ch4_relay2_sub_cmd);
-
-	snprintf(MQTT_ch4_relay3_sub_cmd.topic,
-				sizeof(MQTT_ch4_relay3_sub_cmd.topic), "Hass/switch/%s/%s/%s/set",
-				client_id, conf->Username, "relay3");
-	MQTT_ch4_relay3_sub_cmd.data_handler = pub_relay3_handler;
-	list_add(MQTT_subscribe_list, &MQTT_ch4_relay3_sub_cmd);
-
-	snprintf(MQTT_ch4_relay4_sub_cmd.topic,
-				sizeof(MQTT_ch4_relay4_sub_cmd.topic), "Hass/switch/%s/%s/%s/set",
-				client_id, conf->Username, "relay4");
-	MQTT_ch4_relay4_sub_cmd.data_handler = pub_relay4_handler;
-	list_add(MQTT_subscribe_list, &MQTT_ch4_relay4_sub_cmd);
-
-
-#endif
-#endif
 
 /*
 	snprintf(MQTT_step_motor_sub_cmd.topic,
@@ -493,8 +465,6 @@ static void update_config(void)
 		state = MQTT_CLIENT_STATE_CONFIG_ERROR;
 		return;
 	}
-
-
 
 	if (construct_sub_topic() == 0)
 	{
