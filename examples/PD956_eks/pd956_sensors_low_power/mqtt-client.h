@@ -154,18 +154,25 @@ static const char cover_config_payload[] = "{\"device_class\": \"cover\"," \
 		"\"tilt_opened_value\": 4000,}";
 
 static const char cover_config_topic[] = "Hass/cover/%s%02x%02x%02x%02x%02x%02x/config";
-
+//----------------------------------------------------------------------------------------------------------
 static const char sensor_config_topic[] = "Hass/sensor/%s%02x%02x%02x%02x%02x%02x/config";
-
+//----------------------------------------------------------------------------------------------------------
 static const char switch_config_topic[] = "Hass/switch/%s%02x%02x%02x%02x%02x%02x/config";
 static const char switch_sub_topic[] = "Hass/switch/%s/%s/%s/set";
-
+//----------------------------------------------------------------------------------------------------------
+static const char light_config_topic[] = "Hass/light/%s%02x%02x%02x%02x%02x%02x/config";
+static const char light_sub_topic[] = "Hass/light/%s/%s/%s/set";
+//----------------------------------------------------------------------------------------------------------
 static const char binary_sensor_config_topic[] = "Hass/binary_sensor/%s%02x%02x%02x%02x%02x%02x/config";
-
+//----------------------------------------------------------------------------------------------------------
 void pub_relay1_handler(uint8_t *payload, uint16_t len);
 void pub_relay2_handler(uint8_t *payload, uint16_t len);
 void pub_relay3_handler(uint8_t *payload, uint16_t len);
 void pub_relay4_handler(uint8_t *payload, uint16_t len);
+
+void pub_light_hard_switch_handler(uint8_t *payload, uint16_t len);
+void pub_light_hard_brightness_handler(uint8_t *payload, uint16_t len);
+void pub_light_hard_rgb_handler(uint8_t *payload, uint16_t len);
 /*---------------------------------------------------------------------------*/
 #endif /* MQTT_CLIENT_H_ */
 /*---------------------------------------------------------------------------*/

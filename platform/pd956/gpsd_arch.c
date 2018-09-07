@@ -28,6 +28,7 @@ static const char init_cmd[]={
 	"$PMTK225,0*2B\r\n"// Disable Periodic Mode
 	"$PMTK286,1*23\r\n"// Enable AIC Mode
 	"$PMTK869,1,1*35\r\n"// Enable EASY Mode
+	"$PMTK386,0.27*08\r\n" //Set static threshold to 0.27[m/s] (1 [km/hr])
 };
 
 

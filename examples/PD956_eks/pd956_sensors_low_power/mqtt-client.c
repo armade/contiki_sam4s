@@ -203,6 +203,68 @@ void pub_relay4_handler(uint8_t *payload, uint16_t len)
 	process_post(PROCESS_BROADCAST, Trig_sensors, NULL);
 }
 
+void pub_light_hard_switch_handler(uint8_t *payload, uint16_t len)
+{
+	if(!memcmp(payload,"ON",2))
+		hard_RGB_ctrl_sensor.configure(SENSORS_ACTIVE,1);
+	else if(!memcmp(payload,"OFF",3))
+		hard_RGB_ctrl_sensor.configure(SENSORS_ACTIVE,0);
+
+	process_post(PROCESS_BROADCAST, Trig_sensors, NULL);
+}
+
+void pub_light_hard_brightness_handler(uint8_t *payload, uint16_t len)
+{
+	int brithtness = strtol((char *)payload,NULL,10);
+	RGB_hard_t tmp;
+
+	if(brithtness < 0 ||
+		 brithtness > 128) {
+	 return;
+	}
+
+	tmp.all = ((RGB_hard_t *) hard_RGB_ctrl_sensor.value(SENSOR_ERROR))->all;
+	tmp.led.brightness = brithtness;
+	hard_RGB_ctrl_sensor.value((unsigned)&tmp);
+}
+
+void pub_light_hard_rgb_handler(uint8_t *payload, uint16_t len)
+{
+	char color[3];
+	uint8_t color_index = 0;
+	char chr;
+	RGB_hard_t tmp;
+
+	memset(color,0,sizeof(color));
+
+	while(*payload)
+	{
+		chr = *payload++;
+		if((chr < 0x30) || (chr > 0x39) || (chr == ',')){
+			if(chr == ',')
+				color_index++;
+			continue;
+		}
+		color[color_index] *= 10;
+		color[color_index] += chr;
+	}
+
+	if(color[0] > 255)
+		color[0] = 255;
+
+	if(color[1] > 255)
+		color[1] = 255;
+
+	if(color[2] > 255)
+		color[2] = 255;
+
+	tmp.all = ((RGB_hard_t *) hard_RGB_ctrl_sensor.value(SENSOR_ERROR))->all;
+	tmp.led.r = color[0]*16; //4096 is max in light. 255 is max in payload. 255*16 = 4080.
+	tmp.led.g = color[1]*16;
+	tmp.led.b = color[2]*16;
+	hard_RGB_ctrl_sensor.value((unsigned)&tmp);
+}
+
 static void pub_handler(const char *topic, uint16_t topic_len,
 		const uint8_t *chunk, uint16_t chunk_len)
 {
@@ -370,6 +432,26 @@ static int construct_configs(void)
 				break;
 
 			case light_class:
+				snprintf(reading->MQTT_config_ele.arg, sizeof(reading->MQTT_config_ele.arg),
+									"{\"name\": \"%s %s\","
+									"\"state_topic\": \"%s\","
+									"\"command_topic\": \"Hass/light/%s/%s/%s/switch\","
+									"\"brightness_state_topic\": \"%s\","
+									"\"brightness_command_topic\": \"Hass/light/%s/%s/%s/brightness/set\","
+									"\"rgb_state_topic\": \"%s\","
+									"\"rgb_command_topic\": \"Hass/light/%s/%s/%s/rgb/set\","
+									"\"state_value_template\":\"{{ value_json.state}}\",}"
+									"\"brightness_value_template\":\"{{ value_json.brightness }}\",}"
+									"\"rgb_value_template\":\"{{ value_json.rgb | join(',') }}\",}"
+									"\"brightness_scale\": \"128\"",
+									conf->Username,reading->descr, 		//name
+									pub_topic, //state_topic
+									client_id,conf->Username, reading->descr,  //command_topic
+									pub_topic,  //brightness status
+									client_id,conf->Username, reading->descr,  //brightness set
+									pub_topic,  //rgb status
+									client_id,conf->Username, reading->descr);  //rgb set
+
 				break;
 
 			default: break;
@@ -408,10 +490,11 @@ static int construct_sub_topic(void)
 			continue;
 
 		snprintf(reading->MQTT_subscr_ele.topic,sizeof(reading->MQTT_subscr_ele.topic),
-							reading->component_topic_sub,
-							client_id, conf->Username, reading->descr);
+									reading->component_topic_sub,
+									client_id, conf->Username, reading->descr);
 
 		list_add(MQTT_subscribe_list, &reading->MQTT_subscr_ele);
+
 	}
 
 

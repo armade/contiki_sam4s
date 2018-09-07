@@ -107,34 +107,36 @@ LIST(MQTT_sensor_list);
 		};
 
 /*sensors */
-DEMO_SENSOR2(temp_reading,					"CPUtemperature",UNIT_TEMP,		PD956_WEB_DEMO_SENSOR_ADC,				sensor_class,		sensor_config_topic,NULL,NULL,None);
+DEMO_SENSOR2(temp_reading,						"CPUtemperature",UNIT_TEMP,		PD956_WEB_DEMO_SENSOR_ADC,				sensor_class,		sensor_config_topic,NULL,NULL,None);
 
 
 #ifdef step_motor_reading
-DEMO_SENSOR2(temp_reading,					"Step_Position",UNIT_STEP,		PD956_WEB_DEMO_SENSOR_STEP,				cover_class,		NULL,NULL,NULL,None);
+DEMO_SENSOR2(temp_reading,						"Step_Position",UNIT_STEP,		PD956_WEB_DEMO_SENSOR_STEP,				cover_class,		NULL,NULL,NULL,None);
 #endif
 
 #ifdef NODE_LIGHT
-DEMO_SENSOR2(soft_RGB_ctrl_sensor_reading,	"RGB_light",	UNIT_NONE,		PD956_WEB_DEMO_SENSOR_RGB,				light_class,		sensor_config_topic,NULL,NULL,None);
+DEMO_SENSOR2(soft_RGB_ctrl_sensor_reading,		"RGB_light",	UNIT_NONE,		PD956_WEB_DEMO_SENSOR_RGB,				light_class,		light_config_topic,light_sub_topic,NULL,None);
 #endif
 
-#ifdef NODE_HARD_LIGHT
-DEMO_SENSOR2(hard_RGB_ctrl_sensor_reading,	"RGB_light",	UNIT_NONE,		PD956_WEB_DEMO_SENSOR_RGB,				light_class,		sensor_config_topic,NULL,NULL,None);
+#ifdef NODE_HARD_LIGHT																													//NB: only one config is necessary
+DEMO_SENSOR2(hard_RGB_switch_sensor_reading,	"switch",		UNIT_NONE,		PD956_WEB_DEMO_SENSOR_RGB,				light_class,		light_config_topic,light_sub_topic,pub_light_hard_switch_handler,None);
+DEMO_SENSOR2(hard_RGB_bright_sensor_reading,	"brightness",	UNIT_NONE,		PD956_WEB_DEMO_SENSOR_RGB,				light_class,		NULL,		light_sub_topic,pub_light_hard_brightness_handler,None);
+DEMO_SENSOR2(hard_RGB_rgb_sensor_reading,		"rgb",			UNIT_NONE,		PD956_WEB_DEMO_SENSOR_RGB,				light_class,		NULL,		light_sub_topic,pub_light_hard_rgb_handler,None);
 #endif
 
 #ifdef NODE_DHT11
-DEMO_SENSOR2(dht11_temperature_reading,		"Temperature",	UNIT_TEMP,		PD956_WEB_DEMO_SENSOR_DHT11_TEMP,		sensor_class,		sensor_config_topic,NULL,NULL,None);
-DEMO_SENSOR2(dht11_humidity_reading,		"Humidity",		UNIT_HUMIDITY,	PD956_WEB_DEMO_SENSOR_DHT11_HUMIDITY,	sensor_class, 		sensor_config_topic,NULL,NULL,None);
+DEMO_SENSOR2(dht11_temperature_reading,			"Temperature",	UNIT_TEMP,		PD956_WEB_DEMO_SENSOR_DHT11_TEMP,		sensor_class,		sensor_config_topic,NULL,NULL,None);
+DEMO_SENSOR2(dht11_humidity_reading,			"Humidity",		UNIT_HUMIDITY,	PD956_WEB_DEMO_SENSOR_DHT11_HUMIDITY,	sensor_class, 		sensor_config_topic,NULL,NULL,None);
 #endif
 
 #ifdef NODE_BMP280
-DEMO_SENSOR2(bmp_280_sensor_press_reading,	"Pressure",		UNIT_PRES,		PD956_WEB_DEMO_SENSOR_BMP280_PRES,		sensor_class,		sensor_config_topic,NULL,NULL,None);
-DEMO_SENSOR2(bmp_280_sensor_temp_reading,	"Temperature",	UNIT_TEMP,		PD956_WEB_DEMO_SENSOR_BMP280_TEMP,		sensor_class,		sensor_config_topic,NULL,NULL,None);
+DEMO_SENSOR2(bmp_280_sensor_press_reading,		"Pressure",		UNIT_PRES,		PD956_WEB_DEMO_SENSOR_BMP280_PRES,		sensor_class,		sensor_config_topic,NULL,NULL,None);
+DEMO_SENSOR2(bmp_280_sensor_temp_reading,		"Temperature",	UNIT_TEMP,		PD956_WEB_DEMO_SENSOR_BMP280_TEMP,		sensor_class,		sensor_config_topic,NULL,NULL,None);
 #endif
 
 #ifdef NODE_HTU21D
-DEMO_SENSOR2(HTU21D_sensor_humid_reading,	"Humidity",		UNIT_HUMIDITY,	PD956_WEB_DEMO_SENSOR_HTU21D_humid,		sensor_class,		sensor_config_topic,NULL,NULL,None);
-DEMO_SENSOR2(HTU21D_sensor_temp_reading,	"Temperature",	UNIT_TEMP,		PD956_WEB_DEMO_SENSOR_HTU21D_TEMP,		sensor_class,		sensor_config_topic,NULL,NULL,None);
+DEMO_SENSOR2(HTU21D_sensor_humid_reading,		"Humidity",		UNIT_HUMIDITY,	PD956_WEB_DEMO_SENSOR_HTU21D_humid,		sensor_class,		sensor_config_topic,NULL,NULL,None);
+DEMO_SENSOR2(HTU21D_sensor_temp_reading,		"Temperature",	UNIT_TEMP,		PD956_WEB_DEMO_SENSOR_HTU21D_TEMP,		sensor_class,		sensor_config_topic,NULL,NULL,None);
 #endif
 
 
@@ -335,6 +337,60 @@ get_RGB_reading(void)
 			//snprintf(buf, SENSOR_CONVERTED_LEN, "\"N/A\"");
 		}
 	}
+}
+#endif
+
+#ifdef NODE_HARD_LIGHT
+static void
+get_RGB_hard_reading(void)
+{
+	int value;
+	char *buf;
+	RGB_hard_t tmp;
+	tmp.all = ((RGB_hard_t *) hard_RGB_ctrl_sensor.value(SENSOR_ERROR))->all;
+
+	if(hard_RGB_switch_sensor_reading.publish){
+
+		value = hard_RGB_ctrl_sensor.status(0);
+		if(value == SENSOR_STATUS_READY){
+			hard_RGB_switch_sensor_reading.raw = value;
+
+			buf = hard_RGB_switch_sensor_reading.converted;
+			memset(buf, 0, SENSOR_CONVERTED_LEN);
+
+			snprintf(buf, SENSOR_CONVERTED_LEN, "ON");
+		}
+		else
+		{
+			hard_RGB_switch_sensor_reading.raw = value;
+
+			buf = hard_RGB_switch_sensor_reading.converted;
+			memset(buf, 0, SENSOR_CONVERTED_LEN);
+
+			snprintf(buf, SENSOR_CONVERTED_LEN, "OFF");
+		}
+	}
+
+	if(hard_RGB_bright_sensor_reading.publish){
+
+		hard_RGB_bright_sensor_reading.raw =  tmp.led.brightness;
+
+		buf = hard_RGB_bright_sensor_reading.converted;
+		memset(buf, 0, SENSOR_CONVERTED_LEN);
+
+		snprintf(buf, SENSOR_CONVERTED_LEN, "%d", tmp.led.brightness);
+	}
+
+	if(hard_RGB_rgb_sensor_reading.publish){
+
+		hard_RGB_rgb_sensor_reading.raw =  tmp.led;
+
+		buf = hard_RGB_rgb_sensor_reading.converted;
+		memset(buf, 0, SENSOR_CONVERTED_LEN);
+
+		snprintf(buf, SENSOR_CONVERTED_LEN, "%d,%d,%d", tmp.led.r, tmp.led.g, tmp.led.b);
+	}
+
 }
 #endif
 
@@ -691,8 +747,14 @@ static void init_sensors(void)
 #endif
 
 #ifdef NODE_HARD_LIGHT
-	list_add(MQTT_sensor_list, &hard_RGB_sensor_reading);
-	INSERT_NA(hard_RGB_sensor_reading.converted);
+	list_add(MQTT_sensor_list, &hard_RGB_switch_sensor_reading);
+	INSERT_NA(hard_RGB_switch_sensor_reading.converted);
+
+	list_add(MQTT_sensor_list, &hard_RGB_bright_sensor_reading);
+	INSERT_NA(hard_RGB_bright_sensor_reading.converted);
+
+	list_add(MQTT_sensor_list, &hard_RGB_rgb_sensor_reading);
+	INSERT_NA(hard_RGB_rgb_sensor_reading.converted);
 	//snprintf(hard_RGB_sensor_reading.converted, SENSOR_CONVERTED_LEN, "\"N/A\"");
 #endif
 
@@ -883,6 +945,11 @@ PROCESS_THREAD(PD956_MAIN_process, ev, data)
 			sensor_busy &= ~(1ul << PD956_WEB_DEMO_SENSOR_RELAY2);
 			sensor_busy &= ~(1ul << PD956_WEB_DEMO_SENSOR_RELAY3);
 			sensor_busy &= ~(1ul << PD956_WEB_DEMO_SENSOR_RELAY4);
+#endif
+#ifdef NODE_HARD_LIGHT
+		} else if(ev == sensors_event && data == &hard_RGB_ctrl_sensor){
+			get_RGB_hard_reading();
+			sensor_busy &= ~(1ul<<PD956_WEB_DEMO_SENSOR_RGB);
 #endif
 
 		}
