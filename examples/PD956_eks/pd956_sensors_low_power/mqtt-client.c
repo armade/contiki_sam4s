@@ -230,10 +230,22 @@ void pub_light_hard_brightness_handler(uint8_t *payload, uint16_t len)
 
 void pub_light_hard_rgb_handler(uint8_t *payload, uint16_t len)
 {
-	char color[3];
+	unsigned char color[3];
 	uint8_t color_index = 0;
 	char chr;
 	RGB_hard_t tmp;
+
+	/*
+	char *bb;
+	char *aa = (char *)payload;
+	unsigned char i;
+	for(i=0; i< 3; i++){
+		color[i] = strtol(aa,bb,10);
+		if(*bb != ',')
+			return;
+		aa = bb+1;
+	 }
+	 */
 
 	memset(color,0,sizeof(color));
 
@@ -271,12 +283,6 @@ static void pub_handler(const char *topic, uint16_t topic_len,
 	DBG("Pub Handler: topic='%s' (len=%u), chunk_len=%u\n", topic, topic_len,
 			chunk_len);
 
-	// If we don't like the length, ignore
-	/*if (chunk_len < 4 || chunk_len > 5)
-	{
-		printf("Incorrect topic or chunk len. Ignored\n");
-		return;
-	}*/
 
 	subscribe_ele = list_head(MQTT_subscribe_list);
 
@@ -284,10 +290,6 @@ static void pub_handler(const char *topic, uint16_t topic_len,
 		if(!memcmp((void *)subscribe_ele->topic,(void *)topic,topic_len)){
 			if(subscribe_ele->data_handler)
 				subscribe_ele->data_handler((uint8_t *)chunk,chunk_len);
-			/*if(!memcmp(chunk,"wake",4))
-				no_sleep_allowed = 1;
-			else if(!memcmp((void *)chunk,"sleep",5))
-				no_sleep_allowed = 0;*/
 		}
 		subscribe_ele = subscribe_ele->next;
 	}

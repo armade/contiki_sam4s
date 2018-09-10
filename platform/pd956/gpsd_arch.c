@@ -20,17 +20,26 @@ struct ctimer gps_config_timer;
 
 static uint8_t cmd_index = 0;
 static const char init_cmd[]={
-	"$PMTK301,2*2E\r\n"// Set DGPS mode to SBAS
-	"$PMTK313,1*2E\r\n"// Set SBAS Enabled
+	// This is don in default config "$PMTK301,2*2E\r\n"// Set DGPS mode to SBAS
+	// This is don in default config"$PMTK313,1*2E\r\n"// Set SBAS Enabled
 	//"$PMTK314,0,2,2,2,0,0,0,0,0,0,0,0,0,0,0,0,0,5,0*2F\r\n"// Set NMEA Sentence Output: GLL,RMC,VTG,GGA,GSA,GSV...........ZDA
 	"$PMTK314,0,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0*28\r\n"
 	"$PMTK319,1*24\r\n"// Set SBAS 'Integrity' Mode
 	"$PMTK225,0*2B\r\n"// Disable Periodic Mode
 	"$PMTK286,1*23\r\n"// Enable AIC Mode
-	"$PMTK869,1,1*35\r\n"// Enable EASY Mode
+	// This is don in default config "$PMTK869,1,1*35\r\n"// Enable EASY Mode
 	"$PMTK386,0.27*08\r\n" //Set static threshold to 0.27[m/s] (1 [km/hr])
 };
-
+/*
+	18 NMEA_SEN_MCHN, // PMTKCHN interval – GPS channel status ---- info here >> http://snoob-community.wikispaces.com/PMTKCHN
+	   decoding >>  $PMTKCHN,aabbc,...*XX\r\n
+			 aa => SVid: Space Vehicle Id
+			   bb => SNR: Signal to Noise Ratio
+				 c => Status:
+					  • 0 == Idle
+					  • 1 == Searching
+					  • 2 == Tracking
+*/
 
 static volatile char *config_init = (volatile char *)&init_cmd[0];
 

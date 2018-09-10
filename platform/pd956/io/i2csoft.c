@@ -20,7 +20,7 @@ Pio *I2C_base = (Pio *)PIOB;
 
 #if !LOW_CLOCK
 	#define Q_DEL MREPEAT(36,NOP,~)		//ca. 300 ns
-	#define H_DEL MREPEAT(108,NOP,~)	//ca. 300 ns
+	#define H_DEL MREPEAT(108,NOP,~)	//ca. 900 ns
 #else
 	#define Q_DEL MREPEAT(9,NOP,~)		//ca. 300 ns
 	#define H_DEL MREPEAT(27,NOP,~)		//ca. 900 ns
