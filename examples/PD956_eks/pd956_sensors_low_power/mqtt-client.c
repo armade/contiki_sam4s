@@ -437,11 +437,11 @@ static int construct_configs(void)
 				snprintf(reading->MQTT_config_ele.arg, sizeof(reading->MQTT_config_ele.arg),
 									"{\"name\": \"%s %s\","
 									"\"state_topic\": \"%s\","
-									"\"command_topic\": \"Hass/light/%s/%s/%s/switch\","
+									"\"command_topic\": \"Hass/light/%s/%s/%s/set\","
 									"\"brightness_state_topic\": \"%s\","
-									"\"brightness_command_topic\": \"Hass/light/%s/%s/%s/brightness/set\","
+									"\"brightness_command_topic\": \"Hass/light/%s/%s/brightness/set\","  // NB: brightness hardcoded. must be reading->descr of brightness element
 									"\"rgb_state_topic\": \"%s\","
-									"\"rgb_command_topic\": \"Hass/light/%s/%s/%s/rgb/set\","
+									"\"rgb_command_topic\": \"Hass/light/%s/%s/rgb/set\","   // NB: rgb hardcoded. must be reading->descr of rgb element
 									"\"state_value_template\":\"{{ value_json.state}}\",}"
 									"\"brightness_value_template\":\"{{ value_json.brightness }}\",}"
 									"\"rgb_value_template\":\"{{ value_json.rgb | join(',') }}\",}"
@@ -450,9 +450,9 @@ static int construct_configs(void)
 									pub_topic, //state_topic
 									client_id,conf->Username, reading->descr,  //command_topic
 									pub_topic,  //brightness status
-									client_id,conf->Username, reading->descr,  //brightness set
+									client_id,conf->Username,  //brightness set
 									pub_topic,  //rgb status
-									client_id,conf->Username, reading->descr);  //rgb set
+									client_id,conf->Username);  //rgb set
 
 				break;
 

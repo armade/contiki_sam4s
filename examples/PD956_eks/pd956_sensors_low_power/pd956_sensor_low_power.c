@@ -115,13 +115,14 @@ DEMO_SENSOR2(temp_reading,						"Step_Position",UNIT_STEP,		PD956_WEB_DEMO_SENSO
 #endif
 
 #ifdef NODE_LIGHT
-DEMO_SENSOR2(soft_RGB_ctrl_sensor_reading,		"RGB_light",	UNIT_NONE,		PD956_WEB_DEMO_SENSOR_RGB,				light_class,		light_config_topic,light_sub_topic,NULL,None);
+DEMO_SENSOR2(soft_RGB_ctrl_sensor_reading,		"RGB_light",	UNIT_NONE,		PD956_WEB_DEMO_SENSOR_RGB,				light_class,		light_config_topic,	light_sub_topic,NULL,None);
 #endif
 
 #ifdef NODE_HARD_LIGHT																													//NB: only one config is necessary
-DEMO_SENSOR2(hard_RGB_switch_sensor_reading,	"switch",		UNIT_NONE,		PD956_WEB_DEMO_SENSOR_RGB,				light_class,		light_config_topic,light_sub_topic,pub_light_hard_switch_handler,None);
-DEMO_SENSOR2(hard_RGB_bright_sensor_reading,	"brightness",	UNIT_NONE,		PD956_WEB_DEMO_SENSOR_RGB,				light_class,		NULL,		light_sub_topic,pub_light_hard_brightness_handler,None);
-DEMO_SENSOR2(hard_RGB_rgb_sensor_reading,		"rgb",			UNIT_NONE,		PD956_WEB_DEMO_SENSOR_RGB,				light_class,		NULL,		light_sub_topic,pub_light_hard_rgb_handler,None);
+												// NB names are hardcoded. Do not change.
+DEMO_SENSOR2(hard_RGB_switch_sensor_reading,	"switch",		UNIT_NONE,		PD956_WEB_DEMO_SENSOR_RGB,				light_class,		light_config_topic,	light_sub_topic,pub_light_hard_switch_handler,None);
+DEMO_SENSOR2(hard_RGB_bright_sensor_reading,	"brightness",	UNIT_NONE,		PD956_WEB_DEMO_SENSOR_RGB,				light_class,		NULL,				light_sub_topic,pub_light_hard_brightness_handler,None);
+DEMO_SENSOR2(hard_RGB_rgb_sensor_reading,		"rgb",			UNIT_NONE,		PD956_WEB_DEMO_SENSOR_RGB,				light_class,		NULL,				light_sub_topic,pub_light_hard_rgb_handler,None);
 #endif
 
 #ifdef NODE_DHT11
@@ -141,17 +142,17 @@ DEMO_SENSOR2(HTU21D_sensor_temp_reading,		"Temperature",	UNIT_TEMP,		PD956_WEB_D
 
 
 #ifdef NODE_GPS
-DEMO_SENSOR2(GPS_sensor_LONG_reading,		"Lon",			UNIT_ANGLE,		PD956_WEB_DEMO_SENSOR_GPS_LONG,			sensor_class,		sensor_config_topic,NULL,NULL,None);
-DEMO_SENSOR2(GPS_sensor_LAT_reading,		"Lat",			UNIT_ANGLE,		PD956_WEB_DEMO_SENSOR_GPS_LAT,			sensor_class,		sensor_config_topic,NULL,NULL,None);
-DEMO_SENSOR2(GPS_sensor_ALT_reading,		"Alt",			UNIT_DISTANCE,	PD956_WEB_DEMO_SENSOR_GPS_ALT,			sensor_class,		sensor_config_topic,NULL,NULL,None);
-DEMO_SENSOR2(GPS_sensor_SPEED_reading,		"spd",			UNIT_SPEED,		PD956_WEB_DEMO_SENSOR_GPS_SPEED,		sensor_class,		sensor_config_topic,NULL,NULL,None);
+DEMO_SENSOR2(GPS_sensor_LONG_reading,			"Lon",			UNIT_ANGLE,		PD956_WEB_DEMO_SENSOR_GPS_LONG,			sensor_class,		sensor_config_topic,NULL,NULL,None);
+DEMO_SENSOR2(GPS_sensor_LAT_reading,			"Lat",			UNIT_ANGLE,		PD956_WEB_DEMO_SENSOR_GPS_LAT,			sensor_class,		sensor_config_topic,NULL,NULL,None);
+DEMO_SENSOR2(GPS_sensor_ALT_reading,			"Alt",			UNIT_DISTANCE,	PD956_WEB_DEMO_SENSOR_GPS_ALT,			sensor_class,		sensor_config_topic,NULL,NULL,None);
+DEMO_SENSOR2(GPS_sensor_SPEED_reading,			"spd",			UNIT_SPEED,		PD956_WEB_DEMO_SENSOR_GPS_SPEED,		sensor_class,		sensor_config_topic,NULL,NULL,None);
 #endif
 
 #ifdef NODE_4_ch_relay
-DEMO_SENSOR2(NODE_4_ch_relay1_reading,		"relay1",		UNIT_NONE,		PD956_WEB_DEMO_SENSOR_RELAY1,			switch_class,		switch_config_topic,switch_sub_topic,pub_relay1_handler,None);
-DEMO_SENSOR2(NODE_4_ch_relay2_reading,		"relay2",		UNIT_NONE,		PD956_WEB_DEMO_SENSOR_RELAY2,			switch_class,		switch_config_topic,switch_sub_topic,pub_relay2_handler,None);
-DEMO_SENSOR2(NODE_4_ch_relay3_reading,		"relay3",		UNIT_NONE,		PD956_WEB_DEMO_SENSOR_RELAY3,			switch_class,		switch_config_topic,switch_sub_topic,pub_relay3_handler,None);
-DEMO_SENSOR2(NODE_4_ch_relay4_reading,		"relay4",		UNIT_NONE,		PD956_WEB_DEMO_SENSOR_RELAY4,			switch_class,		switch_config_topic,switch_sub_topic,pub_relay4_handler,None);
+DEMO_SENSOR2(NODE_4_ch_relay1_reading,			"relay1",		UNIT_NONE,		PD956_WEB_DEMO_SENSOR_RELAY1,			switch_class,		switch_config_topic,switch_sub_topic,pub_relay1_handler,None);
+DEMO_SENSOR2(NODE_4_ch_relay2_reading,			"relay2",		UNIT_NONE,		PD956_WEB_DEMO_SENSOR_RELAY2,			switch_class,		switch_config_topic,switch_sub_topic,pub_relay2_handler,None);
+DEMO_SENSOR2(NODE_4_ch_relay3_reading,			"relay3",		UNIT_NONE,		PD956_WEB_DEMO_SENSOR_RELAY3,			switch_class,		switch_config_topic,switch_sub_topic,pub_relay3_handler,None);
+DEMO_SENSOR2(NODE_4_ch_relay4_reading,			"relay4",		UNIT_NONE,		PD956_WEB_DEMO_SENSOR_RELAY4,			switch_class,		switch_config_topic,switch_sub_topic,pub_relay4_handler,None);
 #endif
 
 
@@ -219,7 +220,6 @@ static uint8_t load_config()
 			} else{
 				reading->publish = 0; // debug must be 0
 				INSERT_NA(reading->converted);
-				//snprintf(reading->converted, SENSOR_CONVERTED_LEN,"\"N/A\"");
 			}
 		}
 	} else{
@@ -304,7 +304,6 @@ static void get_temp_reading(void)
 			snprintf(buf, SENSOR_CONVERTED_LEN, "%d.%d", high, low);
 		} else{
 			INSERT_NA(buf);
-			//snprintf(buf, SENSOR_CONVERTED_LEN, "\"N/A\"");
 		}
 	}
 
@@ -334,7 +333,6 @@ get_RGB_reading(void)
 		else
 		{
 			INSERT_NA(buf);
-			//snprintf(buf, SENSOR_CONVERTED_LEN, "\"N/A\"");
 		}
 	}
 }
@@ -415,7 +413,6 @@ get_step_reading(void)
 		else
 		{
 			INSERT_NA(buf);
-			//snprintf(buf, SENSOR_CONVERTED_LEN, "\"N/A\"");
 		}
 	}
 }
@@ -442,7 +439,6 @@ get_dht11_temperature_reading(void)
 		else
 		{
 			INSERT_NA(buf);
-			//snprintf(buf, SENSOR_CONVERTED_LEN,  "\"N/A\"");
 		}
 	}
 
@@ -460,7 +456,6 @@ get_dht11_temperature_reading(void)
 		else
 		{
 			INSERT_NA(buf);
-			//snprintf(buf, SENSOR_CONVERTED_LEN, "\"N/A\"");
 		}
 	}
 	SENSORS_DEACTIVATE(dht11_sensor);
@@ -491,7 +486,6 @@ get_bmp_reading()
 		else
 		{
 			INSERT_NA(buf);
-			//snprintf(buf, SENSOR_CONVERTED_LEN, "\"N/A\"");
 		}
 	}
 
@@ -510,7 +504,6 @@ get_bmp_reading()
 		else
 		{
 			INSERT_NA(buf);
-			//snprintf(buf, SENSOR_CONVERTED_LEN, "\"N/A\"");
 		}
 	}
 
@@ -540,7 +533,6 @@ static void get_HTU21D_reading()
 			snprintf(buf, SENSOR_CONVERTED_LEN, "%d.%d", high, low);
 		} else{
 			INSERT_NA(buf);
-			//snprintf(buf, SENSOR_CONVERTED_LEN, "\"N/A\"");
 		}
 	}
 
@@ -557,7 +549,6 @@ static void get_HTU21D_reading()
 			snprintf(buf, SENSOR_CONVERTED_LEN, "%d.%d", high, low);
 		} else{
 			INSERT_NA(buf);
-			//snprintf(buf, SENSOR_CONVERTED_LEN, "\"N/A\"");
 		}
 	}
 
@@ -588,7 +579,6 @@ static void get_GPS_reading()
 			snprintf(buf, SENSOR_CONVERTED_LEN, "%d.%.7d", high, low);
 		} else{
 			INSERT_NA(buf);
-			//snprintf(buf, SENSOR_CONVERTED_LEN, "\"N/A\"");
 		}
 	}
 
@@ -605,7 +595,6 @@ static void get_GPS_reading()
 			snprintf(buf, SENSOR_CONVERTED_LEN, "%d.%.7d", high, low);
 		} else{
 			INSERT_NA(buf);
-			//snprintf(buf, SENSOR_CONVERTED_LEN, "\"N/A\"");
 		}
 	}
 
@@ -622,7 +611,6 @@ static void get_GPS_reading()
 			snprintf(buf, SENSOR_CONVERTED_LEN, "%d.%.4d", high, low);
 		} else{
 			INSERT_NA(buf);
-			//snprintf(buf, SENSOR_CONVERTED_LEN, "\"N/A\"");
 		}
 	}
 
@@ -639,7 +627,6 @@ static void get_GPS_reading()
 			snprintf(buf, SENSOR_CONVERTED_LEN, "%d.%d", high, low);
 		} else{
 			INSERT_NA(buf);
-			//snprintf(buf, SENSOR_CONVERTED_LEN, "\"N/A\"");
 		}
 	}
 
@@ -662,12 +649,11 @@ static void get_relay_reading()
 			NODE_4_ch_relay1_reading.raw = ret;
 			memset(buf, 0, SENSOR_CONVERTED_LEN);
 			if(ret)
-				INSERT_TXT(buf,"\"ON\"");//snprintf(buf, SENSOR_CONVERTED_LEN, "\"ON\"");
+				INSERT_TXT(buf,"\"ON\"");
 			else
-				INSERT_TXT(buf,"\"OFF\"");//snprintf(buf, SENSOR_CONVERTED_LEN, "\"OFF\"");
+				INSERT_TXT(buf,"\"OFF\"");
 		} else{
 			INSERT_NA(buf);
-			//snprintf(buf, SENSOR_CONVERTED_LEN, "\"N/A\"");
 		}
 	}
 
@@ -679,12 +665,11 @@ static void get_relay_reading()
 			NODE_4_ch_relay2_reading.raw = ret;
 			memset(buf, 0, SENSOR_CONVERTED_LEN);
 			if(ret)
-				INSERT_TXT(buf,"\"ON\"");//snprintf(buf, SENSOR_CONVERTED_LEN, "\"ON\"");
+				INSERT_TXT(buf,"\"ON\"");
 			else
-				INSERT_TXT(buf,"\"OFF\"");//snprintf(buf, SENSOR_CONVERTED_LEN, "\"OFF\"");
+				INSERT_TXT(buf,"\"OFF\"");
 		} else{
 			INSERT_NA(buf);
-			//snprintf(buf, SENSOR_CONVERTED_LEN, "\"N/A\"");
 		}
 	}
 
@@ -696,12 +681,11 @@ static void get_relay_reading()
 			NODE_4_ch_relay3_reading.raw = ret;
 			memset(buf, 0, SENSOR_CONVERTED_LEN);
 			if(ret)
-				INSERT_TXT(buf,"\"ON\"");//snprintf(buf, SENSOR_CONVERTED_LEN, "\"ON\"");
+				INSERT_TXT(buf,"\"ON\"");
 			else
-				INSERT_TXT(buf,"\"OFF\"");//snprintf(buf, SENSOR_CONVERTED_LEN, "\"OFF\"");
+				INSERT_TXT(buf,"\"OFF\"");
 		} else{
 			INSERT_NA(buf);
-			//snprintf(buf, SENSOR_CONVERTED_LEN, "\"N/A\"");
 		}
 	}
 
@@ -713,12 +697,11 @@ static void get_relay_reading()
 			NODE_4_ch_relay4_reading.raw = ret;
 			memset(buf, 0, SENSOR_CONVERTED_LEN);
 			if(ret)
-				INSERT_TXT(buf,"\"ON\"");//snprintf(buf, SENSOR_CONVERTED_LEN, "\"ON\"");
+				INSERT_TXT(buf,"\"ON\"");
 			else
-				INSERT_TXT(buf,"\"OFF\"");//snprintf(buf, SENSOR_CONVERTED_LEN, "\"OFF\"");
+				INSERT_TXT(buf,"\"OFF\"");
 		} else{
 			INSERT_NA(buf);
-			//snprintf(buf, SENSOR_CONVERTED_LEN, "\"N/A\"");
 		}
 	}
 
@@ -732,18 +715,15 @@ static void init_sensors(void)
 {
 	list_add(MQTT_sensor_list, &temp_reading);
 	INSERT_NA(temp_reading.converted);
-	//snprintf(temp_reading.converted, SENSOR_CONVERTED_LEN, "\"N/A\"");
 
 #ifdef NODE_STEP_MOTOR
 	list_add(MQTT_sensor_list, &step_motor_reading);
 	INSERT_NA(step_motor_reading.converted);
-	//snprintf(step_motor_reading.converted, SENSOR_CONVERTED_LEN, "\"N/A\"");
 #endif
 
 #ifdef NODE_LIGHT
 	list_add(MQTT_sensor_list, &RGB_sensor_reading);
 	INSERT_NA(RGB_sensor_reading.converted);
-	//snprintf(RGB_sensor_reading.converted, SENSOR_CONVERTED_LEN, "\"N/A\"");
 #endif
 
 #ifdef NODE_HARD_LIGHT
@@ -755,7 +735,6 @@ static void init_sensors(void)
 
 	list_add(MQTT_sensor_list, &hard_RGB_rgb_sensor_reading);
 	INSERT_NA(hard_RGB_rgb_sensor_reading.converted);
-	//snprintf(hard_RGB_sensor_reading.converted, SENSOR_CONVERTED_LEN, "\"N/A\"");
 #endif
 
 #ifdef NODE_DHT11
@@ -763,9 +742,6 @@ static void init_sensors(void)
 	list_add(MQTT_sensor_list, &dht11_humidity_reading);
 	INSERT_NA(dht11_temperature_reading.converted);
 	INSERT_NA(dht11_humidity_reading.converted);
-	//snprintf(dht11_temperature_reading.converted, SENSOR_CONVERTED_LEN, "\"N/A\"");
-	//snprintf(dht11_humidity_reading.converted, SENSOR_CONVERTED_LEN, "\"N/A\"");
-
 #endif
 
 #ifdef NODE_BMP280
@@ -773,8 +749,6 @@ static void init_sensors(void)
 	list_add(MQTT_sensor_list, &bmp_280_sensor_temp_reading);
 	INSERT_NA(bmp_280_sensor_press_reading.converted);
 	INSERT_NA(bmp_280_sensor_temp_reading.converted);
-	//snprintf(bmp_280_sensor_press_reading.converted, SENSOR_CONVERTED_LEN, "\"N/A\"");
-	//snprintf(bmp_280_sensor_temp_reading.converted, SENSOR_CONVERTED_LEN, "\"N/A\"");
 #endif
 
 #ifdef NODE_HTU21D
@@ -782,8 +756,6 @@ static void init_sensors(void)
 	list_add(MQTT_sensor_list, &HTU21D_sensor_temp_reading);
 	INSERT_NA(HTU21D_sensor_humid_reading.converted);
 	INSERT_NA(HTU21D_sensor_temp_reading.converted);
-	//snprintf(HTU21D_sensor_humid_reading.converted,	SENSOR_CONVERTED_LEN, "\"N/A\"");
-	//snprintf(HTU21D_sensor_temp_reading.converted,	SENSOR_CONVERTED_LEN, "\"N/A\"");
 #endif
 
 #ifdef NODE_GPS
@@ -795,10 +767,6 @@ static void init_sensors(void)
 	INSERT_NA(GPS_sensor_LONG_reading.converted);
 	INSERT_NA(GPS_sensor_ALT_reading.converted);
 	INSERT_NA(GPS_sensor_SPEED_reading.converted);
-	//snprintf(GPS_sensor_LAT_reading.converted, SENSOR_CONVERTED_LEN, 	"\"N/A\"");
-	//snprintf(GPS_sensor_LONG_reading.converted, SENSOR_CONVERTED_LEN, 	"\"N/A\"");
-	//snprintf(GPS_sensor_ALT_reading.converted, SENSOR_CONVERTED_LEN, 	"\"N/A\"");
-	//snprintf(GPS_sensor_SPEED_reading.converted, SENSOR_CONVERTED_LEN, 	"\"N/A\"");
 #endif
 
 #ifdef NODE_4_ch_relay
@@ -810,10 +778,6 @@ static void init_sensors(void)
 	INSERT_NA(NODE_4_ch_relay2_reading.converted);
 	INSERT_NA(NODE_4_ch_relay3_reading.converted);
 	INSERT_NA(NODE_4_ch_relay4_reading.converted);
-	//snprintf(NODE_4_ch_relay1_reading.converted, SENSOR_CONVERTED_LEN, 	"\"N/A\"");
-	//snprintf(NODE_4_ch_relay2_reading.converted, SENSOR_CONVERTED_LEN, 	"\"N/A\"");
-	//snprintf(NODE_4_ch_relay3_reading.converted, SENSOR_CONVERTED_LEN, 	"\"N/A\"");
-	//snprintf(NODE_4_ch_relay4_reading.converted, SENSOR_CONVERTED_LEN, 	"\"N/A\"");
 #endif
 }
 
