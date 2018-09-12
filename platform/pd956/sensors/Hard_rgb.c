@@ -296,12 +296,12 @@ int
 value_hard_RGB(uint16_t R,uint16_t G,uint16_t B, uint16_t brightness)
 {
 
-	if(brightness>128)
-		brightness = 128;
+	if(brightness>256)
+		brightness = 256;
 
-	PWM->PWM_CH_NUM[1].PWM_CDTYUPD = (uint32_t)(gamma_table[R]*brightness)>>7; // divide by 128
-	PWM->PWM_CH_NUM[2].PWM_CDTYUPD = (uint32_t)(gamma_table[G]*brightness)>>7; // divide by 128
-	PWM->PWM_CH_NUM[3].PWM_CDTYUPD = (uint32_t)(gamma_table[B]*brightness)>>7; // divide by 128
+	PWM->PWM_CH_NUM[1].PWM_CDTYUPD = (uint32_t)(gamma_table[R]*brightness)>>8; // divide by 256
+	PWM->PWM_CH_NUM[2].PWM_CDTYUPD = (uint32_t)(gamma_table[G]*brightness)>>8; // divide by 256
+	PWM->PWM_CH_NUM[3].PWM_CDTYUPD = (uint32_t)(gamma_table[B]*brightness)>>8; // divide by 256
 
 	sensors_changed(&hard_RGB_ctrl_sensor);
 	return 1;
@@ -375,22 +375,26 @@ hard_RGB_init(int type, int enable)
 		case SENSORS_HW_INIT:
 			configure_hard_RGB();
 			Sensor_status = SENSOR_STATUS_INITIALISED;
-
+			value_hard_RGB(0,0,0,0);
 			break;
 
 		case SENSORS_ACTIVE:
 			if(Sensor_status == SENSOR_STATUS_DISABLED)
 				return SENSOR_STATUS_DISABLED;
 
-			 if(enable) {
+			 if(enable==1) {
+				 sensors_changed(&hard_RGB_ctrl_sensor);
+				 //RGB_TEST(NULL);
+			 } else if(enable ==7) {
 				 PWM->PWM_ENA = (1<<1) | (1<<2) | (1<<3);
 				 PWM->PWM_OSC = (1<<3) | (1<<2) | (1<<17); // Remove overwrite (0 to pwm)
 				 Sensor_status = SENSOR_STATUS_READY;
-				 RGB_TEST(NULL);
-			 } else {
+				 sensors_changed(&hard_RGB_ctrl_sensor);
+			 } else if(enable ==8){
 				 PWM->PWM_DIS = (1<<1) | (1<<2) | (1<<3);
 				 PWM->PWM_OSS = (1<<3) | (1<<2) | (1<<17); // Apply overwrite (pwm to 0)
 				 Sensor_status = SENSOR_STATUS_INITIALISED;
+				 sensors_changed(&hard_RGB_ctrl_sensor);
 			 }
 			break;
 	}

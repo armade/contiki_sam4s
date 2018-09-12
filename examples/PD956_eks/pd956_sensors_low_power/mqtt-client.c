@@ -206,9 +206,9 @@ void pub_relay4_handler(uint8_t *payload, uint16_t len)
 void pub_light_hard_switch_handler(uint8_t *payload, uint16_t len)
 {
 	if(!memcmp(payload,"ON",2))
-		hard_RGB_ctrl_sensor.configure(SENSORS_ACTIVE,1);
+		hard_RGB_ctrl_sensor.configure(SENSORS_ACTIVE,7);
 	else if(!memcmp(payload,"OFF",3))
-		hard_RGB_ctrl_sensor.configure(SENSORS_ACTIVE,0);
+		hard_RGB_ctrl_sensor.configure(SENSORS_ACTIVE,8);
 
 	process_post(PROCESS_BROADCAST, Trig_sensors, NULL);
 }
@@ -219,7 +219,7 @@ void pub_light_hard_brightness_handler(uint8_t *payload, uint16_t len)
 	RGB_hard_t tmp;
 
 	if(brithtness < 0 ||
-		 brithtness > 128) {
+		 brithtness > 256) {
 	 return;
 	}
 
@@ -258,7 +258,7 @@ void pub_light_hard_rgb_handler(uint8_t *payload, uint16_t len)
 			continue;
 		}
 		color[color_index] *= 10;
-		color[color_index] += chr;
+		color[color_index] += chr-0x30;
 	}
 
 	if(color[0] > 255)
@@ -435,17 +435,17 @@ static int construct_configs(void)
 
 			case light_class:
 				snprintf(reading->MQTT_config_ele.arg, sizeof(reading->MQTT_config_ele.arg),
-									"{\"name\": \"%s %s\","
-									"\"state_topic\": \"%s\","
-									"\"command_topic\": \"Hass/light/%s/%s/%s/set\","
-									"\"brightness_state_topic\": \"%s\","
-									"\"brightness_command_topic\": \"Hass/light/%s/%s/brightness/set\","  // NB: brightness hardcoded. must be reading->descr of brightness element
-									"\"rgb_state_topic\": \"%s\","
-									"\"rgb_command_topic\": \"Hass/light/%s/%s/rgb/set\","   // NB: rgb hardcoded. must be reading->descr of rgb element
-									"\"state_value_template\":\"{{ value_json.state}}\",}"
-									"\"brightness_value_template\":\"{{ value_json.brightness }}\",}"
-									"\"rgb_value_template\":\"{{ value_json.rgb | join(',') }}\",}"
-									"\"brightness_scale\": \"128\"",
+									"{\"name\":\"%s %s\","
+									"\"state_topic\":\"%s\","
+									"\"command_topic\":\"Hass/light/%s/%s/%s/set\","
+									"\"brightness_state_topic\":\"%s\","
+									"\"brightness_command_topic\":\"Hass/light/%s/%s/brightness/set\","  // NB: brightness hardcoded. must be reading->descr of brightness element
+									"\"rgb_state_topic\":\"%s\","
+									"\"rgb_command_topic\":\"Hass/light/%s/%s/rgb/set\","   // NB: rgb hardcoded. must be reading->descr of rgb element
+									"\"state_value_template\":\"{{value_json.switch}}\","
+									"\"brightness_value_template\":\"{{value_json.brightness}}\","
+									//"\"brightness_scale\":\"128\","
+									"\"rgb_value_template\":\"{{value_json.rgb|join(',')}}\"}",
 									conf->Username,reading->descr, 		//name
 									pub_topic, //state_topic
 									client_id,conf->Username, reading->descr,  //command_topic

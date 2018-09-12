@@ -350,13 +350,13 @@ get_RGB_hard_reading(void)
 	if(hard_RGB_switch_sensor_reading.publish){
 
 		value = hard_RGB_ctrl_sensor.status(0);
-		if(value == SENSOR_STATUS_READY){
+		if(value == 3){
 			hard_RGB_switch_sensor_reading.raw = value;
 
 			buf = hard_RGB_switch_sensor_reading.converted;
 			memset(buf, 0, SENSOR_CONVERTED_LEN);
 
-			snprintf(buf, SENSOR_CONVERTED_LEN, "ON");
+			snprintf(buf, SENSOR_CONVERTED_LEN, "\"ON\"");
 		}
 		else
 		{
@@ -365,7 +365,7 @@ get_RGB_hard_reading(void)
 			buf = hard_RGB_switch_sensor_reading.converted;
 			memset(buf, 0, SENSOR_CONVERTED_LEN);
 
-			snprintf(buf, SENSOR_CONVERTED_LEN, "OFF");
+			snprintf(buf, SENSOR_CONVERTED_LEN, "\"OFF\"");
 		}
 	}
 
@@ -381,12 +381,12 @@ get_RGB_hard_reading(void)
 
 	if(hard_RGB_rgb_sensor_reading.publish){
 
-		hard_RGB_rgb_sensor_reading.raw =  tmp.led;
+		hard_RGB_rgb_sensor_reading.raw =  tmp.led.r;
 
 		buf = hard_RGB_rgb_sensor_reading.converted;
 		memset(buf, 0, SENSOR_CONVERTED_LEN);
 
-		snprintf(buf, SENSOR_CONVERTED_LEN, "%d,%d,%d", tmp.led.r, tmp.led.g, tmp.led.b);
+		snprintf(buf, SENSOR_CONVERTED_LEN, "\"%d,%d,%d\"", tmp.led.r/16, tmp.led.g/16, tmp.led.b/16);
 	}
 
 }
