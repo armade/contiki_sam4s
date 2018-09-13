@@ -8,7 +8,6 @@
 #include <stdint.h>
 #include "csprng.h"
 
-#include <math.h>
 
 #include "board-peripherals.h"
 #ifdef NODE_HARD_LIGHT
@@ -290,8 +289,43 @@ static const uint16_t  gamma_table[] = {
   4096 };
 
 float gamma_var   = 2.8; // Correction factor
-float max_in  = 255, // Top end of INPUT range
+float max_in  = 4096, // Top end of INPUT range
       max_out = 4096; // Top end of OUTPUT range
+
+
+#define EXP_A 184
+   #define EXP_C 16249
+
+   float EXP(float y)
+   {
+     union
+     {
+       float d;
+       struct
+       {
+   #ifdef LITTLE_ENDIAN
+         short j, i;
+   #else
+         short i, j;
+   #endif
+       } n;
+     } eco;
+     eco.n.i = EXP_A*(y) + (EXP_C);
+     eco.n.j = 0;
+     return eco.d;
+   }
+
+   float LOG(float y)
+   {
+     int * nTemp = (int*)&y;
+     y = (*nTemp) >> 16;
+     return (y - EXP_C) / EXP_A;
+   }
+
+   float pow(float b, float p)
+   {
+     return EXP(LOG(b) * p);
+   }
 
 int gamma_corr(int input)
 {
@@ -313,17 +347,32 @@ value_hard_RGB(uint16_t R,uint16_t G,uint16_t B, uint16_t brightness)
 	PWM->PWM_CH_NUM[1].PWM_CDTYUPD = (uint32_t)(gamma_table[R]*brightness)>>8; // divide by 256
 	PWM->PWM_CH_NUM[2].PWM_CDTYUPD = (uint32_t)(gamma_table[G]*brightness)>>8; // divide by 256
 	PWM->PWM_CH_NUM[3].PWM_CDTYUPD = (uint32_t)(gamma_table[B]*brightness)>>8; // divide by 256
-
+/*
 	// TEST
-	volatile uint16_t rt,gt,bt;
-	rt = (R>>4)-1;
-	gt = (G>>4)-1;
-	bt = (B>>4)-1;
-	volatile uint16_t pwm1,pwm2,pwm3;
-	pwm1 = (gamma_corr(rt)*brightness)>>8;
-	pwm2 = (gamma_corr(gt)*brightness)>>8;
-	pwm3 = (gamma_corr(bt)*brightness)>>8;
+	volatile uint16_t rgb_debug_r,rgb_debug_g,rgb_debug_b;
+	volatile uint16_t rgb_debug_r_CDTYUPD,rgb_debug_g_CDTYUPD,rgb_debug_b_CDTYUPD;
 
+	rgb_debug_r = R;
+	rgb_debug_g = G;
+	rgb_debug_b = B;
+
+	rgb_debug_r_CDTYUPD = (uint32_t)(gamma_table[R]*brightness)>>8;
+	rgb_debug_g_CDTYUPD = (uint32_t)(gamma_table[G]*brightness)>>8;
+	rgb_debug_b_CDTYUPD = (uint32_t)(gamma_table[B]*brightness)>>8;
+
+	volatile uint16_t rt,gt,bt;
+	rt = (R>>4);
+	gt = (G>>4);
+	bt = (B>>4);
+	volatile uint16_t pwm1,pwm2,pwm3;
+	pwm1 = (gamma_corr(R)*brightness)>>8;
+	pwm2 = (gamma_corr(G)*brightness)>>8;
+	pwm3 = (gamma_corr(B)*brightness)>>8;
+
+	asm volatile("NOP");
+	asm volatile("NOP");
+	asm volatile("NOP");
+*/
 	return 1;
 }
 

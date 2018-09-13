@@ -48,7 +48,7 @@ RGB_blue_post_handler(char *key, int key_len, char *val, int val_len)
   ret = atoi(val);
 
    if(ret < 0 ||
-      ret > 255) {
+      ret > 256) {
      return HTTPD_SIMPLE_POST_HANDLER_ERROR;
    }
 
@@ -75,7 +75,7 @@ RGB_green_post_handler(char *key, int key_len, char *val, int val_len)
   ret = atoi(val);
 
    if(ret < 0 ||
-      ret > 255) {
+      ret > 256) {
      return HTTPD_SIMPLE_POST_HANDLER_ERROR;
    }
 
@@ -101,7 +101,7 @@ RGB_red_post_handler(char *key, int key_len, char *val, int val_len)
   ret = atoi(val);
 
    if(ret < 0 ||
-      ret > 255) {
+      ret > 256) {
      return HTTPD_SIMPLE_POST_HANDLER_ERROR;
    }
 
@@ -127,7 +127,7 @@ RGB_brightness_post_handler(char *key, int key_len, char *val, int val_len)
   ret = atoi(val);
 
    if(ret < 0 ||
-      ret > 255) {
+      ret > 256) {
      return HTTPD_SIMPLE_POST_HANDLER_ERROR;
    }
 

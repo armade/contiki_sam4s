@@ -228,7 +228,7 @@ void pub_light_hard_brightness_handler(uint8_t *payload, uint16_t len)
 
 void pub_light_hard_rgb_handler(uint8_t *payload, uint16_t len)
 {
-	unsigned char color[3];
+	uint16_t color[3];
 	uint8_t color_index = 0;
 	char chr;
 	RGB_hard_t tmp;
@@ -247,15 +247,15 @@ void pub_light_hard_rgb_handler(uint8_t *payload, uint16_t len)
 		color[color_index] += chr-0x30;
 	}
 
-	if(color[0] > 255)	color[0] = 255;
-	if(color[1] > 255)	color[1] = 255;
-	if(color[2] > 255)	color[2] = 255;
+	if(color[0] > 256)	color[0] = 256;
+	if(color[1] > 256)	color[1] = 256;
+	if(color[2] > 256)	color[2] = 256;
 
 	tmp.all = ((RGB_hard_t *) hard_RGB_ctrl_sensor.value(SENSOR_ERROR))->all;
 	// (255+1)*16 = 4096 - 0+1*16= 16 THIS GETS FIXED IN GAMMA CORRECTION.
-	tmp.led.r = color[0]+1; tmp.led.r *=16;
-	tmp.led.g = color[1]+1;	tmp.led.g *=16;
-	tmp.led.b = color[2]+1;	tmp.led.b *=16;
+	tmp.led.r = color[0];	tmp.led.r *=16;
+	tmp.led.g = color[1];	tmp.led.g *=16;
+	tmp.led.b = color[2];	tmp.led.b *=16;
 	hard_RGB_ctrl_sensor.value((unsigned)&tmp);
 }
 
