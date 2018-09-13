@@ -26,6 +26,7 @@
 //#define NODE_DHT11
 
 
+
 #ifdef NODE_DHT11
 #define SENSOR_STRING 		"DHT11"
 #endif
@@ -61,3 +62,7 @@
 #endif /* BOARD_PERIPHERALS_H_ */
 /*---------------------------------------------------------------------------*/
 
+#define SENSOR_STATUS_DISABLED     0
+#define SENSOR_STATUS_INITIALISED  1
+#define SENSOR_STATUS_NOT_READY    2
+#define SENSOR_STATUS_READY        3

@@ -6,6 +6,9 @@
 #include "Hard_rgb.h"
 #include "gpio.h"
 #include <stdint.h>
+#include "csprng.h"
+
+#include <math.h>
 
 #include "board-peripherals.h"
 #ifdef NODE_HARD_LIGHT
@@ -17,15 +20,12 @@
 #define PRINTF(...)
 #endif
 
-static void RGB_TEST(void *data);
+struct ctimer RGB_effect_timer;
+unsigned effect_state = 43;
+static void RGB_FADE_RUN(void *data);
+static void RGB_RANDOM_RUN(void *data);
 
-RGB_hard_t hard_user_set; // User set value (not modified by brightness)
-
-
-#define SENSOR_STATUS_DISABLED     0
-#define SENSOR_STATUS_INITIALISED  1
-#define SENSOR_STATUS_NOT_READY    2
-#define SENSOR_STATUS_READY        3
+static RGB_hard_t hard_user_set; // User set value (not modified by brightness or gamma)
 
 static int Sensor_status = SENSOR_STATUS_DISABLED;
 
@@ -289,32 +289,53 @@ static const uint16_t  gamma_table[] = {
   4051,4054,4057,4060,4062,4065,4068,4071,4074,4076,4079,4082,4085,4088,4090,4093,
   4096 };
 
+float gamma_var   = 2.8; // Correction factor
+float max_in  = 255, // Top end of INPUT range
+      max_out = 4096; // Top end of OUTPUT range
+
+int gamma_corr(int input)
+{
+     return (int)(pow(input / max_in, gamma_var) * max_out + 0.5);
+}
+
 /**
- * \brief Set value (0-4096)
+ * \brief Set value (0-4096) (0-4096) (0-4096) (0-256)
+ * NB: only to be used here
  */
-int
+static int
 value_hard_RGB(uint16_t R,uint16_t G,uint16_t B, uint16_t brightness)
 {
-
-	if(brightness>256)
-		brightness = 256;
+	if(brightness>256)		brightness = 256;
+	if(R > 4096)			R=4096;
+	if(G > 4096)			G=4096;
+	if(B > 4096)			B=4096;
 
 	PWM->PWM_CH_NUM[1].PWM_CDTYUPD = (uint32_t)(gamma_table[R]*brightness)>>8; // divide by 256
 	PWM->PWM_CH_NUM[2].PWM_CDTYUPD = (uint32_t)(gamma_table[G]*brightness)>>8; // divide by 256
 	PWM->PWM_CH_NUM[3].PWM_CDTYUPD = (uint32_t)(gamma_table[B]*brightness)>>8; // divide by 256
 
-	sensors_changed(&hard_RGB_ctrl_sensor);
+	// TEST
+	volatile uint16_t rt,gt,bt;
+	rt = (R>>4)-1;
+	gt = (G>>4)-1;
+	bt = (B>>4)-1;
+	volatile uint16_t pwm1,pwm2,pwm3;
+	pwm1 = (gamma_corr(rt)*brightness)>>8;
+	pwm2 = (gamma_corr(gt)*brightness)>>8;
+	pwm3 = (gamma_corr(bt)*brightness)>>8;
+
 	return 1;
 }
 
 //NB: value must be an address to the variable that holds the RGB values
-int
+static int
 hard_RGB_set(int value_addr)
 {
 	RGB_hard_t *temp = (RGB_hard_t *)value_addr;
 	if(value_addr != SENSOR_ERROR){
 		hard_user_set.all = temp->all;
 		value_hard_RGB(hard_user_set.led.r,hard_user_set.led.g,hard_user_set.led.b,hard_user_set.led.brightness);
+		sensors_changed(&hard_RGB_ctrl_sensor);
 	}
 	return (int)&hard_user_set.all;
 }
@@ -375,7 +396,11 @@ hard_RGB_init(int type, int enable)
 		case SENSORS_HW_INIT:
 			configure_hard_RGB();
 			Sensor_status = SENSOR_STATUS_INITIALISED;
-			value_hard_RGB(0,0,0,0);
+			value_hard_RGB(0,0,0,256);
+			hard_user_set.led.brightness = 256;
+			hard_user_set.led.r = 0;
+			hard_user_set.led.g = 0;
+			hard_user_set.led.b = 0;
 			break;
 
 		case SENSORS_ACTIVE:
@@ -383,6 +408,7 @@ hard_RGB_init(int type, int enable)
 				return SENSOR_STATUS_DISABLED;
 
 			 if(enable==1) {
+				 //Nothing to enable so we signal done
 				 sensors_changed(&hard_RGB_ctrl_sensor);
 				 //RGB_TEST(NULL);
 			 } else if(enable ==7) {
@@ -395,6 +421,12 @@ hard_RGB_init(int type, int enable)
 				 PWM->PWM_OSS = (1<<3) | (1<<2) | (1<<17); // Apply overwrite (pwm to 0)
 				 Sensor_status = SENSOR_STATUS_INITIALISED;
 				 sensors_changed(&hard_RGB_ctrl_sensor);
+			 } else if(enable == 10){
+				 effect_state = 43; // First run indicator
+				 RGB_FADE_RUN(NULL);
+			 } else if(enable == 11){
+				 effect_state = 43; // First run indicator
+				 RGB_RANDOM_RUN(NULL);
 			 }
 			break;
 	}
@@ -410,40 +442,69 @@ hard_RGB_status(int type)
 SENSORS_SENSOR(hard_RGB_ctrl_sensor, "RGB", hard_RGB_set, hard_RGB_init, hard_RGB_status);
 /*---------------------------------------------------------------------------*/
 
-struct ctimer RGB_timer;
 
-unsigned state = 43;
-RGB_hard_t RGB_tmp;
+static RGB_hard_t RGB_tmp;
 
+// 4 ms run on 4096 = 16 sec pr color
+// 4 ms run on 4096/4 = 4 sec pr color
 static void
-RGB_TEST(void *data)
+RGB_FADE_RUN(void *data)
 {
 	clock_time_t next = 4;
-	if(state == 43)
-	{
-		state = 0;
-		RGB_tmp.led.brightness = 128;
+	if(effect_state == 43){
+		effect_state = 0;
+		RGB_tmp.led.r = 0;
+		RGB_tmp.led.g = 0;
+		RGB_tmp.led.b = 0;
+		RGB_tmp.led.brightness = 256;
 	}
-	switch(state)
-	{
+	switch(effect_state){
+
 		case 0:
-			if(RGB_tmp.led.b) 			RGB_tmp.led.b--;
-			if(++RGB_tmp.led.r == 4096)	state++;
+			if(RGB_tmp.led.b) 			RGB_tmp.led.b-=4;
+			RGB_tmp.led.r += 4;
+			if(RGB_tmp.led.r == 4096)	effect_state++;
 			break;
 
 		case 1:
-			if(RGB_tmp.led.r) 			RGB_tmp.led.r--;
-			if(++RGB_tmp.led.g == 4096)	state++;
+			if(RGB_tmp.led.r) 			RGB_tmp.led.r-=4;
+			RGB_tmp.led.g += 4;
+			if(RGB_tmp.led.g == 4096)	effect_state++;
 			break;
 
 		case 2:
-			if(RGB_tmp.led.g) 			RGB_tmp.led.g--;
-			if(++RGB_tmp.led.b == 4096)	state = 0;
+			if(RGB_tmp.led.g) 			RGB_tmp.led.g-=4;
+			RGB_tmp.led.b += 4;
+			if(RGB_tmp.led.b == 4096)	effect_state = 0;
 			break;
 	}
+	// NB: user can't see the value update on the PWM signal. It would just confuse them.
 	value_hard_RGB(RGB_tmp.led.r,RGB_tmp.led.g,RGB_tmp.led.b,RGB_tmp.led.brightness);
-	ctimer_set(&RGB_timer, next, RGB_TEST, NULL);
+	ctimer_set(&RGB_effect_timer, next, RGB_FADE_RUN, NULL);
+}
+
+static void
+RGB_RANDOM_RUN(void *data)
+{
+	clock_time_t next;
+	uint16_t rnd[2];
+	if(effect_state == 43){
+		effect_state = 0;
+		RGB_tmp.led.brightness = 256;
+	}
+
+	csprng_get((unsigned char *)&rnd[0],4);
+	RGB_tmp.led.r = rnd[0];
+	RGB_tmp.led.g = rnd[0];
+	RGB_tmp.led.b = rnd[0];
+
+	next = rnd[1]&127;
+	// NB: user can't see the value update on the PWM signal. It would just confuse them.
+	value_hard_RGB(RGB_tmp.led.r,RGB_tmp.led.g,RGB_tmp.led.b,RGB_tmp.led.brightness);
+	ctimer_set(&RGB_effect_timer, next, RGB_RANDOM_RUN, NULL);
 }
 
 /*---------------------------------------------------------------------------*/
 #endif
+
+

@@ -6,7 +6,8 @@
 #include "pmc.h"
 #include "adc.h"
 #include "platform-conf.h"
-//h3v6qfg4
+#include "board-peripherals.h"
+
 #include <stdint.h>
 #include <string.h>
 #include <stdio.h>
@@ -19,10 +20,6 @@
 #endif
 /*---------------------------------------------------------------------------*/
 
-#define SENSOR_STATUS_DISABLED     0
-#define SENSOR_STATUS_INITIALISED  1
-#define SENSOR_STATUS_NOT_READY    2
-#define SENSOR_STATUS_READY        3
 
 static int sensor_status = SENSOR_STATUS_DISABLED;
 

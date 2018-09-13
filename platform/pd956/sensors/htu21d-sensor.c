@@ -94,11 +94,10 @@ static uint32_t htu21_temperature_conversion_time =
 static uint32_t htu21_humidity_conversion_time =
 		HTU21_HUMIDITY_CONVERSION_TIME_T_14b_RH_12b;
 /*---------------------------------------------------------------------------*/
-#define SENSOR_STATUS_DISABLED     0
-#define SENSOR_STATUS_INITIALISED  1
-#define SENSOR_STATUS_TEMP_MEAS    2
-#define SENSOR_STATUS_HUMID_MEAS   3
-#define SENSOR_STATUS_READY        4
+
+#define SENSOR_STATUS_TEMP_MEAS    20
+#define SENSOR_STATUS_HUMID_MEAS   30
+
 
 static int sensor_state = SENSOR_STATUS_DISABLED;
 static uint8_t retry_count;

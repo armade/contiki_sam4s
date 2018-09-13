@@ -38,7 +38,7 @@
 #include "sys/timer.h"
 #include "gpio.h"
 #include "pio_handler.h"
-
+#include "board-peripherals.h"
 
 /*---------------------------------------------------------------------------*/
 #define CH1_PIN            PIO_PA10
@@ -53,11 +53,6 @@ unsigned pin_array[] = {
 	CH4_PIN
 };
 
-
-#define SENSOR_STATUS_DISABLED     0
-#define SENSOR_STATUS_INITIALISED  1
-#define SENSOR_STATUS_NOT_READY    2
-#define SENSOR_STATUS_READY        3
 
 static int sensor_status = SENSOR_STATUS_DISABLED;
 

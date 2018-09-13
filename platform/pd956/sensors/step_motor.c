@@ -26,11 +26,6 @@
 Pio *step_base = (Pio *)PIOA;
 
 
-#define SENSOR_STATUS_DISABLED     0
-#define SENSOR_STATUS_INITIALISED  1
-#define SENSOR_STATUS_NOT_READY    2
-#define SENSOR_STATUS_READY        3
-
 static int Sensor_status = SENSOR_STATUS_DISABLED;
 int32_t stepPosition;
 uint8_t Motor_running;

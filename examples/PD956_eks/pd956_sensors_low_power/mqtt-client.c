@@ -215,16 +215,14 @@ void pub_light_hard_switch_handler(uint8_t *payload, uint16_t len)
 
 void pub_light_hard_brightness_handler(uint8_t *payload, uint16_t len)
 {
-	int brithtness = strtol((char *)payload,NULL,10);
+	int brightness = strtol((char *)payload,NULL,10);
 	RGB_hard_t tmp;
 
-	if(brithtness < 0 ||
-		 brithtness > 256) {
-	 return;
-	}
+	if((brightness < 0) ||  (brightness > 256))
+		return;
 
 	tmp.all = ((RGB_hard_t *) hard_RGB_ctrl_sensor.value(SENSOR_ERROR))->all;
-	tmp.led.brightness = brithtness;
+	tmp.led.brightness = brightness;
 	hard_RGB_ctrl_sensor.value((unsigned)&tmp);
 }
 
@@ -234,18 +232,6 @@ void pub_light_hard_rgb_handler(uint8_t *payload, uint16_t len)
 	uint8_t color_index = 0;
 	char chr;
 	RGB_hard_t tmp;
-
-	/*
-	char *bb;
-	char *aa = (char *)payload;
-	unsigned char i;
-	for(i=0; i< 3; i++){
-		color[i] = strtol(aa,bb,10);
-		if(*bb != ',')
-			return;
-		aa = bb+1;
-	 }
-	 */
 
 	memset(color,0,sizeof(color));
 
@@ -261,19 +247,15 @@ void pub_light_hard_rgb_handler(uint8_t *payload, uint16_t len)
 		color[color_index] += chr-0x30;
 	}
 
-	if(color[0] > 255)
-		color[0] = 255;
-
-	if(color[1] > 255)
-		color[1] = 255;
-
-	if(color[2] > 255)
-		color[2] = 255;
+	if(color[0] > 255)	color[0] = 255;
+	if(color[1] > 255)	color[1] = 255;
+	if(color[2] > 255)	color[2] = 255;
 
 	tmp.all = ((RGB_hard_t *) hard_RGB_ctrl_sensor.value(SENSOR_ERROR))->all;
-	tmp.led.r = color[0]*16; //4096 is max in light. 255 is max in payload. 255*16 = 4080.
-	tmp.led.g = color[1]*16;
-	tmp.led.b = color[2]*16;
+	// (255+1)*16 = 4096 - 0+1*16= 16 THIS GETS FIXED IN GAMMA CORRECTION.
+	tmp.led.r = color[0]+1; tmp.led.r *=16;
+	tmp.led.g = color[1]+1;	tmp.led.g *=16;
+	tmp.led.b = color[2]+1;	tmp.led.b *=16;
 	hard_RGB_ctrl_sensor.value((unsigned)&tmp);
 }
 
@@ -444,7 +426,6 @@ static int construct_configs(void)
 									"\"rgb_command_topic\":\"Hass/light/%s/%s/rgb/set\","   // NB: rgb hardcoded. must be reading->descr of rgb element
 									"\"state_value_template\":\"{{value_json.switch}}\","
 									"\"brightness_value_template\":\"{{value_json.brightness}}\","
-									//"\"brightness_scale\":\"128\","
 									"\"rgb_value_template\":\"{{value_json.rgb|join(',')}}\"}",
 									conf->Username,reading->descr, 		//name
 									pub_topic, //state_topic

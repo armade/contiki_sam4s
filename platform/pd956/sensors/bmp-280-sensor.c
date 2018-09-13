@@ -42,7 +42,7 @@
 #include "sys/ctimer.h"
 #include "lib/sensors.h"
 #include "i2csoft.h"
-
+#include "board-peripherals.h"
 
 #include <stdint.h>
 #include <string.h>
@@ -125,11 +125,6 @@ typedef struct {
 #define CALIB_DATA_SIZE (sizeof(bmp_280_calibration_t))
 static uint8_t calibration_data[CALIB_DATA_SIZE];
 /*---------------------------------------------------------------------------*/
-#define SENSOR_STATUS_DISABLED     0
-#define SENSOR_STATUS_INITIALISED  1
-#define SENSOR_STATUS_NOT_READY    2
-#define SENSOR_STATUS_READY        3
-
 static int enabled = SENSOR_STATUS_DISABLED;
 /*---------------------------------------------------------------------------*/
 /* A buffer for the raw reading from the sensor */

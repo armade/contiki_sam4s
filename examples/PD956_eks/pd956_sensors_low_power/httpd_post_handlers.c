@@ -160,7 +160,7 @@ RGB_blue_post_handler(char *key, int key_len, char *val, int val_len)
 
    tmp.all = ((RGB_hard_t *) hard_RGB_ctrl_sensor.value(SENSOR_ERROR))->all;
 	tmp.led.b = ret;
-	hard_RGB_ctrl_sensor.value(&tmp);
+	hard_RGB_ctrl_sensor.value((int)&tmp);
 
    return HTTPD_SIMPLE_POST_HANDLER_OK;
 }
@@ -187,7 +187,7 @@ RGB_green_post_handler(char *key, int key_len, char *val, int val_len)
 
    tmp.all = ((RGB_hard_t *) hard_RGB_ctrl_sensor.value(SENSOR_ERROR))->all;
   tmp.led.g = ret;
-  hard_RGB_ctrl_sensor.value(&tmp);
+  hard_RGB_ctrl_sensor.value((int)&tmp);
 
    return HTTPD_SIMPLE_POST_HANDLER_OK;
 }
@@ -213,7 +213,7 @@ RGB_red_post_handler(char *key, int key_len, char *val, int val_len)
 
    tmp.all = ((RGB_hard_t *) hard_RGB_ctrl_sensor.value(SENSOR_ERROR))->all;
    tmp.led.r = ret;
-   hard_RGB_ctrl_sensor.value(&tmp);
+   hard_RGB_ctrl_sensor.value((int)&tmp);
 
    return HTTPD_SIMPLE_POST_HANDLER_OK;
 }
@@ -233,13 +233,13 @@ RGB_brightness_post_handler(char *key, int key_len, char *val, int val_len)
   ret = atoi(val);
 
    if(ret < 0 ||
-      ret > 128) {
+      ret > 256) {
      return HTTPD_SIMPLE_POST_HANDLER_ERROR;
    }
 
    tmp.all = ((RGB_hard_t *) hard_RGB_ctrl_sensor.value(SENSOR_ERROR))->all;
    tmp.led.brightness = ret;
-   hard_RGB_ctrl_sensor.value(&tmp);
+   hard_RGB_ctrl_sensor.value((int)&tmp);
 
    return HTTPD_SIMPLE_POST_HANDLER_OK;
 }

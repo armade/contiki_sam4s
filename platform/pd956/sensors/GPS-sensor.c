@@ -42,7 +42,7 @@
 #include "sys/ctimer.h"
 #include "lib/sensors.h"
 #include "apps/gpsd/minmea.h"
-
+#include "board-peripherals.h"
 
 #include <stdint.h>
 #include <string.h>
@@ -55,11 +55,6 @@
 #else
 #define PRINTF(...)
 #endif
-
-#define SENSOR_STATUS_DISABLED     0
-#define SENSOR_STATUS_INITIALISED  1
-#define SENSOR_STATUS_NOT_READY    2
-#define SENSOR_STATUS_READY        3
 
 #define SENSOR_STARTUP_DELAY 1*(1000/CLOCK_SECOND)
 static struct ctimer startup_timer;

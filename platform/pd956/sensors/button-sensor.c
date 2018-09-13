@@ -38,6 +38,7 @@
 #include "sys/timer.h"
 #include "gpio.h"
 #include "pio_handler.h"
+#include "board-peripherals.h"
 
 #define BUTTON_PIN            PIO_PA6
 Pio *button_base = (Pio *)PIOA;
@@ -48,10 +49,6 @@ volatile uint8_t IRQ_type;
 #define falling_egde 	1
 #define rising_egde 	2
 
-#define SENSOR_STATUS_DISABLED     0
-#define SENSOR_STATUS_INITIALISED  1
-#define SENSOR_STATUS_NOT_READY    2
-#define SENSOR_STATUS_READY        3
 
 static int sensor_status = SENSOR_STATUS_DISABLED;
 

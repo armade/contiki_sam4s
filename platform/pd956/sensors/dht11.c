@@ -2,6 +2,7 @@
 #include "contiki-conf.h"
 #include "platform-conf.h"
 #include "lib/sensors.h"
+#include "board-peripherals.h"
 
 #include "compiler.h"
 #include <gpio.h>
@@ -17,12 +18,6 @@
 #endif
 /*---------------------------------------------------------------------------*/
 #define data_pin PIO_PB2
-
-
-#define SENSOR_STATUS_DISABLED     0
-#define SENSOR_STATUS_INITIALISED  1
-#define SENSOR_STATUS_NOT_READY    2
-#define SENSOR_STATUS_READY        3
 
 static int sensor_status = SENSOR_STATUS_DISABLED;
 
