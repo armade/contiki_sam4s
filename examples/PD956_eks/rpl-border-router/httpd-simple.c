@@ -600,7 +600,6 @@ PT_THREAD(generate_index(struct httpd_state *s))
    PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "style=\"background-color:#fff\">"));
    PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "</canvas><br>"));
 
-
    //======================================================================================
      /* ND Cache */
   PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<fieldset><h1>Neighbors</h1>"));

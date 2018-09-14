@@ -85,7 +85,7 @@ configure_step(void)
 
 	step_TIMER.TC_IER=1<<4; //CPCS
 	NVIC_ClearPendingIRQ(step_TIMER_IRQ);
-	NVIC_SetPriority((IRQn_Type) step_TIMER_ID, 3);
+	NVIC_SetPriority((IRQn_Type) step_TIMER_ID, 3);//level 0 is the highest interrupt priority (0-15)
 	NVIC_EnableIRQ(step_TIMER_IRQ);
 
 	return 1;

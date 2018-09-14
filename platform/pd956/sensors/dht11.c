@@ -208,7 +208,7 @@ dht11_init(int type, int enable)
 			pio_handler_set(PIOB, ID_PIOB, data_pin, PIO_IT_FALL_EDGE, dht11_data_pin_irq);
 			// We don't have an input capture at our disposal,
 			// so we have to use high priority interrupt.
-			NVIC_SetPriority((IRQn_Type) ID_PIOB, 0);
+			NVIC_SetPriority((IRQn_Type) ID_PIOB, 2);//level 0 is the highest interrupt priority (0-15)
 			NVIC_EnableIRQ((IRQn_Type)ID_PIOB);
 
 			sensor_status = SENSOR_STATUS_INITIALISED;

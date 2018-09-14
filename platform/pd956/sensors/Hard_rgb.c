@@ -28,7 +28,7 @@ static RGB_hard_t hard_user_set; // User set value (not modified by brightness o
 
 static int Sensor_status = SENSOR_STATUS_DISABLED;
 
-
+/*
 static const uint16_t  gamma_table[] = {
     0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
     0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
@@ -287,49 +287,38 @@ static const uint16_t  gamma_table[] = {
   4007,4010,4013,4015,4018,4021,4024,4026,4029,4032,4035,4037,4040,4043,4046,4049,
   4051,4054,4057,4060,4062,4065,4068,4071,4074,4076,4079,4082,4085,4088,4090,4093,
   4096 };
+*/
 
-float gamma_var   = 2.8; // Correction factor
-float max_in  = 4096, // Top end of INPUT range
-      max_out = 4096; // Top end of OUTPUT range
+#define max_in  4096 // Top end of INPUT range
+#define max_out 4096 // Top end of OUTPUT range
 
 
-#define EXP_A 184
-   #define EXP_C 16249
-
-   float EXP(float y)
-   {
-     union
-     {
-       float d;
-       struct
-       {
-   #ifdef LITTLE_ENDIAN
-         short j, i;
-   #else
-         short i, j;
-   #endif
-       } n;
-     } eco;
-     eco.n.i = EXP_A*(y) + (EXP_C);
-     eco.n.j = 0;
-     return eco.d;
-   }
-
-   float LOG(float y)
-   {
-     int * nTemp = (int*)&y;
-     y = (*nTemp) >> 16;
-     return (y - EXP_C) / EXP_A;
-   }
-
-   float pow(float b, float p)
-   {
-     return EXP(LOG(b) * p);
-   }
-
+// To simplify the expression the gamma value is chosen to 3
 int gamma_corr(int input)
 {
-     return (int)(pow(input / max_in, gamma_var) * max_out + 0.5);
+	uint64_t accu = input*input*input*max_out; // 49 bit max
+	//accu /= (max_in*max_in*max_in);
+	accu >>= 35;  // 1/(4096^3)   4096 = 2^12   12*3=36
+
+	if(accu&1){ // The last bit is 0.5 if we add 0.5 to 0.5 we get 1 :)
+		accu>>=1;
+		accu++;
+	}
+	else
+		accu>>=1;
+
+	return (int) accu;
+
+	/* This device does not have a FPU but it has some single precision dsp
+	 * instructions. Need to check disassemble to determine best approach.
+
+	float dev_exp = (float)input * (1.0 / max_in);
+	float pow_exp = dev_exp*dev_exp*dev_exp;
+
+	return (int)(pow_exp * max_out + 0.5);
+	*/
+	// First
+    //return (int)(pow(input / max_in, gamma_var) * max_out + 0.5);
 }
 
 /**
@@ -339,40 +328,15 @@ int gamma_corr(int input)
 static int
 value_hard_RGB(uint16_t R,uint16_t G,uint16_t B, uint16_t brightness)
 {
-	if(brightness>256)		brightness = 256;
-	if(R > 4096)			R=4096;
-	if(G > 4096)			G=4096;
-	if(B > 4096)			B=4096;
+	if((brightness>256))		brightness = 256;
+	if((R > 4096))				R=4096;
+	if((G > 4096))				G=4096;
+	if((B > 4096))				B=4096;
 
-	PWM->PWM_CH_NUM[1].PWM_CDTYUPD = (uint32_t)(gamma_table[R]*brightness)>>8; // divide by 256
-	PWM->PWM_CH_NUM[2].PWM_CDTYUPD = (uint32_t)(gamma_table[G]*brightness)>>8; // divide by 256
-	PWM->PWM_CH_NUM[3].PWM_CDTYUPD = (uint32_t)(gamma_table[B]*brightness)>>8; // divide by 256
-/*
-	// TEST
-	volatile uint16_t rgb_debug_r,rgb_debug_g,rgb_debug_b;
-	volatile uint16_t rgb_debug_r_CDTYUPD,rgb_debug_g_CDTYUPD,rgb_debug_b_CDTYUPD;
+	PWM->PWM_CH_NUM[1].PWM_CDTYUPD = (uint32_t)(gamma_corr(R)*brightness)>>8; // divide by 256
+	PWM->PWM_CH_NUM[2].PWM_CDTYUPD = (uint32_t)(gamma_corr(G)*brightness)>>8; // divide by 256
+	PWM->PWM_CH_NUM[3].PWM_CDTYUPD = (uint32_t)(gamma_corr(B)*brightness)>>8; // divide by 256
 
-	rgb_debug_r = R;
-	rgb_debug_g = G;
-	rgb_debug_b = B;
-
-	rgb_debug_r_CDTYUPD = (uint32_t)(gamma_table[R]*brightness)>>8;
-	rgb_debug_g_CDTYUPD = (uint32_t)(gamma_table[G]*brightness)>>8;
-	rgb_debug_b_CDTYUPD = (uint32_t)(gamma_table[B]*brightness)>>8;
-
-	volatile uint16_t rt,gt,bt;
-	rt = (R>>4);
-	gt = (G>>4);
-	bt = (B>>4);
-	volatile uint16_t pwm1,pwm2,pwm3;
-	pwm1 = (gamma_corr(R)*brightness)>>8;
-	pwm2 = (gamma_corr(G)*brightness)>>8;
-	pwm3 = (gamma_corr(B)*brightness)>>8;
-
-	asm volatile("NOP");
-	asm volatile("NOP");
-	asm volatile("NOP");
-*/
 	return 1;
 }
 
@@ -445,11 +409,11 @@ hard_RGB_init(int type, int enable)
 		case SENSORS_HW_INIT:
 			configure_hard_RGB();
 			Sensor_status = SENSOR_STATUS_INITIALISED;
-			value_hard_RGB(0,0,0,256);
+			value_hard_RGB(4096,4096,4096,256);
 			hard_user_set.led.brightness = 256;
-			hard_user_set.led.r = 0;
-			hard_user_set.led.g = 0;
-			hard_user_set.led.b = 0;
+			hard_user_set.led.r = 4096;
+			hard_user_set.led.g = 4096;
+			hard_user_set.led.b = 4096;
 			break;
 
 		case SENSORS_ACTIVE:
@@ -461,11 +425,13 @@ hard_RGB_init(int type, int enable)
 				 sensors_changed(&hard_RGB_ctrl_sensor);
 				 //RGB_TEST(NULL);
 			 } else if(enable ==7) {
+				 effect_state = 255;
 				 PWM->PWM_ENA = (1<<1) | (1<<2) | (1<<3);
 				 PWM->PWM_OSC = (1<<3) | (1<<2) | (1<<17); // Remove overwrite (0 to pwm)
 				 Sensor_status = SENSOR_STATUS_READY;
 				 sensors_changed(&hard_RGB_ctrl_sensor);
 			 } else if(enable ==8){
+				 effect_state = 255;
 				 PWM->PWM_DIS = (1<<1) | (1<<2) | (1<<3);
 				 PWM->PWM_OSS = (1<<3) | (1<<2) | (1<<17); // Apply overwrite (pwm to 0)
 				 Sensor_status = SENSOR_STATUS_INITIALISED;
@@ -526,6 +492,9 @@ RGB_FADE_RUN(void *data)
 			RGB_tmp.led.b += 4;
 			if(RGB_tmp.led.b == 4096)	effect_state = 0;
 			break;
+
+		case 255:// exit
+			return;
 	}
 	// NB: user can't see the value update on the PWM signal. It would just confuse them.
 	value_hard_RGB(RGB_tmp.led.r,RGB_tmp.led.g,RGB_tmp.led.b,RGB_tmp.led.brightness);
@@ -548,6 +517,12 @@ RGB_RANDOM_RUN(void *data)
 	RGB_tmp.led.b = rnd[0];
 
 	next = rnd[1]&127;
+
+	if(next < 5)
+		next = 5;
+
+	if(effect_state == 255)// exit
+		return;
 	// NB: user can't see the value update on the PWM signal. It would just confuse them.
 	value_hard_RGB(RGB_tmp.led.r,RGB_tmp.led.g,RGB_tmp.led.b,RGB_tmp.led.brightness);
 	ctimer_set(&RGB_effect_timer, next, RGB_RANDOM_RUN, NULL);

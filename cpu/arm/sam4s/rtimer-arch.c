@@ -61,7 +61,7 @@ rtimer_arch_init(void)
 	NVIC_DisableIRQ(RTT_IRQn);
 	NVIC_ClearPendingIRQ(RTT_IRQn);
 	pmc_set_fast_startup_input(PMC_FSMR_RTTAL);
-	NVIC_SetPriority(RTT_IRQn, 0);
+	NVIC_SetPriority(RTT_IRQn, 0); //level 0 is the highest interrupt priority (0-15)
 	NVIC_EnableIRQ(RTT_IRQn);
 	rtt_enable_interrupt(RTT, RTT_MR_ALMIEN);
 }

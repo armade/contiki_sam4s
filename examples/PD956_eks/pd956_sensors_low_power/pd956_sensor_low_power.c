@@ -218,11 +218,16 @@ static uint8_t load_config()
 			if(web_demo_config.sensors_bitmap & (1 << reading->type)){
 				reading->publish = 1;
 			} else{
-				reading->publish = 0; // debug must be 0
+				reading->publish = 0;
 				INSERT_NA(reading->converted);
 			}
 		}
 	} else{
+		// If Bad config show all off.
+		for (reading = list_head(MQTT_sensor_list); reading != NULL ; reading =	list_item_next(reading)){
+				reading->publish = 0;
+				INSERT_NA(reading->converted);
+		}
 		printf("Error bad header in config\n");
 		flash_enter_deep_sleep();
 		return 1;

@@ -247,9 +247,9 @@ void pub_light_hard_rgb_handler(uint8_t *payload, uint16_t len)
 		color[color_index] += chr-0x30;
 	}
 
-	if(color[0] > 256)	color[0] = 256;
-	if(color[1] > 256)	color[1] = 256;
-	if(color[2] > 256)	color[2] = 256;
+	if((color[0] > 256))	color[0] = 256;
+	if((color[1] > 256))	color[1] = 256;
+	if((color[2] > 256))	color[2] = 256;
 
 	tmp.all = ((RGB_hard_t *) hard_RGB_ctrl_sensor.value(SENSOR_ERROR))->all;
 	// (255+1)*16 = 4096 - 0+1*16= 16 THIS GETS FIXED IN GAMMA CORRECTION.

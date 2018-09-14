@@ -1098,7 +1098,7 @@ PT_THREAD(generate_light_config(struct httpd_state *s))
   PT_WAIT_THREAD(&s->generate_pt,
 		  	  enqueue_chunk(s, 0, "value=\"%u\" ", RGB.led.brightness));
   PT_WAIT_THREAD(&s->generate_pt,
-		  	  enqueue_chunk(s, 0, "min=\"0\" max=\"128\" "
+		  	  enqueue_chunk(s, 0, "min=\"0\" max=\"255\" "
                                      "name=\"RGB_brightness\">%s",
                                config_div_close));
 

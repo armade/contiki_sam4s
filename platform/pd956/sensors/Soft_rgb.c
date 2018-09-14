@@ -5,7 +5,7 @@
 #include "lib/sensors.h"
 #include "Soft_rgb.h"
 #include <stdint.h>
-
+#include "csprng.h"
 #include "board-peripherals.h"
 #ifdef NODE_LIGHT
 /*---------------------------------------------------------------------------*/
@@ -21,63 +21,94 @@
 #define RGB_B_GPIO            (PIO_PA10)
 Pio *RGB_base = (Pio *)PIOA;
 
+struct ctimer RGB_effect_timer;
+unsigned effect_state = 43;
+static void RGB_FADE_RUN(void *data);
 
-
-volatile RGB_t RGB = {0}; // True output
-volatile RGB_t RGB_reload = {0}; // True reload output
+volatile RGB_t RGB; // True output
+volatile RGB_t RGB_reload; // True reload output
 RGB_t user_set; // User set value (not modified by brightness)
 
-uint8_t counter=0;
+uint16_t counter=256;
 
 
 static int Sensor_status = SENSOR_STATUS_DISABLED;
 
 /*---------------------------------------------------------------------------*/
-
-
+/*
+   |\   |\
+   | \  | \
+   |  \ |  \
+   |   \|   \
+     ___  ___
+  ___|  |_|  |
+*/
 void TC2_Handler(void)
 {
 	RGB_TIMER.TC_SR;
 
 	if(counter == 0)
 	{
+		counter = 256;
 		RGB.all = RGB_reload.all;
-		// If zero don't bother turning them on
-		if(0 != RGB.led.r)		RGB_base->PIO_SODR = RGB_R_GPIO;
-		else 					RGB_base->PIO_CODR = RGB_R_GPIO;
-
-		if(0 != RGB.led.g)		RGB_base->PIO_SODR = RGB_G_GPIO;
-		else					RGB_base->PIO_CODR = RGB_G_GPIO;
-
-		if(0 != RGB.led.b)		RGB_base->PIO_SODR = RGB_B_GPIO;
-		else					RGB_base->PIO_CODR = RGB_B_GPIO;
+		RGB_base->PIO_CODR = RGB_R_GPIO | RGB_G_GPIO | RGB_B_GPIO;
 	}
 	else
 	{
-		if(counter == RGB.led.r)	RGB_base->PIO_CODR = RGB_R_GPIO;
-		if(counter == RGB.led.g)	RGB_base->PIO_CODR = RGB_G_GPIO;
-		if(counter == RGB.led.b)	RGB_base->PIO_CODR = RGB_B_GPIO;
+		if(counter == RGB.led.r)	RGB_base->PIO_SODR = RGB_R_GPIO;
+		if(counter == RGB.led.g)	RGB_base->PIO_SODR = RGB_G_GPIO;
+		if(counter == RGB.led.b)	RGB_base->PIO_SODR = RGB_B_GPIO;
 	}
-	counter++;
+	counter--;
+}
 
+#define max_in  256 // Top end of INPUT range
+#define max_out 256 // Top end of OUTPUT range
+
+
+// To simplify the expression the gamma value is chosen to 3
+int gamma_corr(int input)
+{
+	uint64_t accu = input*input*input*max_out; // 33 bit max
+	//accu /= (max_in*max_in*max_in);
+	accu >>= 23;  // 1/(255^3)
+
+	if(accu&1){ // The last bit is 0.5 if we add 0.5 to 0.5 we get 1 :)
+		accu>>=1;
+		accu++;
+	}
+	else
+		accu>>=1;
+
+	return (int) accu;
+
+	/* This device does not have a FPU but it has some single precision dsp
+	 * instructions. Need to check disassemble to determine best approach.
+
+	float dev_exp = (float)input * (1.0 / max_in);
+	float pow_exp = dev_exp*dev_exp*dev_exp;
+
+	return (int)(pow_exp * max_out + 0.5);
+	*/
+	// First
+    //return (int)(pow(input / max_in, gamma_var) * max_out + 0.5);
 }
 /*---------------------------------------------------------------------------*/
 /**
  * \brief Set value (0-255)
  */
 static int
-value_RGB(uint8_t R,uint8_t G,uint8_t B, uint8_t brightness)
+value_RGB(uint16_t R,uint16_t G,uint16_t B, uint16_t brightness)
 {
+	RGB_t tmp;
 
-	if(brightness>128)
-		brightness = 128;
+	tmp.led.r = (gamma_corr(R)*brightness)>>8; // divide by 256
+	tmp.led.g = (gamma_corr(G)*brightness)>>8;
+	tmp.led.b = (gamma_corr(B)*brightness)>>8;
+	tmp.led.brightness = brightness;
 
-	RGB_reload.led.r = (R*brightness)>>7; // divide by 128
-	RGB_reload.led.g = (G*brightness)>>7;
-	RGB_reload.led.b = (B*brightness)>>7;
-	RGB_reload.led.brightness = brightness;
+	RGB_reload.all = tmp.all;
 
-	sensors_changed(&soft_RGB_ctrl_sensor);
 	return 1;
 }
 
@@ -88,6 +119,7 @@ RGB_set(int value)
 	if(value != SENSOR_ERROR){
 		user_set.all = temp->all;
 		value_RGB(temp->led.r,temp->led.g,temp->led.b,temp->led.brightness);
+		sensors_changed(&soft_RGB_ctrl_sensor);
 	}
 	return user_set.all;
 }
@@ -98,17 +130,17 @@ configure_RGB(void)
 	pmc_enable_periph_clk(RGB_TIMER_ID);
 #if !LOW_CLOCK //120Mhz
 	RGB_TIMER.TC_CMR= 2 + (2<<13); //2=MCK/32   2<<13=up rc compare
-	RGB_TIMER.TC_RC=147; //147 er 25.510kHz, 39.2us (25.510kHz/255 ~ 100Hz)
+	RGB_TIMER.TC_RC=30; //30 er 125kHz,  (125kHz/255 ~ 500Hz)
 #else //30Mhz
 	RGB_TIMER.TC_CMR= 1 + (2<<13); //1=MCK/8   2<<13=up rc compare
-	RGB_TIMER.TC_RC=147; //375 er 25.510kHz, 39.2us (25.510kHz/255 ~ 100Hz)
+	RGB_TIMER.TC_RC=30; //30 er 125kHz,  (125kHz/255 ~ 500Hz)
 #endif
 
 	//RGB_TIMER.TC_CCR=1;
 	//RGB_TIMER.TC_CCR=4;
 	RGB_TIMER.TC_IER=1<<4; //CPCS
 	NVIC_ClearPendingIRQ(RGB_TIMER_IRQ);
-	NVIC_SetPriority((IRQn_Type) RGB_TIMER_ID, 0);
+	NVIC_SetPriority((IRQn_Type) RGB_TIMER_ID, 5); //level 0 is the highest interrupt priority (0-15)
 	NVIC_EnableIRQ(RGB_TIMER_IRQ);
 
 
@@ -139,25 +171,38 @@ RGB_init(int type, int enable)
 	switch(type) {
 
 		case SENSORS_HW_INIT:
+			user_set.led.brightness = 255;
+			user_set.led.r = 255;
+			user_set.led.g = 255;
+			user_set.led.b = 255;
+
+			RGB_reload.all = user_set.all;
 			configure_RGB();
 			Sensor_status = SENSOR_STATUS_INITIALISED;
-			//RGB_TEST(RGB_base);
+
 			break;
 
 		case SENSORS_ACTIVE:
 			if(Sensor_status == SENSOR_STATUS_DISABLED)
 				return SENSOR_STATUS_DISABLED;
 
-			 if(enable) {
+			 if(enable == 1) {
+				 sensors_changed(&hard_RGB_ctrl_sensor);
+			 }else if(enable == 7){
+				 effect_state = 255;
 				 counter = 0;
 				 RGB_TIMER.TC_CCR=1;
 				 RGB_TIMER.TC_CCR=4;
 				 Sensor_status = SENSOR_STATUS_READY;
-			 } else {
+			 } else if(enable == 8){
+				 effect_state = 255;
 				 RGB_TIMER.TC_CCR=2;
 				 RGB_base->PIO_OER =  RGB_R_GPIO | RGB_G_GPIO | RGB_B_GPIO;
 				 RGB_base->PIO_CODR = RGB_R_GPIO | RGB_G_GPIO | RGB_B_GPIO;
 				 Sensor_status = SENSOR_STATUS_INITIALISED;
+			 } else if(enable == 10){
+				 effect_state = 43; // First run indicator
+				 RGB_FADE_RUN(NULL);
 			 }
 			break;
 	}
@@ -172,54 +217,75 @@ RGB_status(int type)
 /*---------------------------------------------------------------------------*/
 SENSORS_SENSOR(soft_RGB_ctrl_sensor, "RGB", RGB_set, RGB_init, RGB_status);
 /*---------------------------------------------------------------------------*/
-#if 0
-struct ctimer RGB_timer;
-volatile unsigned first = 1;
-volatile unsigned test = (1<<0) | (128<<8) | (128<<16);
 
-unsigned state = 0;
+
 RGB_t RGB_tmp;
 
 static void
-RGB_TEST(void *data)
+RGB_FADE_RUN(void *data)
 {
-	clock_time_t next = 40;
-	if(first)
-	{
-		RGB_init(SENSORS_ACTIVE,1);
-		first = 0;
-		RGB_tmp.led.brightness = 128;
+	clock_time_t next = 16;
+	if(effect_state == 43){
+		effect_state = 0;
+		RGB_tmp.led.r = 0;
+		RGB_tmp.led.g = 0;
+		RGB_tmp.led.b = 0;
+		RGB_tmp.led.brightness = 256;
 	}
-	switch(state)
-	{
-		case 0:
-			RGB_tmp.led.r++;
-			if(RGB_tmp.led.r == 255){
-				state++;
-				RGB_tmp.led.r = 0;
-			}
-			break;
+	witch(effect_state){
 
-		case 1:
-			RGB_tmp.led.g++;
-			if(RGB_tmp.led.g == 255){
-				state++;
-				RGB_tmp.led.g = 0;
-			}
-			break;
+			case 0:
+				if(RGB_tmp.led.b) 			RGB_tmp.led.b--;
+				RGB_tmp.led.r++;
+				if(RGB_tmp.led.r == 255)	effect_state++;
+				break;
 
-		case 2:
-			RGB_tmp.led.b++;
-			if(RGB_tmp.led.b == 255){
-				state = 0;
-				RGB_tmp.led.b = 0;
-			}
-			break;
-	}
-	RGB_set(RGB_tmp.all);
-	ctimer_set(&RGB_timer, next, RGB_TEST, NULL);
+			case 1:
+				if(RGB_tmp.led.r) 			RGB_tmp.led.r--;
+				RGB_tmp.led.g++;
+				if(RGB_tmp.led.g == 255)	effect_state++;
+				break;
+
+			case 2:
+				if(RGB_tmp.led.g) 			RGB_tmp.led.g--;
+				RGB_tmp.led.b++;
+				if(RGB_tmp.led.b == 255)	effect_state = 0;
+				break;
+
+			case 255:// exit
+				return;
+		}
+
+	value_RGB(RGB_tmp.led.r,RGB_tmp.led.g,RGB_tmp.led.b,RGB_tmp.led.brightness);
+
+	ctimer_set(&RGB_effect_timer, next, RGB_FADE_RUN, NULL);
 }
-#endif
+static void
+RGB_RANDOM_RUN(void *data)
+{
+	clock_time_t next;
+	uint16_t rnd[2];
+	if(effect_state == 43){
+		effect_state = 0;
+		RGB_tmp.led.brightness = 256;
+	}
+
+	csprng_get((unsigned char *)&rnd[0],4);
+	RGB_tmp.led.r = rnd[0];
+	RGB_tmp.led.g = rnd[0];
+	RGB_tmp.led.b = rnd[0];
+
+	next = rnd[1]&127;
+
+	if(next < 5)
+		next = 5;
+
+	if(effect_state == 255)// exit
+		return;
+	// NB: user can't see the value update on the PWM signal. It would just confuse them.
+	value_RGB(RGB_tmp.led.r,RGB_tmp.led.g,RGB_tmp.led.b,RGB_tmp.led.brightness);
+	ctimer_set(&RGB_effect_timer, next, RGB_RANDOM_RUN, NULL);
+}
 
 #endif
 /*---------------------------------------------------------------------------*/

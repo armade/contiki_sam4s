@@ -148,7 +148,7 @@ typedef enum{
 }HASS_class_t;
 
 /* A data type for sensor readings, internally stored in a linked list */
-#define SENSOR_CONVERTED_LEN        12
+#define SENSOR_CONVERTED_LEN        18
 
 typedef struct sensor_reading {
   struct sensor_reading *next;
