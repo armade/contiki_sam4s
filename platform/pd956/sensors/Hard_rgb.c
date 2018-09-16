@@ -296,7 +296,7 @@ static const uint16_t  gamma_table[] = {
 // To simplify the expression the gamma value is chosen to 3
 int gamma_corr(int input)
 {
-	uint64_t accu = input*input*input*max_out; // 49 bit max
+	volatile uint64_t accu = (uint64_t)input*input*input*max_out; // 49 bit max
 	//accu /= (max_in*max_in*max_in);
 	accu >>= 35;  // 1/(4096^3)   4096 = 2^12   12*3=36
 
