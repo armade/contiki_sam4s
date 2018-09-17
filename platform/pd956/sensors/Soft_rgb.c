@@ -23,7 +23,7 @@ Pio *RGB_base = (Pio *)PIOA;
 
 struct ctimer RGB_effect_timer;
 unsigned effect_state = 43;
-static void RGB_FADE_RUN(void *data);
+static void RGB_COLORLOOP_RUN(void *data);
 
 volatile RGB_t RGB; // True output
 volatile RGB_t RGB_reload; // True reload output
@@ -65,33 +65,16 @@ void TC2_Handler(void)
 #define max_in  256 // Top end of INPUT range
 #define max_out 256 // Top end of OUTPUT range
 
-
+// exp return (int)(pow(input / max_in, gamma_var) * max_out + 0.5);
 // To simplify the expression the gamma value is chosen to 3
 int gamma_corr(int input)
 {
 	uint64_t accu = input*input*input*max_out; // 33 bit max
 	//accu /= (max_in*max_in*max_in);
 	accu >>= 23;  // 1/(255^3)
+	accu++;// The last bit is 0.5 if we add 0.5 to 0.5 we get 1 :)
 
-	if(accu&1){ // The last bit is 0.5 if we add 0.5 to 0.5 we get 1 :)
-		accu>>=1;
-		accu++;
-	}
-	else
-		accu>>=1;
-
-	return (int) accu;
-
-	/* This device does not have a FPU but it has some single precision dsp
-	 * instructions. Need to check disassemble to determine best approach.
-
-	float dev_exp = (float)input * (1.0 / max_in);
-	float pow_exp = dev_exp*dev_exp*dev_exp;
-
-	return (int)(pow_exp * max_out + 0.5);
-	*/
-	// First
-    //return (int)(pow(input / max_in, gamma_var) * max_out + 0.5);
+	return (int) (accu>>1);
 }
 /*---------------------------------------------------------------------------*/
 /**
@@ -117,6 +100,7 @@ RGB_set(int value)
 {
 	RGB_t *temp = (RGB_t *)&value;
 	if(value != SENSOR_ERROR){
+		effect_state = 255;
 		user_set.all = temp->all;
 		value_RGB(temp->led.r,temp->led.g,temp->led.b,temp->led.brightness);
 		sensors_changed(&soft_RGB_ctrl_sensor);
@@ -201,10 +185,21 @@ RGB_init(int type, int enable)
 				 RGB_base->PIO_CODR = RGB_R_GPIO | RGB_G_GPIO | RGB_B_GPIO;
 				 Sensor_status = SENSOR_STATUS_INITIALISED;
 			 } else if(enable == 10){
-				 effect_state = 43; // First run indicator
-				 RGB_FADE_RUN(NULL);
+				 if(Sensor_status == SENSOR_STATUS_READY){
+					 effect_state = 43; // First run indicator
+					 RGB_COLORLOOP_RUN(NULL);
+					 Sensor_status |= (1<<12);
+					 sensors_changed(&hard_RGB_ctrl_sensor);
+				 }
+			 } else if(enable == 11){
+				 if(Sensor_status == SENSOR_STATUS_READY){
+					 effect_state = 43; // First run indicator
+					 RGB_RANDOM_RUN(NULL);
+					 Sensor_status |= (2<<12);
+					 sensors_changed(&hard_RGB_ctrl_sensor);
+				 }
 			 }
-			break;
+			 break;
 	}
 	return Sensor_status;
 }
@@ -222,7 +217,7 @@ SENSORS_SENSOR(soft_RGB_ctrl_sensor, "RGB", RGB_set, RGB_init, RGB_status);
 RGB_t RGB_tmp;
 
 static void
-RGB_FADE_RUN(void *data)
+RGB_COLORLOOP_RUN(void *data)
 {
 	clock_time_t next = 16;
 	if(effect_state == 43){
@@ -258,7 +253,7 @@ RGB_FADE_RUN(void *data)
 
 	value_RGB(RGB_tmp.led.r,RGB_tmp.led.g,RGB_tmp.led.b,RGB_tmp.led.brightness);
 
-	ctimer_set(&RGB_effect_timer, next, RGB_FADE_RUN, NULL);
+	ctimer_set(&RGB_effect_timer, next, RGB_COLORLOOP_RUN, NULL);
 }
 static void
 RGB_RANDOM_RUN(void *data)

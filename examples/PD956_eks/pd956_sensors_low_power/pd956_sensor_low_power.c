@@ -123,6 +123,7 @@ DEMO_SENSOR2(soft_RGB_ctrl_sensor_reading,		"RGB_light",	UNIT_NONE,		PD956_WEB_D
 DEMO_SENSOR2(hard_RGB_switch_sensor_reading,	"switch",		UNIT_NONE,		PD956_WEB_DEMO_SENSOR_RGB,				light_class,		light_config_topic,	light_sub_topic,pub_light_hard_switch_handler,None);
 DEMO_SENSOR2(hard_RGB_bright_sensor_reading,	"brightness",	UNIT_NONE,		PD956_WEB_DEMO_SENSOR_RGB,				light_class,		NULL,				light_sub_topic,pub_light_hard_brightness_handler,None);
 DEMO_SENSOR2(hard_RGB_rgb_sensor_reading,		"rgb",			UNIT_NONE,		PD956_WEB_DEMO_SENSOR_RGB,				light_class,		NULL,				light_sub_topic,pub_light_hard_rgb_handler,None);
+DEMO_SENSOR2(hard_RGB_effect_sensor_reading,	"effect",		UNIT_NONE,		PD956_WEB_DEMO_SENSOR_RGB,				light_class,		NULL,				light_sub_topic,pub_light_hard_effect_handler,None);
 #endif
 
 #ifdef NODE_DHT11
@@ -347,16 +348,16 @@ get_RGB_reading(void)
 static void
 get_RGB_hard_reading(void)
 {
-	int value;
+	static int status_val;
 	char *buf;
 	RGB_hard_t tmp;
+
 	tmp.all = ((RGB_hard_t *) hard_RGB_ctrl_sensor.value(SENSOR_ERROR))->all;
+	status_val = hard_RGB_ctrl_sensor.status(0);
 
 	if(hard_RGB_switch_sensor_reading.publish){
-
-		value = hard_RGB_ctrl_sensor.status(0);
-		if(value == SENSOR_STATUS_READY){
-			hard_RGB_switch_sensor_reading.raw = value;
+		if((status_val&0xf) == SENSOR_STATUS_READY){
+			hard_RGB_switch_sensor_reading.raw = status_val;
 
 			buf = hard_RGB_switch_sensor_reading.converted;
 			memset(buf, 0, SENSOR_CONVERTED_LEN);
@@ -364,11 +365,29 @@ get_RGB_hard_reading(void)
 		}
 		else
 		{
-			hard_RGB_switch_sensor_reading.raw = value;
+			hard_RGB_switch_sensor_reading.raw = status_val;
 
 			buf = hard_RGB_switch_sensor_reading.converted;
 			memset(buf, 0, SENSOR_CONVERTED_LEN);
 			INSERT_TXT(buf,"\"OFF\"");
+		}
+	}
+
+	if(hard_RGB_effect_sensor_reading.publish){
+		if((status_val>>12) == 1){
+			hard_RGB_effect_sensor_reading.raw = status_val;
+
+			buf = hard_RGB_effect_sensor_reading.converted;
+			memset(buf, 0, SENSOR_CONVERTED_LEN);
+			INSERT_TXT(buf,"\"colorloop\"");
+		}
+		else
+		{
+			hard_RGB_effect_sensor_reading.raw = status_val;
+
+			buf = hard_RGB_effect_sensor_reading.converted;
+			memset(buf, 0, SENSOR_CONVERTED_LEN);
+			INSERT_TXT(buf,"\"random\"");
 		}
 	}
 
@@ -389,7 +408,7 @@ get_RGB_hard_reading(void)
 		buf = hard_RGB_rgb_sensor_reading.converted;
 		memset(buf, 0, SENSOR_CONVERTED_LEN);
 
-		snprintf(buf, SENSOR_CONVERTED_LEN, "\"{%d,%d,%d}\"", (tmp.led.r>>4), (tmp.led.g>>4), (tmp.led.b>>4));
+		snprintf(buf, SENSOR_CONVERTED_LEN, "\"%d,%d,%d\"", (tmp.led.r>>4), (tmp.led.g>>4), (tmp.led.b>>4));
 	}
 
 }

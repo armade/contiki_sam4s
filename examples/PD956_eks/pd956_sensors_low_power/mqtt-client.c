@@ -259,6 +259,16 @@ void pub_light_hard_rgb_handler(uint8_t *payload, uint16_t len)
 	hard_RGB_ctrl_sensor.value((unsigned)&tmp);
 }
 
+void pub_light_hard_effect_handler(uint8_t *payload, uint16_t len)
+{
+	if(!memcmp(payload,"colorloop",10))
+		hard_RGB_ctrl_sensor.configure(SENSORS_ACTIVE,7);
+	else if(!memcmp(payload,"random",11))
+		hard_RGB_ctrl_sensor.configure(SENSORS_ACTIVE,8);
+
+	process_post(PROCESS_BROADCAST, Trig_sensors, NULL);
+}
+
 static void pub_handler(const char *topic, uint16_t topic_len,
 		const uint8_t *chunk, uint16_t chunk_len)
 {
@@ -424,8 +434,12 @@ static int construct_configs(void)
 									"\"brightness_command_topic\":\"Hass/light/%s/%s/brightness/set\","  // NB: brightness hardcoded. must be reading->descr of brightness element
 									"\"rgb_state_topic\":\"%s\","
 									"\"rgb_command_topic\":\"Hass/light/%s/%s/rgb/set\","   // NB: rgb hardcoded. must be reading->descr of rgb element
+									"\"effect_state_topic\":\"%s\","
+									"\"effect_command_topic\":\"Hass/light/%s/%s/effect/set\","   // NB: effect hardcoded. must be reading->descr of effect element
 									"\"state_value_template\":\"{{value_json.switch}}\","
 									"\"brightness_value_template\":\"{{value_json.brightness}}\","
+									"\"effect_value_template\":\"{{value_json.effect}}\","
+									"\"effect_list\":['colorloop','random'],"
 									"\"rgb_value_template\":\"{{value_json.rgb|join(',')}}\"}",
 									conf->Username,reading->descr, 		//name
 									pub_topic, //state_topic
@@ -433,6 +447,8 @@ static int construct_configs(void)
 									pub_topic,  //brightness status
 									client_id,conf->Username,  //brightness set
 									pub_topic,  //rgb status
+									client_id,conf->Username,
+									pub_topic,  //effect status
 									client_id,conf->Username);  //rgb set
 
 				break;

@@ -128,7 +128,7 @@ typedef struct MQTT_config_ele
 {
 	struct MQTT_config_ele *next;
 	char topic[64];
-	char arg[64 * 10];
+	char arg[64 * 14];
 } MQTT_config_ele_t;
 
 typedef struct MQTT_sub_ele
