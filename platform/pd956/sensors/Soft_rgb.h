@@ -13,7 +13,7 @@ typedef struct{
 typedef union{
 	leds_t led;
 	uint64_t all;
-}RGB_t;
+}RGB_soft_t;
 /*---------------------------------------------------------------------------*/
 extern const struct sensors_sensor soft_RGB_ctrl_sensor;
 /*---------------------------------------------------------------------------*/

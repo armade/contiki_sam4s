@@ -25,9 +25,9 @@ struct ctimer RGB_effect_timer;
 unsigned effect_state = 43;
 static void RGB_COLORLOOP_RUN(void *data);
 
-volatile RGB_t RGB; // True output
-volatile RGB_t RGB_reload; // True reload output
-RGB_t user_set; // User set value (not modified by brightness)
+volatile RGB_soft_t RGB; // True output
+volatile RGB_soft_t RGB_reload; // True reload output
+RGB_soft_t user_set; // User set value (not modified by brightness)
 
 uint16_t counter=256;
 
@@ -83,7 +83,12 @@ int gamma_corr(int input)
 static int
 value_RGB(uint16_t R,uint16_t G,uint16_t B, uint16_t brightness)
 {
-	RGB_t tmp;
+	RGB_soft_t tmp;
+
+	if((brightness>256))		brightness = 256;
+	if((R > 256))				R=256;
+	if((G > 256))				G=256;
+	if((B > 256))				B=256;
 
 	tmp.led.r = (gamma_corr(R)*brightness)>>8; // divide by 256
 	tmp.led.g = (gamma_corr(G)*brightness)>>8;
@@ -98,7 +103,7 @@ value_RGB(uint16_t R,uint16_t G,uint16_t B, uint16_t brightness)
 int
 RGB_set(int value)
 {
-	RGB_t *temp = (RGB_t *)&value;
+	RGB_soft_t *temp = (RGB_soft_t *)&value;
 	if(value != SENSOR_ERROR){
 		effect_state = 255;
 		user_set.all = temp->all;
@@ -214,7 +219,7 @@ SENSORS_SENSOR(soft_RGB_ctrl_sensor, "RGB", RGB_set, RGB_init, RGB_status);
 /*---------------------------------------------------------------------------*/
 
 
-RGB_t RGB_tmp;
+RGB_soft_t RGB_tmp;
 
 static void
 RGB_COLORLOOP_RUN(void *data)
@@ -262,15 +267,16 @@ RGB_RANDOM_RUN(void *data)
 	uint16_t rnd[2];
 	if(effect_state == 43){
 		effect_state = 0;
+		RGB_tmp.led.r = 256;
+		RGB_tmp.led.g = 256;
+		RGB_tmp.led.b = 256;
 		RGB_tmp.led.brightness = 256;
 	}
 
 	csprng_get((unsigned char *)&rnd[0],4);
-	RGB_tmp.led.r = rnd[0];
-	RGB_tmp.led.g = rnd[0];
-	RGB_tmp.led.b = rnd[0];
+	RGB_tmp.led.brightness = rnd[0] & 255;
 
-	next = rnd[1]&127;
+	next = rnd[1]&255
 
 	if(next < 5)
 		next = 5;

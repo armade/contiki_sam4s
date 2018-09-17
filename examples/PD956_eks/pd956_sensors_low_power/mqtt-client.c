@@ -252,7 +252,6 @@ void pub_light_hard_rgb_handler(uint8_t *payload, uint16_t len)
 	if((color[2] > 256))	color[2] = 256;
 
 	tmp.all = ((RGB_hard_t *) hard_RGB_ctrl_sensor.value(SENSOR_ERROR))->all;
-	// (255+1)*16 = 4096 - 0+1*16= 16 THIS GETS FIXED IN GAMMA CORRECTION.
 	tmp.led.r = color[0];	tmp.led.r *=16;
 	tmp.led.g = color[1];	tmp.led.g *=16;
 	tmp.led.b = color[2];	tmp.led.b *=16;
@@ -268,6 +267,73 @@ void pub_light_hard_effect_handler(uint8_t *payload, uint16_t len)
 
 	process_post(PROCESS_BROADCAST, Trig_sensors, NULL);
 }
+//////////////////////////////////////////////////////////////////////////////////
+void pub_light_soft_switch_handler(uint8_t *payload, uint16_t len)
+{
+	if(!memcmp(payload,"ON",2))
+		soft_RGB_ctrl_sensor.configure(SENSORS_ACTIVE,7);
+	else if(!memcmp(payload,"OFF",3))
+		soft_RGB_ctrl_sensor.configure(SENSORS_ACTIVE,8);
+
+	process_post(PROCESS_BROADCAST, Trig_sensors, NULL);
+}
+
+void pub_light_soft_brightness_handler(uint8_t *payload, uint16_t len)
+{
+	int brightness = strtol((char *)payload,NULL,10);
+	RGB_soft_t tmp;
+
+	if((brightness < 0) ||  (brightness > 256))
+		return;
+
+	tmp.all = ((RGB_soft_t *) soft_RGB_ctrl_sensor.value(SENSOR_ERROR))->all;
+	tmp.led.brightness = brightness;
+	soft_RGB_ctrl_sensor.value((unsigned)&tmp);
+}
+
+void pub_light_soft_rgb_handler(uint8_t *payload, uint16_t len)
+{
+	uint16_t color[3];
+	uint8_t color_index = 0;
+	char chr;
+	RGB_soft_t tmp;
+
+	memset(color,0,sizeof(color));
+
+	while(*payload)
+	{
+		chr = *payload++;
+		if((chr < 0x30) || (chr > 0x39) || (chr == ',')){
+			if(chr == ',')
+				color_index++;
+			continue;
+		}
+		color[color_index] *= 10;
+		color[color_index] += chr-0x30;
+	}
+
+	if((color[0] > 256))	color[0] = 256;
+	if((color[1] > 256))	color[1] = 256;
+	if((color[2] > 256))	color[2] = 256;
+
+	tmp.all = ((RGB_soft_t *) soft_RGB_ctrl_sensor.value(SENSOR_ERROR))->all;
+	tmp.led.r = color[0];
+	tmp.led.g = color[1];
+	tmp.led.b = color[2];
+	soft_RGB_ctrl_sensor.value((unsigned)&tmp);
+}
+
+void pub_light_soft_effect_handler(uint8_t *payload, uint16_t len)
+{
+	if(!memcmp(payload,"colorloop",10))
+		soft_RGB_ctrl_sensor.configure(SENSORS_ACTIVE,7);
+	else if(!memcmp(payload,"random",11))
+		soft_RGB_ctrl_sensor.configure(SENSORS_ACTIVE,8);
+
+	process_post(PROCESS_BROADCAST, Trig_sensors, NULL);
+}
+//////////////////////////////////////////////////////////////////////////////////
+
 
 static void pub_handler(const char *topic, uint16_t topic_len,
 		const uint8_t *chunk, uint16_t chunk_len)
@@ -426,30 +492,66 @@ static int construct_configs(void)
 				break;
 
 			case light_class:
-				snprintf(reading->MQTT_config_ele.arg, sizeof(reading->MQTT_config_ele.arg),
+				/*snprintf(reading->MQTT_config_ele.arg, sizeof(reading->MQTT_config_ele.arg),
 									"{\"name\":\"%s %s\","
 									"\"state_topic\":\"%s\","
 									"\"command_topic\":\"Hass/light/%s/%s/%s/set\","
 									"\"brightness_state_topic\":\"%s\","
 									"\"brightness_command_topic\":\"Hass/light/%s/%s/brightness/set\","  // NB: brightness hardcoded. must be reading->descr of brightness element
 									"\"rgb_state_topic\":\"%s\","
-									"\"rgb_command_topic\":\"Hass/light/%s/%s/rgb/set\","   // NB: rgb hardcoded. must be reading->descr of rgb element
+									"\"rgb_command_topic\":\"Hass/light/%s/%s/color/set\","   // NB: rgb hardcoded. must be reading->descr of rgb element
 									"\"effect_state_topic\":\"%s\","
 									"\"effect_command_topic\":\"Hass/light/%s/%s/effect/set\","   // NB: effect hardcoded. must be reading->descr of effect element
 									"\"state_value_template\":\"{{value_json.switch}}\","
 									"\"brightness_value_template\":\"{{value_json.brightness}}\","
 									"\"effect_value_template\":\"{{value_json.effect}}\","
 									"\"effect_list\":['colorloop','random'],"
-									"\"rgb_value_template\":\"{{value_json.rgb|join(',')}}\"}",
+									"\"rgb_value_template\":\"{{value_json.color|join(',')}}\"}",
 									conf->Username,reading->descr, 		//name
 									pub_topic, //state_topic
 									client_id,conf->Username, reading->descr,  //command_topic
 									pub_topic,  //brightness status
 									client_id,conf->Username,  //brightness set
-									pub_topic,  //rgb status
+									pub_topic,  //color status
 									client_id,conf->Username,
 									pub_topic,  //effect status
-									client_id,conf->Username);  //rgb set
+									client_id,conf->Username);  //color set
+				*/
+
+
+				/*
+				 * light:
+  	  	  	  	  	  - platform: mqtt_json
+    					name: mqtt_json_light_1
+    					state_topic: "home/rgb1"
+						command_topic: "home/rgb1/set"
+						brightness: true
+						rgb: true
+				 */
+				snprintf(reading->MQTT_config_ele.arg, sizeof(reading->MQTT_config_ele.arg),
+													"{\"name\":\"%s %s\","
+													"\"state_topic\":\"%s\","
+													"\"command_topic\":\"Hass/light/%s/%s/%s/set\","
+													"\"brightness_state_topic\":\"%s\","
+													"\"brightness_command_topic\":\"Hass/light/%s/%s/brightness/set\","  // NB: brightness hardcoded. must be reading->descr of brightness element
+													"\"rgb_state_topic\":\"%s\","
+													"\"rgb_command_topic\":\"Hass/light/%s/%s/color/set\","   // NB: rgb hardcoded. must be reading->descr of rgb element
+													"\"effect_state_topic\":\"%s\","
+													"\"effect_command_topic\":\"Hass/light/%s/%s/effect/set\","   // NB: effect hardcoded. must be reading->descr of effect element
+													"\"state_value_template\":\"{{value_json.switch}}\","
+													"\"brightness_value_template\":\"{{value_json.brightness}}\","
+													"\"effect_value_template\":\"{{value_json.effect}}\","
+													"\"effect_list\":['colorloop','random'],"
+													"\"rgb\":\"true\"}",
+													conf->Username,reading->descr, 		//name
+													pub_topic, //state_topic
+													client_id,conf->Username, reading->descr,  //command_topic
+													pub_topic,  //brightness status
+													client_id,conf->Username,  //brightness set
+													pub_topic,  //color status
+													client_id,conf->Username,
+													pub_topic,  //effect status
+													client_id,conf->Username);  //color set
 
 				break;
 

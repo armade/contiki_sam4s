@@ -38,7 +38,7 @@ static int
 RGB_blue_post_handler(char *key, int key_len, char *val, int val_len)
 {
   int ret = HTTPD_SIMPLE_POST_HANDLER_UNKNOWN;
-  RGB_t tmp;
+  RGB_soft_t tmp;
   if(key_len != strlen("RGB_blue") ||
      strncasecmp(key, "RGB_blue", strlen("RGB_blue")) != 0) {
     /* Not ours */
@@ -65,7 +65,7 @@ static int
 RGB_green_post_handler(char *key, int key_len, char *val, int val_len)
 {
   int ret = HTTPD_SIMPLE_POST_HANDLER_UNKNOWN;
-  RGB_t tmp;
+  RGB_soft_t tmp;
   if(key_len != strlen("RGB_green") ||
      strncasecmp(key, "RGB_green", strlen("RGB_green")) != 0) {
     /* Not ours */
@@ -91,7 +91,7 @@ static int
 RGB_red_post_handler(char *key, int key_len, char *val, int val_len)
 {
   int ret = HTTPD_SIMPLE_POST_HANDLER_UNKNOWN;
-  RGB_t tmp;
+  RGB_soft_t tmp;
   if(key_len != strlen("RGB_red") ||
      strncasecmp(key, "RGB_red", strlen("RGB_red")) != 0) {
     /* Not ours */
@@ -117,7 +117,7 @@ static int
 RGB_brightness_post_handler(char *key, int key_len, char *val, int val_len)
 {
   int ret = HTTPD_SIMPLE_POST_HANDLER_UNKNOWN;
-  RGB_t tmp;
+  RGB_soft_t tmp;
   if(key_len != strlen("RGB_brightness") ||
      strncasecmp(key, "RGB_brightness", strlen("RGB_brightness")) != 0) {
     /* Not ours */

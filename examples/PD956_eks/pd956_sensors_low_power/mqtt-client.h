@@ -174,6 +174,11 @@ void pub_light_hard_switch_handler(uint8_t *payload, uint16_t len);
 void pub_light_hard_brightness_handler(uint8_t *payload, uint16_t len);
 void pub_light_hard_rgb_handler(uint8_t *payload, uint16_t len);
 void pub_light_hard_effect_handler(uint8_t *payload, uint16_t len);
+
+void pub_light_soft_switch_handler(uint8_t *payload, uint16_t len);
+void pub_light_soft_brightness_handler(uint8_t *payload, uint16_t len);
+void pub_light_soft_rgb_handler(uint8_t *payload, uint16_t len);
+void pub_light_soft_effect_handler(uint8_t *payload, uint16_t len);
 /*---------------------------------------------------------------------------*/
 #endif /* MQTT_CLIENT_H_ */
 /*---------------------------------------------------------------------------*/

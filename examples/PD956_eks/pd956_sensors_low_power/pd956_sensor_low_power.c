@@ -115,14 +115,18 @@ DEMO_SENSOR2(temp_reading,						"Step_Position",UNIT_STEP,		PD956_WEB_DEMO_SENSO
 #endif
 
 #ifdef NODE_LIGHT
-DEMO_SENSOR2(soft_RGB_ctrl_sensor_reading,		"RGB_light",	UNIT_NONE,		PD956_WEB_DEMO_SENSOR_RGB,				light_class,		light_config_topic,	light_sub_topic,NULL,None);
+// NB names are hardcoded. Do not change.
+DEMO_SENSOR2(soft_RGB_switch_sensor_reading,	"switch",		UNIT_NONE,		PD956_WEB_DEMO_SENSOR_RGB,				light_class,		light_config_topic,	light_sub_topic,pub_light_soft_switch_handler,None);
+DEMO_SENSOR2(soft_RGB_bright_sensor_reading,	"brightness",	UNIT_NONE,		PD956_WEB_DEMO_SENSOR_RGB,				light_class,		NULL,				light_sub_topic,pub_light_soft_brightness_handler,None);
+DEMO_SENSOR2(soft_RGB_rgb_sensor_reading,		"color",		UNIT_NONE,		PD956_WEB_DEMO_SENSOR_RGB,				light_class,		NULL,				light_sub_topic,pub_light_soft_rgb_handler,None);
+DEMO_SENSOR2(soft_RGB_effect_sensor_reading,	"effect",		UNIT_NONE,		PD956_WEB_DEMO_SENSOR_RGB,				light_class,		NULL,				light_sub_topic,pub_light_soft_effect_handler,None);
 #endif
 
 #ifdef NODE_HARD_LIGHT																													//NB: only one config is necessary
 												// NB names are hardcoded. Do not change.
 DEMO_SENSOR2(hard_RGB_switch_sensor_reading,	"switch",		UNIT_NONE,		PD956_WEB_DEMO_SENSOR_RGB,				light_class,		light_config_topic,	light_sub_topic,pub_light_hard_switch_handler,None);
 DEMO_SENSOR2(hard_RGB_bright_sensor_reading,	"brightness",	UNIT_NONE,		PD956_WEB_DEMO_SENSOR_RGB,				light_class,		NULL,				light_sub_topic,pub_light_hard_brightness_handler,None);
-DEMO_SENSOR2(hard_RGB_rgb_sensor_reading,		"rgb",			UNIT_NONE,		PD956_WEB_DEMO_SENSOR_RGB,				light_class,		NULL,				light_sub_topic,pub_light_hard_rgb_handler,None);
+DEMO_SENSOR2(hard_RGB_rgb_sensor_reading,		"color",		UNIT_NONE,		PD956_WEB_DEMO_SENSOR_RGB,				light_class,		NULL,				light_sub_topic,pub_light_hard_rgb_handler,None);
 DEMO_SENSOR2(hard_RGB_effect_sensor_reading,	"effect",		UNIT_NONE,		PD956_WEB_DEMO_SENSOR_RGB,				light_class,		NULL,				light_sub_topic,pub_light_hard_effect_handler,None);
 #endif
 
@@ -318,29 +322,71 @@ static void get_temp_reading(void)
 
 #ifdef NODE_LIGHT
 static void
-get_RGB_reading(void)
+get_RGB_soft_reading(void)
 {
-	int value;
+	static int status_val;
 	char *buf;
-	RGB_t rgb;
+	RGB_soft_t tmp;
 
-	if(RGB_sensor_reading.publish){
+	tmp.all = ((RGB_soft_t *) soft_RGB_ctrl_sensor.value(SENSOR_ERROR))->all;
+	status_val = soft_RGB_ctrl_sensor.status(0);
 
-		value = soft_RGB_ctrl_sensor.value(SENSOR_ERROR);
-		if(value != SENSOR_ERROR){
-			RGB_sensor_reading.raw = value;
-			rgb.all = value;
+	if(soft_RGB_switch_sensor_reading.publish){
+		if((status_val&0xf) == SENSOR_STATUS_READY){
+			soft_RGB_switch_sensor_reading.raw = status_val;
 
-			buf = RGB_sensor_reading.converted;
+			buf = soft_RGB_switch_sensor_reading.converted;
 			memset(buf, 0, SENSOR_CONVERTED_LEN);
-
-			snprintf(buf, SENSOR_CONVERTED_LEN, "%d,%d,%d",rgb.led.r,rgb.led.g,rgb.led.b);
+			INSERT_TXT(buf,"\"ON\"");
 		}
 		else
 		{
-			INSERT_NA(buf);
+			soft_RGB_switch_sensor_reading.raw = status_val;
+
+			buf = soft_RGB_switch_sensor_reading.converted;
+			memset(buf, 0, SENSOR_CONVERTED_LEN);
+			INSERT_TXT(buf,"\"OFF\"");
 		}
 	}
+
+	if(soft_RGB_effect_sensor_reading.publish){
+		if((status_val>>12) == 1){
+			soft_RGB_effect_sensor_reading.raw = status_val;
+
+			buf = soft_RGB_effect_sensor_reading.converted;
+			memset(buf, 0, SENSOR_CONVERTED_LEN);
+			INSERT_TXT(buf,"\"colorloop\"");
+		}
+		else
+		{
+			soft_RGB_effect_sensor_reading.raw = status_val;
+
+			buf = soft_RGB_effect_sensor_reading.converted;
+			memset(buf, 0, SENSOR_CONVERTED_LEN);
+			INSERT_TXT(buf,"\"random\"");
+		}
+	}
+
+	if(soft_RGB_bright_sensor_reading.publish){
+
+		soft_RGB_bright_sensor_reading.raw =  tmp.led.brightness;
+
+		buf = soft_RGB_bright_sensor_reading.converted;
+		memset(buf, 0, SENSOR_CONVERTED_LEN);
+
+		snprintf(buf, SENSOR_CONVERTED_LEN, "%d", tmp.led.brightness);
+	}
+
+	if(soft_RGB_rgb_sensor_reading.publish){
+
+		soft_RGB_rgb_sensor_reading.raw =  tmp.led.r;
+
+		buf = soft_RGB_rgb_sensor_reading.converted;
+		memset(buf, 0, SENSOR_CONVERTED_LEN);
+
+		snprintf(buf, SENSOR_CONVERTED_LEN, "{\"r\":%d,\"g\":%d,\"b\":%d}", (tmp.led.r>>4), (tmp.led.g>>4), (tmp.led.b>>4));
+	}
+
 }
 #endif
 
@@ -408,7 +454,7 @@ get_RGB_hard_reading(void)
 		buf = hard_RGB_rgb_sensor_reading.converted;
 		memset(buf, 0, SENSOR_CONVERTED_LEN);
 
-		snprintf(buf, SENSOR_CONVERTED_LEN, "\"%d,%d,%d\"", (tmp.led.r>>4), (tmp.led.g>>4), (tmp.led.b>>4));
+		snprintf(buf, SENSOR_CONVERTED_LEN,"{\"r\":%d,\"g\":%d,\"b\":%d}", (tmp.led.r>>4), (tmp.led.g>>4), (tmp.led.b>>4));
 	}
 
 }
@@ -890,7 +936,7 @@ PROCESS_THREAD(PD956_MAIN_process, ev, data)
 
 #ifdef NODE_LIGHT
 		} else if(ev == sensors_event && data == &soft_RGB_ctrl_sensor){
-			get_RGB_reading();
+			get_RGB_soft_reading();();
 			sensor_busy &= ~(1ul<<PD956_WEB_DEMO_SENSOR_RGB);
 #endif
 

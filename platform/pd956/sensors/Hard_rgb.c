@@ -242,15 +242,16 @@ RGB_RANDOM_RUN(void *data)
 	uint16_t rnd[2];
 	if(effect_state == 43){
 		effect_state = 0;
+		RGB_tmp.led.r = 4096;
+		RGB_tmp.led.g = 4096;
+		RGB_tmp.led.b = 4096;
 		RGB_tmp.led.brightness = 256;
 	}
 
 	csprng_get((unsigned char *)&rnd[0],4);
-	RGB_tmp.led.r = rnd[0];
-	RGB_tmp.led.g = rnd[0];
-	RGB_tmp.led.b = rnd[0];
+	RGB_tmp.led.brightness = rnd[0] & 255;
 
-	next = rnd[1]&127;
+	next = rnd[1]&255;
 
 	if(next < 5)
 		next = 5;
