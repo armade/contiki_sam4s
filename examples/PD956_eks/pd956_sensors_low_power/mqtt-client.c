@@ -492,7 +492,7 @@ static int construct_configs(void)
 				break;
 
 			case light_class:
-				/*snprintf(reading->MQTT_config_ele.arg, sizeof(reading->MQTT_config_ele.arg),
+				snprintf(reading->MQTT_config_ele.arg, sizeof(reading->MQTT_config_ele.arg),
 									"{\"name\":\"%s %s\","
 									"\"state_topic\":\"%s\","
 									"\"command_topic\":\"Hass/light/%s/%s/%s/set\","
@@ -516,42 +516,7 @@ static int construct_configs(void)
 									client_id,conf->Username,
 									pub_topic,  //effect status
 									client_id,conf->Username);  //color set
-				*/
 
-
-				/*
-				 * light:
-  	  	  	  	  	  - platform: mqtt_json
-    					name: mqtt_json_light_1
-    					state_topic: "home/rgb1"
-						command_topic: "home/rgb1/set"
-						brightness: true
-						rgb: true
-				 */
-				snprintf(reading->MQTT_config_ele.arg, sizeof(reading->MQTT_config_ele.arg),
-													"{\"name\":\"%s %s\","
-													"\"state_topic\":\"%s\","
-													"\"command_topic\":\"Hass/light/%s/%s/%s/set\","
-													"\"brightness_state_topic\":\"%s\","
-													"\"brightness_command_topic\":\"Hass/light/%s/%s/brightness/set\","  // NB: brightness hardcoded. must be reading->descr of brightness element
-													"\"rgb_state_topic\":\"%s\","
-													"\"rgb_command_topic\":\"Hass/light/%s/%s/color/set\","   // NB: rgb hardcoded. must be reading->descr of rgb element
-													"\"effect_state_topic\":\"%s\","
-													"\"effect_command_topic\":\"Hass/light/%s/%s/effect/set\","   // NB: effect hardcoded. must be reading->descr of effect element
-													"\"state_value_template\":\"{{value_json.switch}}\","
-													"\"brightness_value_template\":\"{{value_json.brightness}}\","
-													"\"effect_value_template\":\"{{value_json.effect}}\","
-													"\"effect_list\":['colorloop','random'],"
-													"\"rgb\":\"true\"}",
-													conf->Username,reading->descr, 		//name
-													pub_topic, //state_topic
-													client_id,conf->Username, reading->descr,  //command_topic
-													pub_topic,  //brightness status
-													client_id,conf->Username,  //brightness set
-													pub_topic,  //color status
-													client_id,conf->Username,
-													pub_topic,  //effect status
-													client_id,conf->Username);  //color set
 
 				break;
 
@@ -705,9 +670,7 @@ static void publish(void)
 {
 	int len;
 	int remaining = APP_BUFFER_SIZE;
-	// Could we move this, so the radio is only turned on when we are about to send.
-	// There is no need to supply 12 mA into the radio when measuring the temperature.
-	NETSTACK_RADIO.on();
+
 	seq_nr_value++;
 
 	buf_ptr = app_buffer;
@@ -754,7 +717,8 @@ static void publish(void)
 		printf("Buffer too short. Have %d, need %d + \\0\n", remaining, len);
 		return;
 	}
-
+	// There is no need to supply 12 mA into the radio when measuring the temperature.
+	NETSTACK_RADIO.on();
 	mqtt_publish(&conn, NULL, pub_topic, (uint8_t *) app_buffer,
 			strlen(app_buffer), MQTT_QOS_LEVEL_1, MQTT_RETAIN_OFF);
 

@@ -168,14 +168,13 @@ send(mac_callback_t sent, void *ptr)
 
 	nbr = uip_ds6_nbr_lookup(&UIP_IP_BUF->destipaddr);
 	if(nbr == NULL){
-		nbr = uip_ds6_nbr_lookup(&border_router);
+		nbr = uip_ds6_nbr_lookup(border_router);
 		if(nbr == NULL)
 			return;
 	}
 
 	if(nbr->enable_encryption)
 	{
-
 		hotfix = len & 7;
 		// TODO: add padding to buffer if there is room.
 		//if(hotfix && space_left > 8)
@@ -208,7 +207,6 @@ input(void)
 
 	if(nbr->enable_encryption)
 	{
-
 		hotfix = len & 7;
 		len -= hotfix;
 

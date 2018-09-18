@@ -610,9 +610,7 @@ PT_THREAD(generate_index(struct httpd_state *s))
 
 	  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<tr>"));
 
-    memset(ipaddr_buf, 0, IPADDR_BUF_LEN);
-    ipaddr_sprintf(ipaddr_buf, IPADDR_BUF_LEN, &s->nbr->ipaddr);
-    PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<td><a href=http://[%s]/index.html> %s </a></td>",ipaddr_buf, ipaddr_buf));
+    PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<td><a> %s </a></td>", ipaddr_buf));
 
     memset(ipaddr_buf, 0, IPADDR_BUF_LEN);
     get_neighbour_state_text(ipaddr_buf, s->nbr->state);

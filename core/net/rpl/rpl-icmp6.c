@@ -212,7 +212,7 @@ dis_input(void)
   rpl_instance_t *end;
   uip_ds6_nbr_t *nbr;
   unsigned char *buffer;
-  crt_t *certificate_ptr;
+  static crt_t *certificate_ptr;
   static uint8_t hash[32] = {0};
 
   buffer = UIP_ICMP_PAYLOAD;
@@ -252,6 +252,7 @@ dis_input(void)
 		  uECC_shared_secret(certificate_ptr->public_key, (void *)&device_certificate.private_key, nbr->nbr_session_key, uECC_secp256r1());
 		  memcpy(nbr->nbr_UUID,certificate_ptr->snr,certificate_ptr->snlen);
 		  nbr->nbr_UUID[certificate_ptr->snlen]=0;
+		  nbr->enable_encryption = 0;
           PRINTF("RPL: Unicast DIS, reply to sender\n");
           dio_output(instance, &UIP_IP_BUF->srcipaddr);
         }
@@ -306,7 +307,7 @@ dio_input(void)
   int len;
   uip_ipaddr_t from;
   uint8_t valid_frame = 0;
-  crt_t *certificate_ptr;
+  static crt_t *certificate_ptr;
   static uint8_t hash[32] = {0};
   //uip_ds6_nbr_t *nbr;
 
@@ -688,7 +689,7 @@ dao_input_storing(void)
   uint8_t prefixlen;
   uint8_t flags;
   uint8_t subopt_type;
-  crt_t *certificate_ptr;
+  static crt_t *certificate_ptr;
   static uint8_t hash[32] = {0};
   uint8_t valid_frame = 0;
   /*
@@ -1396,7 +1397,7 @@ dao_ack_input(void)
    uECC_shared_secret(certificate_ptr->public_key, (void *)&device_certificate.private_key, nbr->nbr_session_key, uECC_secp256r1());
    memcpy(nbr->nbr_UUID,certificate_ptr->snr,certificate_ptr->snlen);
    nbr->nbr_UUID[certificate_ptr->snlen]=0;
-
+   nbr->enable_encryption = 1;
   instance = rpl_get_instance(instance_id);
   if(instance == NULL) {
     uip_clear_buf();
@@ -1493,6 +1494,7 @@ dao_ack_output(rpl_instance_t *instance, uip_ipaddr_t *dest, uint8_t sequence,
   memcpy(&buffer[4],(void *)&device_certificate.crt,sizeof(device_certificate.crt));
 
   uip_icmp6_send(dest, ICMP6_RPL, RPL_CODE_DAO_ACK, 4+sizeof(device_certificate.crt));
+
 #endif /* RPL_WITH_DAO_ACK */
 }
 /*---------------------------------------------------------------------------*/

@@ -384,7 +384,7 @@ get_RGB_soft_reading(void)
 		buf = soft_RGB_rgb_sensor_reading.converted;
 		memset(buf, 0, SENSOR_CONVERTED_LEN);
 
-		snprintf(buf, SENSOR_CONVERTED_LEN, "{\"r\":%d,\"g\":%d,\"b\":%d}", (tmp.led.r>>4), (tmp.led.g>>4), (tmp.led.b>>4));
+		snprintf(buf, SENSOR_CONVERTED_LEN, "[%d,%d,%d]", (tmp.led.r>>4), (tmp.led.g>>4), (tmp.led.b>>4));
 	}
 
 }
@@ -454,7 +454,7 @@ get_RGB_hard_reading(void)
 		buf = hard_RGB_rgb_sensor_reading.converted;
 		memset(buf, 0, SENSOR_CONVERTED_LEN);
 
-		snprintf(buf, SENSOR_CONVERTED_LEN,"{\"r\":%d,\"g\":%d,\"b\":%d}", (tmp.led.r>>4), (tmp.led.g>>4), (tmp.led.b>>4));
+		snprintf(buf, SENSOR_CONVERTED_LEN,"[%d,%d,%d]", (tmp.led.r>>4), (tmp.led.g>>4), (tmp.led.b>>4));
 	}
 
 }
