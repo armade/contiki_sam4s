@@ -81,7 +81,7 @@ button_sensor_value(int type)
 /*---------------------------------------------------------------------------*/
 
 static int
-button_sensor_init(int type, int enable)
+button_sensor_configure(int type, int enable)
 {
 	switch(type) {
 
@@ -127,5 +127,5 @@ button_sensor_status(int type)
 	return SENSOR_ERROR;
 }
 /*---------------------------------------------------------------------------*/
-SENSORS_SENSOR(button_sensor_PD956, "Button sensor",button_sensor_value, button_sensor_init, button_sensor_status);
+SENSORS_SENSOR(button_sensor_PD956, "Button sensor",button_sensor_value, button_sensor_configure, button_sensor_status);
 /*---------------------------------------------------------------------------*/

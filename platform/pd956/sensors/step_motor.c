@@ -4,7 +4,7 @@
 #include "compiler.h"
 #include "lib/sensors.h"
 #include "step_motor.h"
-
+#include "gpio.h"
 #include <stdint.h>
 #include "board-peripherals.h"
 
@@ -17,27 +17,28 @@
 #define PRINTF(...)
 #endif
 
+#define BIT_B2 PIO_PA6_IDX //J03 => step1_GPIO on module
+#define BIT_A2 PIO_PA8_IDX //J04 => step2_GPIO on module
+#define BIT_B1 PIO_PA9_IDX //J05 => step3_GPIO on module
+#define BIT_A1 PIO_PA10_IDX//J07 => step4_GPIO on module
 
-#define step1_GPIO            (PIO_PA6)
-#define step2_GPIO            (PIO_PA8)
-#define step3_GPIO            (PIO_PA9)
-#define step4_GPIO            (PIO_PA10)
+#define step1_GPIO            (1ul<<BIT_B2)
+#define step2_GPIO            (1ul<<BIT_A2)
+#define step3_GPIO            (1ul<<BIT_B1)
+#define step4_GPIO            (1ul<<BIT_A1)
 
 Pio *step_base = (Pio *)PIOA;
 
 
 static int Sensor_status = SENSOR_STATUS_DISABLED;
-int32_t stepPosition;
-uint8_t Motor_running;
+volatile int32_t stepPosition ,stepPosition_request;
+volatile uint8_t Motor_running;
 // Contains data for timer interrupt.
 speedRampData srd;
 
 void speed_cntr_Move(int step, int accel, int decel, int speed);
 
-#define BIT_B2 PIO_PA6_IDX //J03 => step1_GPIO on module
-#define BIT_A2 PIO_PA8_IDX //J04 => step2_GPIO on module
-#define BIT_B1 PIO_PA9_IDX //J05 => step3_GPIO on module
-#define BIT_A1 PIO_PA10_IDX//J07 => step4_GPIO on module
+
 
 // Table with control signals for stepper motor
 //(NB: should be 32 bit, but since the highest pin is 10 we can same the flash)
@@ -51,7 +52,7 @@ const uint16_t steptabel[] = {
 	((0<<BIT_A1) | (0<<BIT_A2) | (0<<BIT_B1) | (1<<BIT_B2)),
 	((1<<BIT_A1) | (0<<BIT_A2) | (0<<BIT_B1) | (1<<BIT_B2))};
 
-process_event_t Step_motor_destination_reached_event = 0;
+
 /*---------------------------------------------------------------------------*/
 void driver_StepCounter(uint8_t dir)
 {
@@ -108,34 +109,34 @@ step_init(int type, int enable)
 
 		case SENSORS_HW_INIT:
 			configure_step();
-			stepPosition=0;
+			stepPosition_request = stepPosition=0;
 			Sensor_status = SENSOR_STATUS_INITIALISED;
-			// Paranoia check
-			if(Step_motor_destination_reached_event == 0)
-				Step_motor_destination_reached_event = process_alloc_event();
 
-			// No one but the moter driver uses PIO_ODSR. Atmels framework will
+			// No one but the motor driver uses PIO_ODSR. Atmels framework will
 			// for some reason set this doing initialization. As a hotfix clear all bits.
 			// NB: This is taken care of but the comment stays as a reminder
 			//step_base->PIO_OWDR = 0xffffffff;
-			//speed_cntr_Move(FSPR, 100, 100, 50);
+
 			break;
 
 		case SENSORS_ACTIVE:
 			if(Sensor_status == SENSOR_STATUS_DISABLED)
 				return SENSOR_STATUS_DISABLED;
 
-			 if(enable) {
-				 //Enables writing PIO_ODSR for the I/O line
-				 step_base->PIO_OWER = step1_GPIO | step2_GPIO | step3_GPIO | step4_GPIO;
-				 Sensor_status = SENSOR_STATUS_READY;
-				 //sensors_changed(&step_sensor);
-			 } else {
-				 //Disables writing PIO_ODSR for the I/O line
-				 step_base->PIO_OWDR = step1_GPIO | step2_GPIO | step3_GPIO | step4_GPIO;
-				 Sensor_status = SENSOR_STATUS_INITIALISED;
-			 }
-			 break;
+			if(enable==1) {
+				//Enables writing PIO_ODSR for the I/O line
+				step_base->PIO_OWER = step1_GPIO | step2_GPIO | step3_GPIO | step4_GPIO;
+				step_base->PIO_ODSR = (unsigned)steptabel[stepPosition&7];
+				speed_cntr_Move(stepPosition_request-stepPosition, 5, 5, 40);
+				Sensor_status = SENSOR_STATUS_READY;
+			}else if(enable == 10){
+				srd.run_state = STOP;
+			} else {
+				//Disables writing PIO_ODSR for the I/O line
+				step_base->PIO_OWDR = step1_GPIO | step2_GPIO | step3_GPIO | step4_GPIO;
+				Sensor_status = SENSOR_STATUS_INITIALISED;
+			}
+			break;
 	}
 	return Sensor_status;
 }
@@ -147,19 +148,16 @@ step_set(int value)
 		if(Motor_running)
 			return SENSOR_ERROR;
 
-		step_base->PIO_ODSR = (unsigned)steptabel[stepPosition&7];
-		speed_cntr_Move(value-stepPosition, 20, 20, 40);
+		stepPosition_request = value;
+		//step_base->PIO_ODSR = (unsigned)steptabel[stepPosition&7];
+		//speed_cntr_Move(value-stepPosition, 20, 20, 40);
 
 		// freq = srd.min_delay/speed
 		// =>
 		// freq = speed * FSPR /(pi*100) => 40*4096/(pi*100) = 521Hz (motor is rated to 600Hz)
 		// 40*0.01*9.55 = 3.82rpm    60[s]/3.82rmp = 15.7[s]
 	}
-	else
-	{
-		if(Motor_running)
-			srd.run_state = DECEL;
-	}
+
 	return stepPosition;
 }
 /*---------------------------------------------------------------------------*/
@@ -178,33 +176,32 @@ SENSORS_SENSOR(step_sensor, "Step motor", step_set, step_init, step_status);
 
 static unsigned long sqrt_lc(unsigned long x)
 {
-  register unsigned long xr;  // result register
-  register unsigned long q2;  // scan-bit register
-  register unsigned char f;   // flag (one bit)
+	register unsigned long xr;  // result register
+	register unsigned long q2;// scan-bit register
+	register unsigned char f;// flag (one bit)
 
-  xr = 0;                     // clear result
-  q2 = 0x40000000L;           // higest possible result bit
-  do
-  {
-    if((xr + q2) <= x)
-    {
-      x -= xr + q2;
-      f = 1;                  // set flag
-    }
-    else{
-      f = 0;                  // clear flag
-    }
-    xr >>= 1;
-    if(f){
-      xr += q2;               // test flag
-    }
-  } while(q2 >>= 2);          // shift twice
-  if(xr < x){
-    return xr +1;             // add for rounding
-  }
-  else{
-    return xr;
-  }
+	xr = 0;// clear result
+	q2 = 0x40000000L;// higest possible result bit
+	do
+	{
+		if((xr + q2) <= x){
+			x -= xr + q2;
+			f = 1;                  // set flag
+		}
+		else{
+			f = 0;                  // clear flag
+		}
+		xr >>= 1;
+		if(f){
+			xr += q2;               // test flag
+		}
+	}while(q2 >>= 2);          // shift twice
+
+	if(xr < x){
+		return xr +1;             // add for rounding
+	} else{
+		return xr;
+	}
 }
 
 
@@ -352,7 +349,6 @@ void TC2_Handler(void)
 		  step_TIMER.TC_CCR=2;
 		  Motor_running = FALSE;
 		  step_base->PIO_ODSR = 0;
-		  process_post(PROCESS_BROADCAST, Step_motor_destination_reached_event, NULL);
 		  sensors_changed(&step_sensor);
 		  break;
 

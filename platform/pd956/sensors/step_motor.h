@@ -34,6 +34,7 @@ typedef struct {
 	int accel_count;
 } speedRampData;
 /*---------------------------------------------------------------------------*/
+// USER DEFINED VARIABELS - please modify
 /*! \Brief Frequency of timer in [Hz].
  * Modify this according to frequency used.
  */
@@ -43,7 +44,7 @@ typedef struct {
 #define FSPR 4096 //64 steps + gear 63.68395:1 (64:1) 64*63.68=4076
 
 #define SPR (FSPR*2) // only half step
-
+/*---------------------------------------------------------------------------*/
 
 // Maths constants. To simplify maths when calculating in speed_cntr_Move().
 #define ALPHA (2*3.14159/SPR)                    // 2*pi/spr

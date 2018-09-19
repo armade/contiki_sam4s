@@ -140,8 +140,8 @@ static struct ctimer startup_timer;
 int32_t temp = 0;
 uint32_t pres = 0;
 
-static void convert(uint8_t *data, int32_t *temp, uint32_t *press);
-static bool read_data(uint8_t *data);
+static void bmp280_convert(uint8_t *data, int32_t *temp, uint32_t *press);
+static bool bmp280_read_data(uint8_t *data);
 /*---------------------------------------------------------------------------*/
 static inline
 uint16_t SoftI2Cread_register(uint8_t Addr, uint8_t reg, uint8_t *Data, uint8_t len)
@@ -201,7 +201,7 @@ notify_ready(void *not_used)
 	int rv;
 	memset(sensor_value, 0, SENSOR_DATA_BUF_SIZE);
 
-	rv = read_data(sensor_value);
+	rv = bmp280_read_data(sensor_value);
 
 	if(rv == 0) {
 		temp = SENSOR_ERROR;
@@ -214,7 +214,7 @@ notify_ready(void *not_used)
 		   sensor_value[0], sensor_value[1], sensor_value[2],
 		   sensor_value[3], sensor_value[4], sensor_value[5]);
 
-	convert(sensor_value, &temp, &pres);
+	bmp280_convert(sensor_value, &temp, &pres);
 	enabled = SENSOR_STATUS_READY;
 	sensors_changed(&bmp_280_sensor);
 }
@@ -223,7 +223,7 @@ notify_ready(void *not_used)
  * \brief Initalise the sensor
  */
 static void
-init(void)
+bmp280_init(void)
 {
 	uint8_t val;
 
@@ -242,7 +242,7 @@ init(void)
  * @return      none
  */
 static void
-enable_sensor(bool enable)
+bmp280_enable_sensor(bool enable)
 {
 	uint8_t val;
 
@@ -263,7 +263,7 @@ enable_sensor(bool enable)
  * \return True if valid data could be retrieved
  */
 static bool
-read_data(uint8_t *data)
+bmp280_read_data(uint8_t *data)
 {
 	SoftI2Cread_register(BMP280_I2C_ADDRESS, ADDR_PRESS_MSB, data, MEAS_DATA_SIZE);
 
@@ -279,7 +279,7 @@ read_data(uint8_t *data)
  *              written
  */
 static void
-convert(uint8_t *data, int32_t *temp, uint32_t *press)
+bmp280_convert(uint8_t *data, int32_t *temp, uint32_t *press)
 {
 	int32_t utemp, upress;
 	bmp_280_calibration_t *p = (bmp_280_calibration_t *)calibration_data;
@@ -357,7 +357,7 @@ convert(uint8_t *data, int32_t *temp, uint32_t *press)
  * \return Temperature (centi degrees C) or Pressure (Pascal).
  */
 static int
-value(int type)
+bmp280_value(int type)
 {
 	int rv;
 
@@ -391,19 +391,19 @@ value(int type)
  * When type == SENSORS_ACTIVE and enable==0 we disable the sensor
  */
 static int
-configure(int type, int enable)
+bmp280_configure(int type, int enable)
 {
 	uint8_t ID;
 	switch(type) {
 		case SENSORS_HW_INIT:
 			SoftI2CInit();
 			enabled = SENSOR_STATUS_INITIALISED;
-			init();
+			bmp280_init();
 			ID = SoftI2Cread_char_register(BMP280_I2C_ADDRESS, ADDR_PROD_ID);
 			if(ID != 0x58)
 				enabled = SENSOR_STATUS_DISABLED;
 			else
-				enable_sensor(0);
+				bmp280_enable_sensor(0);
 			break;
 		case SENSORS_ACTIVE:
 			/* Must be initialised first */
@@ -411,12 +411,12 @@ configure(int type, int enable)
 			  return SENSOR_STATUS_DISABLED;
 			}
 			if(enable) {
-			  enable_sensor(1);
+			  bmp280_enable_sensor(1);
 			  ctimer_set(&startup_timer, SENSOR_STARTUP_DELAY, notify_ready, NULL);
 			  enabled = SENSOR_STATUS_NOT_READY;
 			} else {
 			  ctimer_stop(&startup_timer);
-			  enable_sensor(0);
+			  bmp280_enable_sensor(0);
 			  enabled = SENSOR_STATUS_INITIALISED;
 			}
 			break;
@@ -433,7 +433,7 @@ configure(int type, int enable)
  * \return 1 if the sensor is enabled
  */
 static int
-status(int type)
+bmp280_status(int type)
 {
 	switch(type) {
 		case SENSORS_ACTIVE:
@@ -446,7 +446,7 @@ status(int type)
 	return SENSOR_STATUS_DISABLED;
 }
 /*---------------------------------------------------------------------------*/
-SENSORS_SENSOR(bmp_280_sensor, "BMP280", value, configure, status);
+SENSORS_SENSOR(bmp_280_sensor, "BMP280", bmp280_value, bmp280_configure, bmp280_status);
 /*---------------------------------------------------------------------------*/
 /** @} */
 #endif

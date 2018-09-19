@@ -483,6 +483,16 @@ get_step_reading(void)
 			INSERT_NA(buf);
 		}
 	}
+	SENSORS_DEACTIVATE(step_sensor);
+
+	/* Flow.
+	 *  1) MQTT set value (received)
+	 *  2) SENSOR_VALUE(pos) // set final pos
+	 *  2) process_post(PROCESS_BROADCAST, Trig_sensors, NULL); //reset sensorbits. sensor is called with enable=1 - initialize stepmotor control (motor is now running)
+	 *  3) POS=request_POS sensor_changed // when position is reached signal sensor_changed
+	 *  4) get_step_reading() // get position and publish it
+	 *  7) SENSOR_DEACTIVATE() // remove pio control
+	 */
 }
 #endif
 

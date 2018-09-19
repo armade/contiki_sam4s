@@ -145,7 +145,7 @@ void dht11_data_pin_irq(uint32_t a, uint32_t b)
  * \ Humidity_split = hud<<8 | hud_dec
  */
 static int
-dht11_get_reading(int type)
+dht11_value(int type)
 {
 	if(type == TEMPERATURE_READING) // temperature
 		return temperature;
@@ -198,7 +198,7 @@ dht11_start_measurement(void *ptr)
  * When type == SENSORS_ACTIVE and enable==0 we disable the sensor
  */
 static int
-dht11_init(int type, int enable)
+dht11_configure(int type, int enable)
 {
 	switch(type) {
 
@@ -246,5 +246,5 @@ dht11_status(int type)
 }
 
 /*---------------------------------------------------------------------------*/
-SENSORS_SENSOR(dht11_sensor, "DHT11", dht11_get_reading, dht11_init, dht11_status);
+SENSORS_SENSOR(dht11_sensor, "DHT11", dht11_value, dht11_configure, dht11_status);
 /*---------------------------------------------------------------------------*/

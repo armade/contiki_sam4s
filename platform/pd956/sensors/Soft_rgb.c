@@ -101,7 +101,7 @@ value_RGB(uint16_t R,uint16_t G,uint16_t B, uint16_t brightness)
 }
 
 int
-RGB_set(int value)
+soft_RGB_value(int value)
 {
 	RGB_soft_t *temp = (RGB_soft_t *)&value;
 	if(value != SENSOR_ERROR){
@@ -114,7 +114,7 @@ RGB_set(int value)
 }
 /*---------------------------------------------------------------------------*/
 int
-configure_RGB(void)
+soft_RGB_init(void)
 {
 	pmc_enable_periph_clk(RGB_TIMER_ID);
 #if !LOW_CLOCK //120Mhz
@@ -155,7 +155,7 @@ configure_RGB(void)
  * When type == SENSORS_ACTIVE and enable==0 we disable the sensor
  */
 static int
-RGB_init(int type, int enable)
+soft_RGB_configure(int type, int enable)
 {
 	switch(type) {
 
@@ -166,7 +166,7 @@ RGB_init(int type, int enable)
 			user_set.led.b = 255;
 
 			RGB_reload.all = user_set.all;
-			configure_RGB();
+			soft_RGB_init();
 			Sensor_status = SENSOR_STATUS_INITIALISED;
 
 			break;
@@ -210,12 +210,12 @@ RGB_init(int type, int enable)
 }
 /*---------------------------------------------------------------------------*/
 static int
-RGB_status(int type)
+soft_RGB_status(int type)
 {
 	return Sensor_status;
 }
 /*---------------------------------------------------------------------------*/
-SENSORS_SENSOR(soft_RGB_ctrl_sensor, "RGB", RGB_set, RGB_init, RGB_status);
+SENSORS_SENSOR(soft_RGB_ctrl_sensor, "RGB", soft_RGB_value, soft_RGB_configure, soft_RGB_status);
 /*---------------------------------------------------------------------------*/
 
 

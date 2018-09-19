@@ -67,7 +67,7 @@ value_hard_RGB(uint16_t R,uint16_t G,uint16_t B, uint16_t brightness)
 
 //NB: value must be an address to the variable that holds the RGB values
 static int
-hard_RGB_set(int value_addr)
+hard_RGB_value(int value_addr)
 {
 	RGB_hard_t *temp = (RGB_hard_t *)value_addr;
 	if(value_addr != SENSOR_ERROR){
@@ -80,7 +80,7 @@ hard_RGB_set(int value_addr)
 }
 /*---------------------------------------------------------------------------*/
 int
-configure_hard_RGB(void)
+hard_RGB_init(void)
 {
 	uint32_t clk_config;
 	pmc_enable_periph_clk(ID_PWM);
@@ -128,12 +128,12 @@ configure_hard_RGB(void)
  * When type == SENSORS_ACTIVE and enable==0 we disable the sensor
  */
 static int
-hard_RGB_init(int type, int enable)
+hard_RGB_configure(int type, int enable)
 {
 	switch(type) {
 
 		case SENSORS_HW_INIT:
-			configure_hard_RGB();
+			hard_RGB_init();
 			Sensor_status = SENSOR_STATUS_INITIALISED;
 			hard_user_set.led.brightness = 256;
 			hard_user_set.led.r = 4096;
@@ -188,7 +188,7 @@ hard_RGB_status(int type)
 	return Sensor_status;
 }
 /*---------------------------------------------------------------------------*/
-SENSORS_SENSOR(hard_RGB_ctrl_sensor, "RGB", hard_RGB_set, hard_RGB_init, hard_RGB_status);
+SENSORS_SENSOR(hard_RGB_ctrl_sensor, "RGB", hard_RGB_value, hard_RGB_configure, hard_RGB_status);
 /*---------------------------------------------------------------------------*/
 
 

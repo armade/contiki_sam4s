@@ -264,6 +264,7 @@ step_motor_position_post_handler(char *key, int key_len, char *val, int val_len)
    }
 
    step_sensor.value(ret);
+   step_sensor.configure(SENSORS_ACTIVE, 1);
 
    return HTTPD_SIMPLE_POST_HANDLER_OK;
 }

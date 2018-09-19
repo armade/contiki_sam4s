@@ -68,7 +68,7 @@ notify_ready(void *not_used)
 
 /*---------------------------------------------------------------------------*/
 static int
-relay_state_value(int type)
+relay_value(int type)
 {
 	// Status
 	if((type >= STATUS_MIN) && (type <= STATUS_MAX))
@@ -80,9 +80,9 @@ relay_state_value(int type)
 
 	// set values
 	if(type&1)
-		PIOA->PIO_SODR = pin_array[(type-15)>>1];//pio_set_pin_group_high(PIOA,pin_array[type-1]); //RELAY_OFF
+		PIOA->PIO_SODR = pin_array[(type-15)>>1]; //RELAY_OFF
 	else
-		PIOA->PIO_CODR = pin_array[(type-14)>>1];//pio_set_pin_group_low(PIOA,pin_array[type]); //RELAY_ON
+		PIOA->PIO_CODR = pin_array[(type-14)>>1]; //RELAY_ON
 
 	sensor_status = SENSOR_STATUS_NOT_READY;
 	ctimer_set(&switch_timer, SENSOR_SWITCH_DELAY, notify_ready, NULL);
@@ -91,12 +91,12 @@ relay_state_value(int type)
 /*---------------------------------------------------------------------------*/
 
 static int
-relay_init(int type, int enable)
+relay_configure(int type, int enable)
 {
 	switch(type) {
 
 		case SENSORS_HW_INIT:
-			pio_set_input(PIOA,PIO_PA3 | PIO_PA28,0); // NB: pa3 and pa28 is connected to pa9 and pa10.
+			pio_set_input(PIOA, PIO_PA3 | PIO_PA28, 0); // NB: pa3 and pa28 is connected to pa9 and pa10.
 			pio_set_output(PIOA, CH1_PIN | CH2_PIN | CH3_PIN | CH4_PIN,	1, 0, 0);
 
 			enable = SENSOR_STATUS_INITIALISED;
@@ -124,5 +124,5 @@ relay_status(int type)
 	return sensor_status;
 }
 /*---------------------------------------------------------------------------*/
-SENSORS_SENSOR(ch4_relay_PD956, "4 Ch relay",relay_state_value, relay_init, relay_status);
+SENSORS_SENSOR(ch4_relay_PD956, "4 Ch relay",relay_value, relay_configure, relay_status);
 /*---------------------------------------------------------------------------*/

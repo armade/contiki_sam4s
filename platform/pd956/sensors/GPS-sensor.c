@@ -81,7 +81,7 @@ notify_ready(void *not_used)
  * \brief Returns a reading from the sensor
  */
 static int
-value(int type)
+gps_value(int type)
 {
 
 	if(enabled != SENSOR_STATUS_READY) {
@@ -129,7 +129,7 @@ value(int type)
  * When type == SENSORS_ACTIVE and enable==0 we disable the sensor
  */
 static int
-configure(int type, int enable)
+gps_configure(int type, int enable)
 {
 	switch(type) {
 		case SENSORS_HW_INIT:
@@ -161,7 +161,7 @@ configure(int type, int enable)
  * \return 1 if the sensor is enabled
  */
 static int
-status(int type)
+gps_status(int type)
 {
 	switch(type) {
 		case SENSORS_ACTIVE:
@@ -174,6 +174,6 @@ status(int type)
 	return SENSOR_STATUS_DISABLED;
 }
 /*---------------------------------------------------------------------------*/
-SENSORS_SENSOR(GPS_sensor, "GPS", value, configure, status);
+SENSORS_SENSOR(GPS_sensor, "GPS", gps_value, gps_configure, gps_status);
 /*---------------------------------------------------------------------------*/
 /** @} */

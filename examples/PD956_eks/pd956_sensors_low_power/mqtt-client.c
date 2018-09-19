@@ -137,6 +137,8 @@ void new_net_config(void)
 	mqtt_disconnect(&conn);
 }
 
+// TODO: We only verify payload and not payload size.
+
 void pub_sleep_handler(uint8_t *payload, uint16_t len)
 {
 #if defined(NODE_GPS) || defined(NODE_4_ch_relay) || defined(NODE_HARD_LIGHT) || defined(NODE_LIGHT) || defined(NODE_STEP_MOTOR)
@@ -150,6 +152,7 @@ void pub_sleep_handler(uint8_t *payload, uint16_t len)
 }
 
 static struct ctimer reset_timer;
+
 static void
 reset_now(void *not_used)
 {
@@ -157,6 +160,7 @@ reset_now(void *not_used)
 	asm volatile ("isb 0xF":::"memory");
 	*((uint32_t *)0x400E1400) = 0xa500000D;
 }
+
 void pub_reset_handler(uint8_t *payload, uint16_t len)
 {
 	if(!memcmp(payload,"reset",5)){
@@ -260,9 +264,9 @@ void pub_light_hard_rgb_handler(uint8_t *payload, uint16_t len)
 
 void pub_light_hard_effect_handler(uint8_t *payload, uint16_t len)
 {
-	if(!memcmp(payload,"colorloop",10))
+	if(!memcmp(payload,"colorloop",9))
 		hard_RGB_ctrl_sensor.configure(SENSORS_ACTIVE,7);
-	else if(!memcmp(payload,"random",11))
+	else if(!memcmp(payload,"random",6))
 		hard_RGB_ctrl_sensor.configure(SENSORS_ACTIVE,8);
 
 	process_post(PROCESS_BROADCAST, Trig_sensors, NULL);
@@ -325,9 +329,9 @@ void pub_light_soft_rgb_handler(uint8_t *payload, uint16_t len)
 
 void pub_light_soft_effect_handler(uint8_t *payload, uint16_t len)
 {
-	if(!memcmp(payload,"colorloop",10))
+	if(!memcmp(payload,"colorloop",9))
 		soft_RGB_ctrl_sensor.configure(SENSORS_ACTIVE,7);
-	else if(!memcmp(payload,"random",11))
+	else if(!memcmp(payload,"random",6))
 		soft_RGB_ctrl_sensor.configure(SENSORS_ACTIVE,8);
 
 	process_post(PROCESS_BROADCAST, Trig_sensors, NULL);
