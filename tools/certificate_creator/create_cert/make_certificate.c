@@ -81,7 +81,7 @@ typedef struct {
 	 } crt; //public cert
 } devicecert_t;
 
-devicecert_t device_sertificate = {0};
+devicecert_t device_certificate = {0};
 uint8_t sig_tmp[64];
 
 static inline void print_sig(uint8_t *sig)
@@ -188,16 +188,10 @@ int save_keys(void)
 	SHA_UPDATE(&KEY, (uint8_t *)"public_signer", sizeof("public_signer"));
 	SHA_FINAL(&KEY,HASH_KEY_result);
 
-	masterkeys_fp = fopen("keys.pri","w");
+	masterkeys_fp = fopen("../../../../keys.pri","w");
 	if(masterkeys_fp != NULL){
 		memcpy(pub,public,sizeof(pub));
 		memcpy(pri,private,sizeof(pri));
-
-		print_seperator('#');
-		printf("%s%s keyes:%s\n",KCYN,__func__,KNRM);
-		print_sig(public);
-		print_hash(private);
-		print_seperator('#');
 
 		encipher_payload_xtea(pub,(uint32_t *)HASH_KEY_result, sizeof(pub),*(uint64_t *)IV_crypt);
 		encipher_payload_xtea(pri,(uint32_t *)HASH_KEY_result, sizeof(pri),*(uint64_t *)IV_crypt);
@@ -236,13 +230,13 @@ int main(int argc, char **argv)
         return 1;
     }
 	// Normal error handling
-	device_sertificate.crt.snlen = strlen(UUID_nr);
-	if(device_sertificate.crt.snlen > sizeof(device_sertificate.crt.snr)){
+	device_certificate.crt.snlen = strlen(UUID_nr);
+	if(device_certificate.crt.snlen > sizeof(device_certificate.crt.snr)){
 		printf("Bad serial number length\n");
 		return 1;
 	}
 	// Get the keys
-	masterkeys_fp = fopen("keys.pri","r");
+	masterkeys_fp = fopen("../../../../keys.pri","r");
 	if(masterkeys_fp== NULL){
 		printf("%s",KRED);
 		print_seperator('*');
@@ -268,23 +262,23 @@ int main(int argc, char **argv)
 		}
 	}
 
-	device_sertificate.crt.typeBE = 1;
-	memcpy(device_sertificate.crt.snr,UUID_nr,device_sertificate.crt.snlen);
-	memcpy(device_sertificate.crt.modul,"PD956-v1",sizeof("PD956-v1"));
-	memcpy(device_sertificate.masterpublic_key,public,sizeof(public));
-	if (!uECC_make_key(device_sertificate.crt.public_key, device_sertificate.private_key, uECC_secp256r1())) {
+	device_certificate.crt.typeBE = 1;
+	memcpy(device_certificate.crt.snr,UUID_nr,device_certificate.crt.snlen);
+	memcpy(device_certificate.crt.modul,"PD956-v1",sizeof("PD956-v1"));
+	memcpy(device_certificate.masterpublic_key,public,sizeof(public));
+	if (!uECC_make_key(device_certificate.crt.public_key, device_certificate.private_key, uECC_secp256r1())) {
 		printf("uECC_make_key() failed\n");
 		return 1;
 	}
 	// Debug test hardcoded values
 	print_seperator('=');
-	printf("UUID:    %s \n", device_sertificate.crt.snr);
+	printf("UUID:    %s \n", device_certificate.crt.snr);
 	print_seperator('-');
 
 
 	// Make HASH of certificate
     SHA_INIT  (&CTX);
-	SHA_UPDATE(&CTX, (uint8_t *)&device_sertificate.crt.payloadfield_size_control, sizeof(device_sertificate.crt.payloadfield_size_control));
+	SHA_UPDATE(&CTX, (uint8_t *)&device_certificate.crt.payloadfield_size_control, sizeof(device_certificate.crt.payloadfield_size_control));
 	SHA_FINAL (&CTX, hash);
 
     // Debug display result
@@ -293,21 +287,21 @@ int main(int argc, char **argv)
 	printf("\n");
 
 	// Sign firmware
-	if (!uECC_sign(private, hash, sizeof(hash), device_sertificate.crt.signature, uECC_secp256r1())) {
+	if (!uECC_sign(private, hash, sizeof(hash), device_certificate.crt.signature, uECC_secp256r1())) {
 		printf("uECC_sign() failed\n");
 		fclose(masterkeys_fp);
 		return 1;
 	}
 
 	// Debug verify signature
-	if (!uECC_verify(public, hash, sizeof(hash), device_sertificate.crt.signature, uECC_secp256r1())) {
+	if (!uECC_verify(public, hash, sizeof(hash), device_certificate.crt.signature, uECC_secp256r1())) {
 		printf("uECC_verify() failed\n");
 		fclose(masterkeys_fp);
 		return 1;
 	}
 	print_seperator('-');
 	printf("\nSignature\n");
-	print_sig(device_sertificate.crt.signature);
+	print_sig(device_certificate.crt.signature);
 	printf("\n");
 	print_seperator('=');
 
@@ -319,18 +313,16 @@ int main(int argc, char **argv)
 	while(1){
 		lok[i] = fgetc(Firmware_fp);
 
-		if(lok[i] == EOF){
-			//fwrite("break",5,1,Firmware_out_fp);
+		if(lok[i] == EOF)
 			break;
-		}
 
 		if(lok[i] == lok_find[i])
 		{
 			i++;
 			if(i== 13)
 			{
-				fwrite((void *)&device_sertificate,(sizeof(device_sertificate)),1,Firmware_out_fp);
-				k = sizeof(device_sertificate) - i;
+				fwrite((void *)&device_certificate,(sizeof(device_certificate)),1,Firmware_out_fp);
+				k = sizeof(device_certificate) - i;
 				while(k--)
 					lok[i] = fgetc(Firmware_fp);
 				i=0;
@@ -349,6 +341,8 @@ int main(int argc, char **argv)
 	fclose(Firmware_out_fp);
 	fclose(masterkeys_fp);
 	
+	memset(private,0,sizeof(private));
+
 	remove( msg);
 	rename( "temp.elf", msg );
 	

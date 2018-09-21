@@ -249,9 +249,9 @@ RGB_RANDOM_RUN(void *data)
 	}
 
 	csprng_get((unsigned char *)&rnd[0],4);
-	RGB_tmp.led.brightness = rnd[0] & 255;
+	RGB_tmp.led.brightness = (rnd[0] & 127) + 128;
 
-	next = rnd[1]&255;
+	next = rnd[1]&127;
 
 	if(next < 5)
 		next = 5;
