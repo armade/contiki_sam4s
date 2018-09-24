@@ -223,7 +223,7 @@ int main(int argc, char **argv)
 	const char lok_find[32] = "Replace point";
 
 	char *UUID_nr = argv[1];
-	char *msg = argv[2];
+	char *FileName = argv[2];
 
 	if (argc != 3) { // Normal error handling
         printf("usage: %s [UUID] file \n", argv[0]);
@@ -275,7 +275,6 @@ int main(int argc, char **argv)
 	printf("UUID:    %s \n", device_certificate.crt.snr);
 	print_seperator('-');
 
-
 	// Make HASH of certificate
     SHA_INIT  (&CTX);
 	SHA_UPDATE(&CTX, (uint8_t *)&device_certificate.crt.payloadfield_size_control, sizeof(device_certificate.crt.payloadfield_size_control));
@@ -305,8 +304,7 @@ int main(int argc, char **argv)
 	printf("\n");
 	print_seperator('=');
 
-
-	Firmware_fp=fopen(msg,"r");
+	Firmware_fp=fopen(FileName,"r");
 	rewind(Firmware_fp);
 	Firmware_out_fp = fopen("temp.elf","w");
 	i=0;
@@ -335,7 +333,6 @@ int main(int argc, char **argv)
 				fwrite((void *)&lok[k++],1,1,Firmware_out_fp);
 			i=0;
 		}
-
 	}
 
 	fclose(Firmware_out_fp);
@@ -343,8 +340,8 @@ int main(int argc, char **argv)
 	
 	memset(private,0,sizeof(private));
 
-	remove( msg);
-	rename( "temp.elf", msg );
+	remove( FileName);
+	rename( "temp.elf", FileName );
 	
     return 0;
 }

@@ -20,12 +20,12 @@
 #endif
 
 struct ctimer RGB_effect_timer;
-unsigned effect_state = 43;
+unsigned effect_state;
+static RGB_hard_t RGB_tmp; // Used doing effect
 static void RGB_COLORLOOP_RUN(void *data);
 static void RGB_RANDOM_RUN(void *data);
 
 static RGB_hard_t hard_user_set; // User set value (not modified by brightness or gamma)
-
 static int Sensor_status = SENSOR_STATUS_DISABLED;
 
 
@@ -130,8 +130,8 @@ hard_RGB_init(void)
 static int
 hard_RGB_configure(int type, int enable)
 {
-	switch(type) {
-
+	switch(type)
+	{
 		case SENSORS_HW_INIT:
 			hard_RGB_init();
 			Sensor_status = SENSOR_STATUS_INITIALISED;
@@ -143,40 +143,42 @@ hard_RGB_configure(int type, int enable)
 
 		case SENSORS_ACTIVE:
 			if(Sensor_status == SENSOR_STATUS_DISABLED)
-				return SENSOR_STATUS_DISABLED;
+			return Sensor_status;
 
-			 if(enable==1) {
-				 //Nothing to enable so we signal done
-				 sensors_changed(&hard_RGB_ctrl_sensor);
-				 //RGB_TEST(NULL);
-			 } else if(enable ==7) { // ON command
-				 effect_state = 255;
-				 PWM->PWM_ENA = (1<<1) | (1<<2) | (1<<3);
-				 PWM->PWM_OSC = (1<<3) | (1<<2) | (1<<17); // Remove overwrite (0 to pwm)
-				 value_hard_RGB(hard_user_set.led.r,hard_user_set.led.g,hard_user_set.led.b,hard_user_set.led.brightness);
-				 Sensor_status = SENSOR_STATUS_READY;
-				 sensors_changed(&hard_RGB_ctrl_sensor);
-			 } else if(enable ==8){ // OFF command
-				 effect_state = 255;
-				 PWM->PWM_DIS = (1<<1) | (1<<2) | (1<<3);
-				 PWM->PWM_OSS = (1<<3) | (1<<2) | (1<<17); // Apply overwrite (pwm to 0)
-				 Sensor_status = SENSOR_STATUS_INITIALISED;
-				 sensors_changed(&hard_RGB_ctrl_sensor);
-			 } else if(enable == 10){
-				 if(Sensor_status == SENSOR_STATUS_READY){
-					 effect_state = 43; // First run indicator
-					 RGB_COLORLOOP_RUN(NULL);
-					 Sensor_status |= (1<<12);
-					 sensors_changed(&hard_RGB_ctrl_sensor);
-				 }
-			 } else if(enable == 11){
-				 if(Sensor_status == SENSOR_STATUS_READY){
-					 effect_state = 43; // First run indicator
-					 RGB_RANDOM_RUN(NULL);
-					 Sensor_status |= (2<<12);
-					 sensors_changed(&hard_RGB_ctrl_sensor);
-				 }
-			 }
+			if(enable==1){
+				//Nothing to enable so we signal done
+				sensors_changed(&hard_RGB_ctrl_sensor);
+				//RGB_TEST(NULL);
+			} else if(enable == 7){ // ON command
+				effect_state = 255;
+				PWM->PWM_ENA = (1<<1) | (1<<2) | (1<<3);
+				PWM->PWM_OSC = (1<<3) | (1<<2) | (1<<17);// Remove overwrite (0 to pwm)
+				value_hard_RGB(hard_user_set.led.r,hard_user_set.led.g,hard_user_set.led.b,hard_user_set.led.brightness);
+				Sensor_status = SENSOR_STATUS_READY;
+				sensors_changed(&hard_RGB_ctrl_sensor);
+			} else if(enable == 8){ // OFF command
+				effect_state = 255;
+				PWM->PWM_DIS = (1<<1) | (1<<2) | (1<<3);
+				PWM->PWM_OSS = (1<<3) | (1<<2) | (1<<17);// Apply overwrite (pwm to 0)
+				Sensor_status = SENSOR_STATUS_INITIALISED;
+				sensors_changed(&hard_RGB_ctrl_sensor);
+			} else if(enable == 10){
+				if(Sensor_status == SENSOR_STATUS_READY){
+					effect_state = 0;
+					RGB_tmp.led = (leds_hard_t){0,0,4096,256};
+					RGB_COLORLOOP_RUN(NULL);
+					Sensor_status |= (1<<12);
+					sensors_changed(&hard_RGB_ctrl_sensor);
+				}
+			} else if(enable == 11){
+				if(Sensor_status == SENSOR_STATUS_READY){
+					effect_state = 0;
+					RGB_tmp.led = (leds_hard_t){4096,4096,4096,256};
+					RGB_RANDOM_RUN(NULL);
+					Sensor_status |= (2<<12);
+					sensors_changed(&hard_RGB_ctrl_sensor);
+				}
+			}
 			break;
 	}
 	return Sensor_status;
@@ -192,7 +194,6 @@ SENSORS_SENSOR(hard_RGB_ctrl_sensor, "RGB", hard_RGB_value, hard_RGB_configure, 
 /*---------------------------------------------------------------------------*/
 
 
-static RGB_hard_t RGB_tmp;
 
 // 4 ms run on 4096 = 16 sec pr color
 // 4 ms run on 4096/4 = 4 sec pr color
@@ -200,34 +201,28 @@ static void
 RGB_COLORLOOP_RUN(void *data)
 {
 	clock_time_t next = 4;
-	if(effect_state == 43){
-		effect_state = 0;
-		RGB_tmp.led.r = 0;
-		RGB_tmp.led.g = 0;
-		RGB_tmp.led.b = 0;
-		RGB_tmp.led.brightness = 256;
-	}
-	switch(effect_state){
 
+	switch(effect_state)
+	{
 		case 0:
-			if(RGB_tmp.led.b) 			RGB_tmp.led.b-=4;
+			RGB_tmp.led.b-=4;
 			RGB_tmp.led.r += 4;
-			if(RGB_tmp.led.r == 4096)	effect_state++;
+			if(RGB_tmp.led.r == 4096) effect_state++;
 			break;
 
 		case 1:
-			if(RGB_tmp.led.r) 			RGB_tmp.led.r-=4;
+			RGB_tmp.led.r-=4;
 			RGB_tmp.led.g += 4;
-			if(RGB_tmp.led.g == 4096)	effect_state++;
+			if(RGB_tmp.led.g == 4096) effect_state++;
 			break;
 
 		case 2:
-			if(RGB_tmp.led.g) 			RGB_tmp.led.g-=4;
+			RGB_tmp.led.g-=4;
 			RGB_tmp.led.b += 4;
-			if(RGB_tmp.led.b == 4096)	effect_state = 0;
+			if(RGB_tmp.led.b == 4096) effect_state = 0;
 			break;
 
-		case 255:// exit
+		case 255: // exit
 			return;
 	}
 	// NB: user can't see the value update on the PWM signal. It would just confuse them.
@@ -240,13 +235,9 @@ RGB_RANDOM_RUN(void *data)
 {
 	clock_time_t next;
 	uint16_t rnd[2];
-	if(effect_state == 43){
-		effect_state = 0;
-		RGB_tmp.led.r = 4096;
-		RGB_tmp.led.g = 4096;
-		RGB_tmp.led.b = 4096;
-		RGB_tmp.led.brightness = 256;
-	}
+
+	if(effect_state == 255)// exit
+		return;
 
 	csprng_get((unsigned char *)&rnd[0],4);
 	RGB_tmp.led.brightness = (rnd[0] & 127) + 128;
@@ -256,8 +247,6 @@ RGB_RANDOM_RUN(void *data)
 	if(next < 5)
 		next = 5;
 
-	if(effect_state == 255)// exit
-		return;
 	// NB: user can't see the value update on the PWM signal. It would just confuse them.
 	value_hard_RGB(RGB_tmp.led.r,RGB_tmp.led.g,RGB_tmp.led.b,RGB_tmp.led.brightness);
 	ctimer_set(&RGB_effect_timer, next, RGB_RANDOM_RUN, NULL);
@@ -265,5 +254,3 @@ RGB_RANDOM_RUN(void *data)
 
 /*---------------------------------------------------------------------------*/
 #endif
-
-

@@ -22,8 +22,10 @@
 Pio *RGB_base = (Pio *)PIOA;
 
 struct ctimer RGB_effect_timer;
-unsigned effect_state = 43;
+unsigned effect_state;
+static RGB_soft_t RGB_tmp;
 static void RGB_COLORLOOP_RUN(void *data);
+static void RGB_RANDOM_RUN(void *data);
 
 volatile RGB_soft_t RGB; // True output
 volatile RGB_soft_t RGB_reload; // True reload output
@@ -78,10 +80,10 @@ int gamma_corr(int input)
 }
 /*---------------------------------------------------------------------------*/
 /**
- * \brief Set value (0-255)
+ * \brief Set value (0-256)
  */
 static int
-value_RGB(uint16_t R,uint16_t G,uint16_t B, uint16_t brightness)
+value_soft_RGB(uint16_t R,uint16_t G,uint16_t B, uint16_t brightness)
 {
 	RGB_soft_t tmp;
 
@@ -107,7 +109,7 @@ soft_RGB_value(int value)
 	if(value != SENSOR_ERROR){
 		effect_state = 255;
 		user_set.all = temp->all;
-		value_RGB(temp->led.r,temp->led.g,temp->led.b,temp->led.brightness);
+		value_soft_RGB(temp->led.r,temp->led.g,temp->led.b,temp->led.brightness);
 		sensors_changed(&soft_RGB_ctrl_sensor);
 	}
 	return user_set.all;
@@ -173,7 +175,7 @@ soft_RGB_configure(int type, int enable)
 
 		case SENSORS_ACTIVE:
 			if(Sensor_status == SENSOR_STATUS_DISABLED)
-				return SENSOR_STATUS_DISABLED;
+				return Sensor_status;
 
 			 if(enable == 1) {
 				 sensors_changed(&hard_RGB_ctrl_sensor);
@@ -191,14 +193,16 @@ soft_RGB_configure(int type, int enable)
 				 Sensor_status = SENSOR_STATUS_INITIALISED;
 			 } else if(enable == 10){
 				 if(Sensor_status == SENSOR_STATUS_READY){
-					 effect_state = 43; // First run indicator
+					 effect_state = 0;
+					 RGB_tmp.led = (leds_t){0,0,256,256};
 					 RGB_COLORLOOP_RUN(NULL);
 					 Sensor_status |= (1<<12);
 					 sensors_changed(&hard_RGB_ctrl_sensor);
 				 }
 			 } else if(enable == 11){
 				 if(Sensor_status == SENSOR_STATUS_READY){
-					 effect_state = 43; // First run indicator
+					 effect_state = 0;
+					 RGB_tmp.led = (leds_t){256,256,256,256};
 					 RGB_RANDOM_RUN(NULL);
 					 Sensor_status |= (2<<12);
 					 sensors_changed(&hard_RGB_ctrl_sensor);
@@ -219,74 +223,62 @@ SENSORS_SENSOR(soft_RGB_ctrl_sensor, "RGB", soft_RGB_value, soft_RGB_configure, 
 /*---------------------------------------------------------------------------*/
 
 
-RGB_soft_t RGB_tmp;
+
 
 static void
 RGB_COLORLOOP_RUN(void *data)
 {
 	clock_time_t next = 16;
-	if(effect_state == 43){
-		effect_state = 0;
-		RGB_tmp.led.r = 0;
-		RGB_tmp.led.g = 0;
-		RGB_tmp.led.b = 0;
-		RGB_tmp.led.brightness = 256;
+
+	switch(effect_state){
+
+		case 0:
+			RGB_tmp.led.b--;
+			RGB_tmp.led.r++;
+			if(RGB_tmp.led.r == 256)	effect_state++;
+			break;
+
+		case 1:
+			RGB_tmp.led.r--;
+			RGB_tmp.led.g++;
+			if(RGB_tmp.led.g == 256)	effect_state++;
+			break;
+
+		case 2:
+			RGB_tmp.led.g--;
+			RGB_tmp.led.b++;
+			if(RGB_tmp.led.b == 256)	effect_state = 0;
+			break;
+
+		case 255:// exit
+			return;
 	}
-	witch(effect_state){
 
-			case 0:
-				if(RGB_tmp.led.b) 			RGB_tmp.led.b--;
-				RGB_tmp.led.r++;
-				if(RGB_tmp.led.r == 255)	effect_state++;
-				break;
-
-			case 1:
-				if(RGB_tmp.led.r) 			RGB_tmp.led.r--;
-				RGB_tmp.led.g++;
-				if(RGB_tmp.led.g == 255)	effect_state++;
-				break;
-
-			case 2:
-				if(RGB_tmp.led.g) 			RGB_tmp.led.g--;
-				RGB_tmp.led.b++;
-				if(RGB_tmp.led.b == 255)	effect_state = 0;
-				break;
-
-			case 255:// exit
-				return;
-		}
-
-	value_RGB(RGB_tmp.led.r,RGB_tmp.led.g,RGB_tmp.led.b,RGB_tmp.led.brightness);
-
+	value_soft_RGB(RGB_tmp.led.r,RGB_tmp.led.g,RGB_tmp.led.b,RGB_tmp.led.brightness);
 	ctimer_set(&RGB_effect_timer, next, RGB_COLORLOOP_RUN, NULL);
 }
+
 static void
 RGB_RANDOM_RUN(void *data)
 {
 	clock_time_t next;
 	uint16_t rnd[2];
-	if(effect_state == 43){
-		effect_state = 0;
-		RGB_tmp.led.r = 256;
-		RGB_tmp.led.g = 256;
-		RGB_tmp.led.b = 256;
-		RGB_tmp.led.brightness = 256;
-	}
+
+	if(effect_state == 255)// exit
+		return;
 
 	csprng_get((unsigned char *)&rnd[0],4);
-	RGB_tmp.led.brightness = rnd[0] & 255;
+	RGB_tmp.led.brightness = (rnd[0] & 127) + 128;
 
-	next = rnd[1]&255
+	next = rnd[1]&127;
 
 	if(next < 5)
 		next = 5;
 
-	if(effect_state == 255)// exit
-		return;
 	// NB: user can't see the value update on the PWM signal. It would just confuse them.
-	value_RGB(RGB_tmp.led.r,RGB_tmp.led.g,RGB_tmp.led.b,RGB_tmp.led.brightness);
+	value_soft_RGB(RGB_tmp.led.r,RGB_tmp.led.g,RGB_tmp.led.b,RGB_tmp.led.brightness);
 	ctimer_set(&RGB_effect_timer, next, RGB_RANDOM_RUN, NULL);
 }
 
-#endif
 /*---------------------------------------------------------------------------*/
+#endif

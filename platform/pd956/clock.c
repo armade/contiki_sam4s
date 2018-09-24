@@ -137,7 +137,8 @@ clock_time_t RtctoUnix(tm_t *tb)
     unsigned int day    = tb->tm_mday-1;   // 0-30
     unsigned int month  = tb->tm_mon-1; // 0-11
     unsigned int year   = tb->tm_year-1970;    // 0-99
-    return (((year/4*(365*4+1)+days[year%4][month]+day)*24+hour)*60+minute)*60+second;
+    //return (((year/4*(365*4+1)+days[year%4][month]+day)*24+hour)*60+minute)*60+second;
+    return (((year/4*(365*4+1)+days[year&3][month]+day)*24+hour)*60+minute)*60+second;
 }
 
 void UnixtoRTC(tm_t *tb, clock_time_t Unix_epoch)

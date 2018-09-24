@@ -211,14 +211,28 @@ void board_init(void)
 
 	/* Configure all unused PIOs as outputs and high to save power */
 	pio_set_output(PIOA,
-			(1 << 0) | (1 << 2) | (1 << 3)  | (1 << 4)  | (1 << 5)  | (1 << 6)
-					| (1 << 7)  | (1 << 8)  | (1 << 9)  | (1 << 10) | (1 << 16)
-					| (1 << 17) | (1 << 18) | (1 << 19) | (1 << 20) | (1 << 26)
-					| (1 << 27) | (1 << 28) | (1 << 29) | (1 << 30) | (1 << 31),
+			(1 << 0)  | (1 << 2)  | (1 << 3)  | (1 << 4)  |
+			(1 << 5)  | (1 << 6)  | (1 << 8)  | (1 << 9)  |
+			(1 << 10) | (1 << 16) |	(1 << 17) | (1 << 18) |
+			(1 << 19) | (1 << 26) |	(1 << 27) | (1 << 28) |
+			(1 << 29) | (1 << 30) | (1 << 31),
 			1, 0, 0);
+/********************************************************************************/
+	// Please verify that this does not influence on sleep mode current.
+	// By setting these pins low hardlight does not startup
+	// lighting all diodes. This problem must also be fixed in hardware!!!
+	// NB: these pins are normally not used so this should not be a problem.
+	pio_set_output(PIOA,
+			(1 << 7) | (1 << 20),
+			0, 0, 0);
+
 	pio_set_output(PIOB,
-			(1 << 0) | (1 << 1) | (1 << 2)  | (1 << 3)  | (1 << 4)  | (1 << 5)
-					| (1 << 13) | (1 << 14),
+			(1 << 4),
+			0, 0, 0);
+/********************************************************************************/
+	pio_set_output(PIOB,
+			(1 << 0) | (1 << 1)  | (1 << 2)  | (1 << 3) |
+			(1 << 5) | (1 << 13) | (1 << 14),
 			1, 0, 1);
 
 #ifdef CONF_BOARD_UART_CONSOLE

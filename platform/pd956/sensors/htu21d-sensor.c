@@ -487,7 +487,7 @@ static int htu21_configure(int type, int enable)
 		case SENSORS_ACTIVE:
 			/* Must be initialised first */
 			if(sensor_state == SENSOR_STATUS_DISABLED){
-				sensors_changed(&HTU21D_sensor);
+				//sensors_changed(&HTU21D_sensor);
 				return sensor_state;
 			}
 			if(enable){
