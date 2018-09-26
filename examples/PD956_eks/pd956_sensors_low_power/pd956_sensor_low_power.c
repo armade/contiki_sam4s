@@ -115,7 +115,7 @@ DEMO_SENSOR2(temp_reading,						"Step_Position",UNIT_STEP,		PD956_WEB_DEMO_SENSO
 #endif
 
 #ifdef NODE_LIGHT
-// NB names are hardcoded. Do not change.
+												// NB names are hardcoded. Do not change.
 DEMO_SENSOR2(soft_RGB_switch_sensor_reading,	"switch",		UNIT_NONE,		PD956_WEB_DEMO_SENSOR_RGB,				light_class,		light_config_topic,	light_sub_topic,pub_light_soft_switch_handler,None);
 DEMO_SENSOR2(soft_RGB_bright_sensor_reading,	"brightness",	UNIT_NONE,		PD956_WEB_DEMO_SENSOR_RGB,				light_class,		NULL,				light_sub_topic,pub_light_soft_brightness_handler,None);
 DEMO_SENSOR2(soft_RGB_rgb_sensor_reading,		"color",		UNIT_NONE,		PD956_WEB_DEMO_SENSOR_RGB,				light_class,		NULL,				light_sub_topic,pub_light_soft_rgb_handler,None);
@@ -357,13 +357,19 @@ get_RGB_soft_reading(void)
 			memset(buf, 0, SENSOR_CONVERTED_LEN);
 			INSERT_TXT(buf,"\"colorloop\"");
 		}
-		else
+		else if((status_val>>12) == 2)
 		{
 			soft_RGB_effect_sensor_reading.raw = status_val;
 
 			buf = soft_RGB_effect_sensor_reading.converted;
 			memset(buf, 0, SENSOR_CONVERTED_LEN);
 			INSERT_TXT(buf,"\"random\"");
+		}
+		else
+		{
+			buf = soft_RGB_effect_sensor_reading.converted;
+			memset(buf, 0, SENSOR_CONVERTED_LEN);
+			INSERT_TXT(buf,"\"none\"");
 		}
 	}
 
@@ -427,7 +433,7 @@ get_RGB_hard_reading(void)
 			memset(buf, 0, SENSOR_CONVERTED_LEN);
 			INSERT_TXT(buf,"\"colorloop\"");
 		}
-		else
+		else if((status_val>>12) == 2)
 		{
 			hard_RGB_effect_sensor_reading.raw = status_val;
 
@@ -435,6 +441,12 @@ get_RGB_hard_reading(void)
 			memset(buf, 0, SENSOR_CONVERTED_LEN);
 			INSERT_TXT(buf,"\"random\"");
 		}
+		else{
+			buf = hard_RGB_effect_sensor_reading.converted;
+			memset(buf, 0, SENSOR_CONVERTED_LEN);
+			INSERT_TXT(buf,"\"none\"");
+		}
+
 	}
 
 	if(hard_RGB_bright_sensor_reading.publish){
@@ -944,12 +956,6 @@ PROCESS_THREAD(PD956_MAIN_process, ev, data)
 			sensor_busy &= ~(1ul<<PD956_WEB_DEMO_SENSOR_STEP);
 #endif
 
-#ifdef NODE_LIGHT
-		} else if(ev == sensors_event && data == &soft_RGB_ctrl_sensor){
-			get_RGB_soft_reading();();
-			sensor_busy &= ~(1ul<<PD956_WEB_DEMO_SENSOR_RGB);
-#endif
-
 #ifdef NODE_DHT11
 		} else if(ev == sensors_event && data == &dht11_sensor){
 			get_dht11_temperature_reading();
@@ -988,9 +994,16 @@ PROCESS_THREAD(PD956_MAIN_process, ev, data)
 			sensor_busy &= ~(1ul << PD956_WEB_DEMO_SENSOR_RELAY3);
 			sensor_busy &= ~(1ul << PD956_WEB_DEMO_SENSOR_RELAY4);
 #endif
+
 #ifdef NODE_HARD_LIGHT
 		} else if(ev == sensors_event && data == &hard_RGB_ctrl_sensor){
 			get_RGB_hard_reading();
+			sensor_busy &= ~(1ul<<PD956_WEB_DEMO_SENSOR_RGB);
+#endif
+
+#ifdef NODE_LIGHT
+		} else if(ev == sensors_event && data == &soft_RGB_ctrl_sensor){
+			get_RGB_soft_reading();
 			sensor_busy &= ~(1ul<<PD956_WEB_DEMO_SENSOR_RGB);
 #endif
 

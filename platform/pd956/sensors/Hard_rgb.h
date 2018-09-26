@@ -1,9 +1,6 @@
 #ifndef hard_rgb_H_
 #define hard_rgb_H_
 /*---------------------------------------------------------------------------*/
-int configure_RGB(void);
-//int value_RGB(uint8_t R,uint8_t G,uint8_t B);
-/*---------------------------------------------------------------------------*/
 typedef struct{
 	uint16_t r;
 	uint16_t g;

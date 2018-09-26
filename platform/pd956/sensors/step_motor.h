@@ -1,7 +1,6 @@
 #ifndef step_motor_H_
 #define step_motor_H_
 
-#include "sys/process.h"
 // Speed ramp states
 typedef enum{
 	STOP,
@@ -54,7 +53,6 @@ typedef struct {
 #define A_x20000 (int)(ALPHA*20000)              // ALPHA*20000
 
 /*---------------------------------------------------------------------------*/
-extern process_event_t Step_motor_destination_reached_event;
 extern const struct sensors_sensor step_sensor;
 /*---------------------------------------------------------------------------*/
 #endif

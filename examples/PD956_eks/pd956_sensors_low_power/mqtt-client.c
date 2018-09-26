@@ -349,8 +349,9 @@ static void pub_handler(const char *topic, uint16_t topic_len,
 	subscribe_ele = list_head(MQTT_subscribe_list);
 
 	while (subscribe_ele != NULL){
+
 		if(!memcmp((void *)subscribe_ele->topic,(void *)topic,topic_len)){
-			if(subscribe_ele->data_handler)
+			if(subscribe_ele->data_handler /*&& (topic_len == strlen(subscribe_ele->topic))*/)
 				subscribe_ele->data_handler((uint8_t *)chunk,chunk_len);
 		}
 		subscribe_ele = subscribe_ele->next;

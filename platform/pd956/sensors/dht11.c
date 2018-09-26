@@ -31,7 +31,7 @@ int temperature_split = SENSOR_ERROR, humidity_split = SENSOR_ERROR;
 
 #define BUSYWAIT_UNTIL(cond, max_time)                                  \
   do {                                                                  \
-    static rtimer_clock_t t0;                                                  \
+    static rtimer_clock_t t0;                                           \
     t0 = RTIMER_NOW();                                                  \
     while(!(cond) && RTIMER_CLOCK_LT(RTIMER_NOW(), t0 + (max_time)));   \
   } while(0)
@@ -78,7 +78,12 @@ dht11_timeout(void *data)
 	sensors_changed(&dht11_sensor);
 }
 
+#ifdef DEBUG_TIME
 volatile int debug_time[42];
+#define LOG_TIME(index,time) debug_time[index] = time
+#else
+#define LOG_TIME(index,time)
+#endif
 /*
  * Sample on falling edge. depending on the time between samples
  * we can determine if the bit is '1' or '0'.
@@ -95,20 +100,20 @@ void dht11_data_pin_irq(uint32_t a, uint32_t b)
 	{
 		// Delay DHT 20-40us
 		case 0:
-			debug_time[0] = timer;
+			LOG_TIME(0, timer);
 			bitcounter=0;
 			dht_state++;
 			break;
 
 		// Start 80us*2
 		case 1:
-			debug_time[1] = timer;
+			LOG_TIME(1, timer);
 			dht_state++;
 			break;
 		// Data
 		case 2:
 			data_bytes <<=1;
-			debug_time[2+bitcounter] = timer;
+			LOG_TIME(2+bitcounter, timer);
 			bitcounter++;
 			if((timer < 130) && (timer > 110)) 		// 120us = '1'
 				data_bytes |= 1;
@@ -165,6 +170,7 @@ dht11_value(int type)
 
 struct ctimer dht11_timer;
 
+// TODO: pio supports multidrive. use it.
 void
 dht11_start_measurement(void *ptr)
 {
@@ -180,10 +186,6 @@ dht11_start_measurement(void *ptr)
 	pio_enable_interrupt(PIOB, data_pin);
 	old_timer = SysTick->VAL;
 
-	// Measure every 15 sec as long as we are active
-	// NB: this means that every measurement is 15 seconds behind. (but does it matter?)
-	//if(SENSOR_STATUS_READY == sensor_status)
-	//	ctimer_set(&dht11_timer, (15*CLOCK_SECOND), dht11_start_measurement, NULL);
 }
 
 /*---------------------------------------------------------------------------*/

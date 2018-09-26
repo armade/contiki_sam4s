@@ -40,6 +40,8 @@
 #include "pio_handler.h"
 #include "board-peripherals.h"
 
+#ifdef NODE_4_ch_relay
+
 /*---------------------------------------------------------------------------*/
 #define CH1_PIN            PIO_PA10
 #define CH2_PIN            PIO_PA9
@@ -126,3 +128,4 @@ relay_status(int type)
 /*---------------------------------------------------------------------------*/
 SENSORS_SENSOR(ch4_relay_PD956, "4 Ch relay",relay_value, relay_configure, relay_status);
 /*---------------------------------------------------------------------------*/
+#endif
