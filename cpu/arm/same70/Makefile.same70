@@ -1,0 +1,146 @@
+##############################################################################################################
+# Make file for same70q20
+# -- Version 1.0
+##############################################################################################################
+# My current version of ubuntu has installed a arm gcc with errors. Point to one that works until they have fixed this.
+ifeq ($(UBUNTUBREAK),1)
+CC      = /home/peter/GNUARM/gcc-arm-none-eabi-7-2017-q4-major-linux/gcc-arm-none-eabi-7-2017-q4-major/bin/arm-none-eabi-gcc
+CPP     = /home/peter/GNUARM/gcc-arm-none-eabi-7-2017-q4-major-linux/gcc-arm-none-eabi-7-2017-q4-major/bin/arm-none-eabi-cpp
+LD      = /home/peter/GNUARM/gcc-arm-none-eabi-7-2017-q4-major-linux/gcc-arm-none-eabi-7-2017-q4-major/bin/arm-none-eabi-gcc
+AR      = /home/peter/GNUARM/gcc-arm-none-eabi-7-2017-q4-major-linux/gcc-arm-none-eabi-7-2017-q4-major/bin/arm-none-eabi-ar
+OBJCOPY = /home/peter/GNUARM/gcc-arm-none-eabi-7-2017-q4-major-linux/gcc-arm-none-eabi-7-2017-q4-major/bin/arm-none-eabi-objcopy
+OBJDUMP = /home/peter/GNUARM/gcc-arm-none-eabi-7-2017-q4-major-linux/gcc-arm-none-eabi-7-2017-q4-major/bin/arm-none-eabi-objdump
+NM      = /home/peter/GNUARM/gcc-arm-none-eabi-7-2017-q4-major-linux/gcc-arm-none-eabi-7-2017-q4-major/bin/arm-none-eabi-nm
+SIZE    = /home/peter/GNUARM/gcc-arm-none-eabi-7-2017-q4-major-linux/gcc-arm-none-eabi-7-2017-q4-major/bin/arm-none-eabi-size
+else
+CC      = arm-none-eabi-gcc
+CPP     = arm-none-eabi-cpp
+LD      = arm-none-eabi-gcc
+AR      = arm-none-eabi-ar
+OBJCOPY = arm-none-eabi-objcopy
+OBJDUMP = arm-none-eabi-objdump
+NM      = arm-none-eabi-nm
+SIZE    = arm-none-eabi-size
+endif
+
+
+LDSCRIPT = $(CONTIKI_CPU)/flash.ld
+#-march=armv7-m
+CFLAGS += 	-mcpu=cortex-m7\
+			-march=armv7e-m\
+			-mthumb\
+			-mlittle-endian\
+			-O2 \
+			-ffunction-sections\
+			-fdata-sections \
+			-fshort-enums\
+			-fomit-frame-pointer\
+			-fno-strict-aliasing\
+			-Wall\
+			-g3\
+			-D __SAME70Q20__\
+			-D SAME70 
+
+LDFLAGS += -mcpu=cortex-m7 -march=armv7e-m -mthumb -nostartfiles -specs=nosys.specs
+LDFLAGS += -T $(LDSCRIPT) -g3 
+LDFLAGS += -Wl,--gc-sections,--sort-section=alignment
+
+OBJCOPY_FLAGS += -O binary --gap-fill 0xff
+OBJDUMP_FLAGS += --disassemble --source --disassembler-options=force-thumb
+
+### CPU-dependent cleanup files
+CLEAN += symbols.c symbols.h *.d *.elf *.hex
+
+### CPU-dependent directories
+CONTIKI_CPU_DIRS += 	$(CONTIKI_CPU) \
+						$(CONTIKI)/cpu/arm/common/CMSIS \
+						$(CONTIKI_CPU)/include \
+						$(CONTIKI_CPU)/include/component \
+						$(CONTIKI_CPU)/include/instance \
+						$(CONTIKI_CPU)/include/pio \
+						$(CONTIKI_CPU)/drivers \
+						$(CONTIKI_CPU)/USB \
+						../common/dbg-io
+
+### CPU-dependent source files
+CONTIKI_CPU_SOURCEFILES += rtimer-arch.c  
+
+CPU_STARTFILES_SOURCE = startup_same70.c system_same70.c syscalls.c
+CPU_STARTFILES = ${addprefix $(OBJECTDIR)/,${call oname, $(CPU_STARTFILES_SOURCE)}}
+CONTIKI_SOURCEFILES += $(CONTIKI_CPU_SOURCEFILES) $(CPU_STARTFILES_SOURCE)
+
+PLATFORM_DRIVER = 	rtc.c \
+					rtt.c \
+					sysclk.c \
+					pmc.c \
+					sam_sleep.c \
+					sleepmgr.c \
+					pio_handler.c \
+					pio.c \
+					interrupt_sam_nvic.c \
+					efc.c \
+					flash_efc.c \
+					spi.c \
+					spi_master.c \
+					debug-uart.c \
+					eeprom.c \
+					afec.c \
+					wdt.c
+					
+					
+USB_DRIVERS =		udc.c \
+					udi_cdc_desc.c \
+					udi_cdc.c 
+					
+TARGETLIBS = dbg-printf.c dbg-puts.c dbg-putchar.c dbg-sprintf.c dbg-snprintf.c strformat.c
+
+CONTIKI_SOURCEFILES += $(PLATFORM_DRIVER) $(USB_DRIVERS) $(TARGETLIBS)
+
+##############################################################################################################
+##############################################################################################################
+##############################################################################################################
+
+.SECONDEXPANSION:
+### Don't treat the .elf as intermediate
+.PRECIOUS: %.elf %.hex %.bin
+
+
+### Compilation rules
+CUSTOM_RULE_LINK=1
+
+%.elf: $(CPU_STARTFILES) $$(CONTIKI_OBJECTFILES) %.co $(PROJECT_OBJECTFILES) $(PROJECT_LIBRARIES) $(LDSCRIPT)
+	$(TRACE_LD)
+	$(Q)$(LD) $(LDFLAGS) ${filter-out $(LDSCRIPT) %.a,$^} ${filter %.a,$^} $(TARGET_LIBFILES) -o $@
+
+%.hex: %.elf
+	$(OBJCOPY) -O ihex $< $@
+
+%.bin: %.elf
+	$(OBJCOPY) $(OBJCOPY_FLAGS) $< $@
+	../../../tools/certificate_creator/create_cert/make_certificate.exe $(UUID) $@ > /dev/null
+
+%.lst: %.elf
+	$(OBJDUMP) $(OBJDUMP_FLAGS) $< > $@
+
+# Build .elf and .bin files
+%.$(TARGET): %.elf %.bin
+	cp $< $@
+	@echo "$@"
+	@$(CC) --version
+	@echo ""
+	$(Q)$(SIZE) -Ax $<
+	@$(SIZE) -A $< | egrep "data|bss" | awk '{s+=$$2} END {s=s+$(STACK_SIZE); f=$(RAM_SIZE)-s; printf "\t[RAM]   used %6d, free %6d (%f%)\n",s,f,s/f*100;}'
+	@$(SIZE) -A $< | egrep "text|isr_vector" | awk '{s+=$$2} END {f=$(FLASH_SIZE)-s; printf "\t[Flash] used %6d, free %6d (%f%)\n",s,f,s/f*100;}'
+	@echo ""
+	@echo ""
+	../../../tools/certificate_creator/create_cert/make_certificate.exe $(UUID) $<
+
+# a target that gives a user-friendly memory profile, taking into account the RAM
+# that is statically occupied by the stack as defined in the linker script
+# see $(LDSCRIPT)
+RAM_SIZE = 0x00060000
+FLASH_SIZE = 0x00100000
+STACK_SIZE = 0
+
+
+	

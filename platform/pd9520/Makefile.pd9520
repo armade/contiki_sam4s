@@ -1,0 +1,66 @@
+# PD9520 platform makefile
+
+ifndef CONTIKI
+  $(error CONTIKI not defined! You must specify where CONTIKI resides!)
+endif
+
+CONTIKI_TARGET_DIRS += 	.	sensors PD_FLASH io crypt crypt/uECC crypt/sha2
+		
+PLATFORM_NET_DRIVER = clock.c
+PLATFORM_FLASH_DRIVER = hw_spiflash.c hl_spiflash.c FLASH_driver.c
+PLATFORM_SENSOR_DRIVER = 	ADC_temp.c \
+							Soft_rgb.c  \
+							lm73.c \
+							button-sensor.c \
+							leds-arch.c \
+							PD956_sensors.c \
+							dht11.c \
+							step_motor.c \
+							4ch_relay.c \
+							bmp-280-sensor.c \
+							Hard_rgb.c \
+							htu21d-sensor.c \
+							GPS-sensor.c\
+							xmem.c \
+							Neo_Pixel_Ring.c
+							
+PLATFORM_IO_DRIVER = i2csoft.c \
+					cfs-coffee.c \
+					ctk.c
+
+PLATFORM_CRYPT_DRIVER = sha256.c \
+						sha512.c \
+						uECC.c \
+						csprng.c
+
+CONTIKI_TARGET_SOURCEFILES += 	contiki-main.c \
+								clock.c \
+								node-id.c \
+								slip_arch.c \
+								gpsd_arch.c \
+								$(PLATFORM_NET_DRIVER) \
+								$(PLATFORM_FLASH_DRIVER) \
+								$(PLATFORM_SENSOR_DRIVER) \
+								$(PLATFORM_IO_DRIVER) \
+								$(PLATFORM_CRYPT_DRIVER)
+
+CONTIKI_SOURCEFILES += $(CONTIKI_TARGET_SOURCEFILES)
+
+CLEAN += *.pd9520
+
+CFLAGS += -D NETSTACK_CONF_WITH_IPV6=1
+
+### Define the CPU directory
+CONTIKI_CPU=$(CONTIKI)/cpu/arm/same70
+include $(CONTIKI_CPU)/Makefile.same70
+
+MODULES += 	core/net \
+			core/net/mac \
+           	core/net/mac/contikimac \
+           	core/net/ip \
+           	core/net/llsec \
+           	core/net/llsec/noncoresec \
+           	core/net/ip64 \
+           	core/net/ipv6/multicast
+
+
