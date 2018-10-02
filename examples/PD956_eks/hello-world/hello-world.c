@@ -38,6 +38,15 @@
  */
 
 #include "contiki.h"
+#include "contiki-net.h"
+#include "ip64.h"
+#include "net/netstack.h"
+#include "net/rpl/rpl-dag-root.h"
+#include "ntpd.h"
+
+#ifdef NODE_GPS
+#include "gpsd.h"
+#endif
 
 #include <stdio.h> /* For printf() */
 /*---------------------------------------------------------------------------*/
@@ -47,9 +56,31 @@ AUTOSTART_PROCESSES(&hello_world_process);
 PROCESS_THREAD(hello_world_process, ev, data)
 {
   PROCESS_BEGIN();
-
+  uip_ip4addr_t ipv4addr, netmask;
   printf("Hello, world\n");
   
+  /* Set us up as a RPL root node. */
+   rpl_dag_root_init_dag();
+   ip64_init();
+   /* Initialize the IP64 module so we'll start translating packets */
+   uip_ipaddr(&ipv4addr, 169, 254, 103, 7);
+     uip_ipaddr(&netmask, 255, 255, 0, 0);
+     ip64_set_ipv4_address(&ipv4addr, &netmask);
+
+
+
+
+
+#ifdef NODE_GPS
+	//process_start(&gpsd_process, NULL);
+#endif
+
+	  while(1) {
+	    PROCESS_WAIT_EVENT();
+	  }
   PROCESS_END();
 }
 /*---------------------------------------------------------------------------*/
+
+
+

@@ -64,9 +64,7 @@ tm_t time;
 
 int parse_sentence(char *line)
 {
-	char debug_buf[6];
-	snprintf(debug_buf,sizeof(debug_buf),line+1);
-	printf("%s\n\r",debug_buf);
+
 
 	switch (minmea_sentence_id(line, false)) {
 		case MINMEA_SENTENCE_RMC: {
@@ -196,6 +194,7 @@ int parse_sentence(char *line)
 		} break;
 
 		case MINMEA_SENTENCE_PMTK:{
+			PRINTF("$%s\n",line);
 			asm volatile("NOP");
 		}break;
 

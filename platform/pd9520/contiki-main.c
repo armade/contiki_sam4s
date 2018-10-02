@@ -19,6 +19,7 @@
 #include "board-peripherals.h"
 #include "i2csoft.h"
 #include "ioport.h"
+#include "leds.h"
 
 
 #include "FLASH_driver.h"
@@ -45,11 +46,11 @@ volatile devicecert_t device_certificate = (devicecert_t) {
 
 uint8_t sleepmgr_locks[SLEEPMGR_NR_OF_MODES];
 //rtimer_clock_t static rtime_now,rtime_old;
-
+extern int net_init_eth(void);
 int main()
 {
 	uint8_t version_var;
-	//uint8_t hash[32] = {0};
+	uint8_t hash[32] = {0};
 	uint8_t masterpublic_key_eeprom[64];
 
 	sysclk_init();
@@ -70,18 +71,15 @@ int main()
 	 * Otherwise we have a bad certificate.
 	 */
 
-	/*sha2_sha256( (uint8_t *)&device_certificate.crt.payloadfield_size_control, sizeof(device_certificate.crt.payloadfield_size_control),hash);
+	sha2_sha256( (uint8_t *)&device_certificate.crt.payloadfield_size_control, sizeof(device_certificate.crt.payloadfield_size_control),hash);
 
 	if (!uECC_verify((void *)&masterpublic_key_eeprom, hash, sizeof(hash), (void *)&device_certificate.crt.signature, uECC_secp256r1())) {
 		printf("uECC_verify() failed\n");
 		while(1);
-	}*/
+	}
 
-	// START
-//#if defined(NODE_HTU21D) || defined(NODE_BMP280) || defined(NODE_LM73)
-//	SoftI2CInit();
-//#endif
 	flash_init_df();
+	//net_init_eth();
 
 	// Don't start USB on endnodes
 #if !LOW_CLOCK //120Mhz
@@ -199,7 +197,24 @@ void set_linkaddr(void)
 #define SPI_NPCS0_GPIO        	(PIO_PA11_IDX)
 #define SPI_NPCS0_FLAGS       	(PIO_PERIPH_A | PIO_DEFAULT)
 
-#define clkm_pin IOPORT_CREATE_PIN(PIOA, 26)
+void initSWO(void)
+{
+	uint32_t SWOSpeed = 6000000; //6000kbps, default for JLinkSWOViewer
+    uint32_t SWOPrescaler = (150000000 / SWOSpeed) - 1; // SWOSpeed in Hz, note that F_CPU is expected to be 150000000 in this case
+
+	PMC->PMC_PCK[3] = 4 ;
+	PMC->PMC_SCER = PMC_SCDR_PCK3;
+	CoreDebug->DEMCR = (1<<24); //Set the TRCENA bit to 1 into the Debug Exception and Monitor Register (0xE000EDFC) to enable the use of trace and debug blocks
+
+	TPI->SPPR = 2;//Write 0x2 into the Selected Pin Protocol Register. Select the Serial Wire output – NRZ
+	TPI->FFCR = 0x100; //Write 0x100 into the Formatter and Flush Control Register
+	TPI->ACPR = SWOPrescaler;//Set the suitable clock prescaler value into the Async Clock Prescaler Register to scale the baud rate of the asynchronous output (this can be done automatically by the debugging tool).
+
+	ITM->LAR = 0xC5ACCE55; //Enable the write accesses into the ITM registers by writing “0xC5ACCE55” into the Lock Access Register
+	ITM->TCR = 0x10009;// Write 0x00010015 into the Trace Control register
+	//ITM->TPR = ITM_TPR_PRIVMASK_Msk; // ITM Trace Privilege Register
+	ITM->TER |= 1;//Write 0x1 into the Trace Enable register: Enable the Stimulus port 0
+}
 
 void board_init(void)
 {
@@ -207,50 +222,16 @@ void board_init(void)
 	WDT->WDT_MR = WDT_MR_WDDIS;
 	//wdt_init(WDT, WDT_MR_WDRSTEN|WDT_MR_WDDBGHLT|WDT_MR_WDIDLEHLT, 0xfff, 0xfff);
 	ioport_init();
+	leds_init();
+	leds_arch_set(LEDS_GREEN);
 
-	/* Configure all unused PIOs as outputs and high to save power */
-	pio_set_output(PIOA,
-			(1 << 0)  | (1 << 2)  | (1 << 3)  | (1 << 4)  |
-			(1 << 5)  | (1 << 6)  | (1 << 8)  | (1 << 9)  |
-			(1 << 10) | (1 << 16) |	(1 << 17) | (1 << 18) |
-			(1 << 19) | (1 << 26) |	(1 << 27) | (1 << 28) |
-			(1 << 29) | (1 << 30) | (1 << 31),
-			1, 0, 0);
-/********************************************************************************/
-	// Please verify that this does not influence on sleep mode current.
-	// By setting these pins low hardlight does not startup
-	// lighting all diodes. This problem must also be fixed in hardware!!!
-	// NB: these pins are normally not used so this should not be a problem.
-	pio_set_output(PIOA,
-			(1 << 7) | (1 << 20),
-			0, 0, 0);
-
-	pio_set_output(PIOB,
-			(1 << 4),
-			0, 0, 0);
-/********************************************************************************/
-	pio_set_output(PIOB,
-			(1 << 0) | (1 << 1)  | (1 << 2)  | (1 << 3) |
-			(1 << 5) | (1 << 13) | (1 << 14),
-			1, 0, 1);
-
-#ifdef CONF_BOARD_UART_CONSOLE
-	/* Configure UART pins */
-	SETUP_CONSOLE(DEBUG_UART);
-#endif
-	/*------------------------------------------------------------------------------*/
-	// SPI FLASH
-	// Configure SPI pins
-	//gpio_configure_pin(SPI_MISO_GPIO, SPI_MISO_FLAGS);
-	//gpio_configure_pin(SPI_MOSI_GPIO, SPI_MOSI_FLAGS);
-	//gpio_configure_pin(SPI_SPCK_GPIO, SPI_SPCK_FLAGS);
-	//gpio_configure_pin(SPI_NPCS0_GPIO, SPI_NPCS0_FLAGS);
-	/*------------------------------------------------------------------------------*/
+	initSWO();
 
 	/*------------------------------------------------------------------------------*/
 }
 
 void enable_cache(void)
 {
-
+	//SCB_EnableICache();
+	//SCB_EnableDCache();
 }

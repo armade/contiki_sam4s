@@ -62,7 +62,8 @@
 #include "gmac.h"
 #include "gmac_raw_2.h"
 #include <string.h>
-#include "conf_eth.h"
+#include <stdio.h>
+//#include "conf_eth.h"
 
 /// @cond 0
 /**INDENT-OFF**/
@@ -86,7 +87,8 @@ extern "C" {
  *
  * @{
  */
-
+#define GMAC_TX_BUFFERS 8
+#define GMAC_RX_BUFFERS 18
 /** TX descriptor lists */
 COMPILER_ALIGNED(8)
 static gmac_tx_descriptor_t gs_tx_desc_null, gs_tx_desc[GMAC_TX_BUFFERS];
@@ -424,22 +426,23 @@ uint32_t gmac_dev_read(gmac_device_t* p_gmac_dev, gmac_quelist_t queue_idx, uint
 	uint32_t tmp_ul_frame_size = 0;
 	uint8_t *p_tmp_frame = 0;
 
-	gmac_queue_t* p_gmac_queue = &p_gmac_dev->gmac_queue_list[queue_idx];
-	uint16_t us_tmp_idx = p_gmac_queue->us_rx_idx;
-	gmac_rx_descriptor_t *p_rx_td =
-			&p_gmac_queue->p_rx_dscr[p_gmac_queue->us_rx_idx];
-	int8_t c_is_frame = 0;
+	 gmac_queue_t* p_gmac_queue = &p_gmac_dev->gmac_queue_list[queue_idx];
+	 uint16_t us_tmp_idx = p_gmac_queue->us_rx_idx;
+	 gmac_rx_descriptor_t *p_rx_td = &p_gmac_queue->p_rx_dscr[p_gmac_queue->us_rx_idx];
+	 int8_t c_is_frame = 0;
 
 	if (p_frame == NULL)
 		return GMAC_PARAM;
 
 	/* Set the default return value */
 	*p_rcv_size = 0;
-
+	//printf("v\n");
 	/* Process received RX descriptor */
 	while ((p_rx_td->addr.val & GMAC_RXD_OWNERSHIP) == GMAC_RXD_OWNERSHIP) {
+
 		/* A start of frame has been received, discard previous fragments */
 		if ((p_rx_td->status.val & GMAC_RXD_SOF) == GMAC_RXD_SOF) {
+			printf("t\n");
 			/* Skip previous fragment */
 			while (us_tmp_idx != p_gmac_queue->us_rx_idx) {
 				p_rx_td = &p_gmac_queue->p_rx_dscr[p_gmac_queue->us_rx_idx];
@@ -818,6 +821,7 @@ void gmac_handler(gmac_device_t* p_gmac_dev, gmac_quelist_t queue_idx)
 		}
 		/* Clear status */
 		gmac_clear_rx_status(p_hw, ul_rx_status_flag);
+		printf("r\n");
 
 		/* Invoke callbacks */
 		if (p_gmac_queue->func_rx_cb) {

@@ -8,7 +8,8 @@
 
 #include "compiler.h"
 #include "udi_cdc.h"
-#include "uart.h"
+#include "drivers/uart.h"
+#include "drivers/sysclk.h"
 #include "same70.h"
 #include "gpio.h"
 extern void gpsd_put_char(uint8_t c);
@@ -22,8 +23,8 @@ static uint8_t cmd_index = 0;
 static const char init_cmd[]={
 	"$PMTK301,2*2E\r\n"// Set DGPS mode to SBAS
 	"$PMTK313,1*2E\r\n"// Set SBAS Enabled
-	//"$PMTK314,0,2,2,2,0,0,0,0,0,0,0,0,0,0,0,0,0,5,0*2F\r\n"// Set NMEA Sentence Output: GLL,RMC,VTG,GGA,GSA,GSV...........ZDA
-	"$PMTK314,0,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0*28\r\n"
+	"$PMTK314,0,2,2,2,0,0,0,0,0,0,0,0,0,0,0,0,0,5,0*2F\r\n"// Set NMEA Sentence Output: GLL,RMC,VTG,GGA,GSA,GSV...........ZDA
+	//"$PMTK314,0,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0*28\r\n"
 	"$PMTK319,1*24\r\n"// Set SBAS 'Integrity' Mode
 	"$PMTK225,0*2B\r\n"// Disable Periodic Mode
 	"$PMTK286,1*23\r\n"// Enable AIC Mode
@@ -83,8 +84,8 @@ void gpsd_arch_init(void)
 
 	// Enabling the peripheral clock
 	sysclk_enable_peripheral_clock(ID_UART1);
-	pio_set_peripheral(PIOB, PIO_PERIPH_A, PIO_PB2);
-	pio_set_peripheral(PIOB, PIO_PERIPH_A, PIO_PB3);
+	pio_set_peripheral(PIOA, PIO_PERIPH_C, PIO_PA5);
+	pio_set_peripheral(PIOA, PIO_PERIPH_C, PIO_PA4);
 
 	// Initialize UART
 	uart_init(UART1,&uart_settings);

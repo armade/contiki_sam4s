@@ -39,6 +39,7 @@ CFLAGS += 	-mcpu=cortex-m7\
 			-Wall\
 			-g3\
 			-D __SAME70Q20__\
+			-D __VFP_FP__\
 			-D SAME70 
 
 LDFLAGS += -mcpu=cortex-m7 -march=armv7e-m -mthumb -nostartfiles -specs=nosys.specs
@@ -85,6 +86,8 @@ PLATFORM_DRIVER = 	rtc.c \
 					debug-uart.c \
 					eeprom.c \
 					afec.c \
+					trng.c \
+					uart.c \
 					wdt.c
 					
 					

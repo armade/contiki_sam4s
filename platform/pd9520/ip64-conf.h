@@ -1,15 +1,12 @@
+/*---------------------------------------------------------------------------*/
 #ifndef IP64_CONF_H
 #define IP64_CONF_H
-
-#undef UIP_FALLBACK_INTERFACE
-#define UIP_FALLBACK_INTERFACE ip64_uip_fallback_interface
-
-#include "ip64-slip-interface.h"
-#include "ip64-null-driver.h"
-
-#define IP64_CONF_UIP_FALLBACK_INTERFACE_SLIP 		1
-#define IP64_CONF_UIP_FALLBACK_INTERFACE 			ip64_slip_interface
-#define IP64_CONF_INPUT                  			ip64_slip_interface_input
-#define IP64_CONF_ETH_DRIVER             			ip64_null_driver
-
+/*---------------------------------------------------------------------------*/
+#include "ip64-eth-interface.h"
+/*---------------------------------------------------------------------------*/
+#define IP64_CONF_UIP_FALLBACK_INTERFACE ip64_eth_interface
+#define IP64_CONF_INPUT                  ip64_eth_interface_input
+#include "init_net.h"
+#define IP64_CONF_ETH_DRIVER             ksz8863_ip64_driver
+/*---------------------------------------------------------------------------*/
 #endif /* IP64_CONF_H */

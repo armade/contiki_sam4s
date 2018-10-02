@@ -254,19 +254,15 @@ static void Store_time_to_RTC(void *data)
 	rtc_settime(RTC,&timer);
 
 	Set_GPBR_val(RTC_valid,0xA7);
-	// We are using the internal rc 32kHz. This is really bad so update it every 6 hour
-	// from the more accurate systimer.
-	// TODO: When we sleep we run on slow clock the most of the time making this pointless.
-	//ctimer_set(&rtc_timer, 6 * 60 * 60 * CLOCK_SECOND, Store_time_to_RTC, NULL); // 6 hr interval
-
 }
-
+// PD9520 has an external temperature compensated RTC which provide
+// a precise 32.768kHz clock ref.
 static void Increment_stranum(void *data)
 {
 	if(clock_gpbr->stranum < UNSYNC_TIME){
 		Set_GPBR_val(stranum,tmp.stranum+1);
 		if(clock_gpbr->stranum < UNSYNC_TIME) // if we reach absolute rock bottom there is no need to call this again.
-			ctimer_set(&stranum_timer, 1 * 60 * 60 * CLOCK_SECOND, Increment_stranum, NULL); // 1 hr interval
+			ctimer_set(&stranum_timer, 10 * 60 * 60 * CLOCK_SECOND, Increment_stranum, NULL); // 10 hr interval
 	}
 }
 

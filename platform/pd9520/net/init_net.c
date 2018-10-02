@@ -1,26 +1,50 @@
+#include <stdio.h>
+#include "net/ip/uip.h"
+#include "ip64.h"
+#include "ip64-eth.h"
 #include "same70.h"
 #include "gmac.h"
+#include "gmac_raw_2.h"
+#include "drivers/sysclk.h"
+#include "ethernet_phy.h"
+
+#include "platform-conf.h"
+
+PROCESS(ksz8863_process, "KSZ8863 IP64 driver");
+
+void rx_input(uint32_t ul_status);
+
+/** The GMAC driver instance */
+static gmac_device_t gs_gmac_dev;
 
 void GMAC_Handler(void)
 {
 	gmac_handler(&gs_gmac_dev, GMAC_QUE_0);
 }
 
-#define printf(...)
+uint8_t gs_uc_mac_address[8];
 
-int main(void)
+
+static void
+init(void)
 {
-	uint32_t ul_frm_size;
+
 	volatile uint32_t ul_delay;
 	gmac_options_t gmac_option;
+
+	get_eeprom(eepromMacAddress[0], gs_uc_mac_address[0]);
+	get_eeprom(eepromMacAddress[1], gs_uc_mac_address[1]);
+	get_eeprom(eepromMacAddress[2], gs_uc_mac_address[2]);
+	get_eeprom(eepromMacAddress[3], gs_uc_mac_address[3]);
+	get_eeprom(eepromMacAddress[4], gs_uc_mac_address[4]);
+	get_eeprom(eepromMacAddress[5], gs_uc_mac_address[5]);
 
 	/* Display MAC & IP settings */
 	printf("-- MAC %x:%x:%x:%x:%x:%x\n\r",
 			gs_uc_mac_address[0], gs_uc_mac_address[1], gs_uc_mac_address[2],
 			gs_uc_mac_address[3], gs_uc_mac_address[4], gs_uc_mac_address[5]);
 
-	printf("-- IP  %d.%d.%d.%d\n\r", gs_uc_ip_address[0], gs_uc_ip_address[1],
-			gs_uc_ip_address[2], gs_uc_ip_address[3]);
+
 
 	/* Wait for PHY to be ready (CAT811: Max400ms) */
 	ul_delay = sysclk_get_cpu_hz() / 1000 / 3 * 400;
@@ -43,43 +67,78 @@ int main(void)
 	/* Enable Interrupt */
 	NVIC_EnableIRQ(GMAC_IRQn);
 
+	gmac_dev_set_rx_callback(&gs_gmac_dev, GMAC_QUE_0,rx_input);
+
 	/* Init MAC PHY driver */
-	if (ethernet_phy_init(GMAC, BOARD_GMAC_PHY_ADDR, sysclk_get_cpu_hz())
+	if (ethernet_phy_init(GMAC, 0, sysclk_get_cpu_hz()/2)
 					!= GMAC_OK) {
-		puts("PHY Initialize ERROR!\r");
-		return -1;
+		printf("PHY Initialize ERROR!\r");
+		return;
 	}
 
 	/* Auto Negotiate, work in RMII mode */
-	if (ethernet_phy_auto_negotiate(GMAC, BOARD_GMAC_PHY_ADDR) != GMAC_OK) {
+	if (ethernet_phy_auto_negotiate(GMAC, 1) != GMAC_OK) {
 
-		puts("Auto Negotiate ERROR!\r");
-		return -1;
+		printf("Auto Negotiate ERROR!\r");
+		return;
 	}
 
 	/* Establish ethernet link */
-	while (ethernet_phy_set_link(GMAC, BOARD_GMAC_PHY_ADDR, 1) != GMAC_OK) {
-		puts("Set link ERROR!\r");
-		return -1;
+	while (ethernet_phy_set_link(GMAC, 1, 1) != GMAC_OK) {
+		printf("Set link ERROR!\r");
+		return;
 	}
 
-	puts("-- Link detected. \r");
+	printf("-- Link detected. \r");
 
-	while (1) {
-		/* Process packets */
-#if (SAM4E)
-		if (GMAC_OK != gmac_dev_read(&gs_gmac_dev, (uint8_t *) gs_uc_eth_buffer,
-						sizeof(gs_uc_eth_buffer), &ul_frm_size)) {
-#else
-		if (GMAC_OK != gmac_dev_read(&gs_gmac_dev, GMAC_QUE_0, (uint8_t *) gs_uc_eth_buffer,
-						sizeof(gs_uc_eth_buffer), &ul_frm_size)) {
-#endif
-			continue;
-		}
+	process_start(&ksz8863_process, NULL);
 
-		if (ul_frm_size > 0) {
-			/* Handle input frame */
-			gmac_process_eth_packet((uint8_t *) gs_uc_eth_buffer, ul_frm_size);
-		}
-	}
 }
+
+void rx_input(uint32_t ul_status)
+{
+	process_poll(&ksz8863_process);
+	memset(ip64_packet_buffer,0,ip64_packet_buffer_maxlen);
+}
+
+PROCESS_THREAD(ksz8863_process, ev, data)
+{
+  uint32_t ul_frm_size;
+  static uint32_t i;
+  PROCESS_BEGIN();
+
+  while(1) {
+	  PROCESS_YIELD_UNTIL(ev == PROCESS_EVENT_POLL);
+
+    gmac_dev_read(&gs_gmac_dev, GMAC_QUE_0, (uint8_t *) ip64_packet_buffer,
+			ip64_packet_buffer_maxlen, &ul_frm_size);
+
+	if (ul_frm_size > 0) {
+		/* Handle input frame */
+		printf("%d",ul_frm_size);
+		for(i=0;i<ul_frm_size;i++)
+			printf(",0x%x",ip64_packet_buffer[i]);
+		printf("\n");
+		IP64_INPUT(ip64_packet_buffer, ul_frm_size);
+	}
+  }
+
+  PROCESS_END();
+}
+
+/*---------------------------------------------------------------------------*/
+
+static int
+output(uint8_t *packet, uint16_t len)
+{
+	gmac_dev_write(&gs_gmac_dev, GMAC_QUE_0, packet, len, NULL);
+  return len;
+}
+
+
+/*---------------------------------------------------------------------------*/
+const struct ip64_driver ksz8863_ip64_driver = {
+  init,
+  output
+};
+/*---------------------------------------------------------------------------*/

@@ -14,6 +14,8 @@
 #include "platform-conf.h"
 #include "stdint.h"
 #include "clock.h"
+#include "drivers/trng.h"
+#include "drivers/pmc.h"
 
 #include "csprng.h"
 #include "sha256.h"
@@ -30,8 +32,6 @@ const unsigned short ramtable[16] = { RAMS(48), RAMS(192), RAMS(384), RAMS(6),
 
 
 
-static struct ctimer rng_timer;
-
 static inline void csprng_feed(unsigned d)
 {
 	int fix = csprng_feedix;
@@ -44,15 +44,15 @@ static inline void csprng_feed(unsigned d)
 	csprng_feedix = fix;
 }
 
-// This function is called with normal clock,
-// and adding the rtimer as feed.
-// The rtimer runs on 32kHz rc clock.
-static void
-RNG_handler(void *not_used)
+void TRNG_Handler(void)
 {
-	csprng_feed(rtimer_arch_now());
-	ctimer_reset(&rng_timer);
-	csprng_ready = 1;
+	uint32_t status;
+
+	status = trng_get_interrupt_status(TRNG);
+
+	if ((status & TRNG_ISR_DATRDY) == TRNG_ISR_DATRDY) {
+		csprng_feed(trng_read_output_data(TRNG));
+	}
 }
 
 int RNG_Function(uint8_t *dest, unsigned size)
@@ -62,40 +62,18 @@ int RNG_Function(uint8_t *dest, unsigned size)
 
 void csprng_start(void)
 {
-	volatile unsigned *src, *top;
-	unsigned h, i;
+	/* Configure PMC */
+	pmc_enable_periph_clk(ID_TRNG);
 
-	h = (CHIPID->CHIPID_CIDR >> 16) & 15; //ram size
-	h = (ramtable[h] << 10) + 0x20000000; //end of ram
-	top = (volatile unsigned*) h;
-	src = top - 8192; //last 32k
+	/* Enable TRNG */
+	trng_enable(TRNG);
 
-	h = 0;
-	i = 0;
-	do{
-		h ^= *src++;
-		h *= 123456789;
-		h ^= h >> 16;
-		if(++i == 191){
-			csprng_feed(h);
-			i = 0;
-			h = 0;
-		}
-	} while(src != top);
-	top[-1]++; //increment last word in ram - paranoia (reset tricks)
-
-	csprng_feed(h);
-
-	for(i=0;i<4;i++){
-		get_eeprom(Flash_unique_id[i], h);
-		csprng_feed(h);
-		csprng_feed(rand()); // initialized in radio with random seed
-	}
-	csprng_feed(clock_get_unix_time()); // if clock is set this will be good.
-	csprng_feedix = 0;
-	csprng_ready = 0;
-
-	ctimer_set(&rng_timer, 20, RNG_handler, NULL);
+	/* Enable TRNG interrupt */
+	NVIC_DisableIRQ(TRNG_IRQn);
+	NVIC_ClearPendingIRQ(TRNG_IRQn);
+	NVIC_SetPriority(TRNG_IRQn, 0);
+	//NVIC_EnableIRQ(TRNG_IRQn);
+	//trng_enable_interrupt(TRNG);
 
 	uECC_set_rng(RNG_Function);
 }
