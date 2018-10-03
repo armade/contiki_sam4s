@@ -43,6 +43,8 @@
 #include "net/netstack.h"
 #include "net/rpl/rpl-dag-root.h"
 #include "ntpd.h"
+#include "httpd-simple.h"
+#include "httpd_post_handlers.h"
 
 #ifdef NODE_GPS
 #include "gpsd.h"
@@ -63,8 +65,8 @@ PROCESS_THREAD(hello_world_process, ev, data)
    rpl_dag_root_init_dag();
    ip64_init();
    /* Initialize the IP64 module so we'll start translating packets */
-   uip_ipaddr(&ipv4addr, 169, 254, 103, 7);
-     uip_ipaddr(&netmask, 255, 255, 0, 0);
+   uip_ipaddr(&ipv4addr, 55, 55, 55, 7);
+     uip_ipaddr(&netmask, 255, 255, 255, 0);
      ip64_set_ipv4_address(&ipv4addr, &netmask);
 
 
@@ -72,8 +74,10 @@ PROCESS_THREAD(hello_world_process, ev, data)
 
 
 #ifdef NODE_GPS
-	//process_start(&gpsd_process, NULL);
+	process_start(&gpsd_process, NULL);
 #endif
+     process_start(&httpd_simple_process, NULL);
+     register_http_post_handlers();
 
 	  while(1) {
 	    PROCESS_WAIT_EVENT();

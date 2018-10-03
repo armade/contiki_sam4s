@@ -232,6 +232,6 @@ void board_init(void)
 
 void enable_cache(void)
 {
-	//SCB_EnableICache();
-	//SCB_EnableDCache();
+	SCB_EnableICache();
+	SCB_EnableDCache();
 }

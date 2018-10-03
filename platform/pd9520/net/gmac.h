@@ -277,20 +277,6 @@ static inline void gmac_enable_transmit(Gmac* p_gmac, uint8_t uc_enable)
 	}
 }
 
-/**
- * \brief Enable/Disable GMAC management.
- *
- * \param p_gmac   Pointer to the GMAC instance.
- * \param uc_enable   0 to disable GMAC management, else to enable it.
- */
-static inline void gmac_enable_management(Gmac* p_gmac, uint8_t uc_enable)
-{
-	if (uc_enable) {
-		p_gmac->GMAC_NCR |= GMAC_NCR_MPE;
-	} else {
-		p_gmac->GMAC_NCR &= ~GMAC_NCR_MPE;
-	}
-}
 
 /**
  * \brief Clear all statistics registers.

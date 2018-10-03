@@ -31,11 +31,7 @@ void SysTick_Handler(void)
 void clock_init(void)
 {
 	ticks = 0;
-#if !LOW_CLOCK
-	SysTick_Config(120000);
-#else
-	SysTick_Config(30000);
-#endif
+	SysTick_Config(300000);
 }
 
 clock_time_t clock_time(void)
@@ -197,7 +193,7 @@ void Load_time_from_RTC(void)
 	//UnixtoRTC(&timer, Unix_time);
 
 	if(clock_gpbr->RTC_valid == 0xA7)
-		clock_quality(clock_gpbr->stranum);
+		clock_quality(clock_gpbr->stranum+1);
 	else
 		clock_quality(UNSYNC_TIME);
 

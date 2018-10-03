@@ -40,7 +40,7 @@ init(void)
 	get_eeprom(eepromMacAddress[5], gs_uc_mac_address[5]);
 
 	/* Display MAC & IP settings */
-	printf("-- MAC %x:%x:%x:%x:%x:%x\n\r",
+	printf("-- MAC %x:%x:%x:%x:%x:%x\n",
 			gs_uc_mac_address[0], gs_uc_mac_address[1], gs_uc_mac_address[2],
 			gs_uc_mac_address[3], gs_uc_mac_address[4], gs_uc_mac_address[5]);
 
@@ -58,7 +58,7 @@ init(void)
 	gmac_option.uc_no_boardcast = 0;
 
 	memcpy(gmac_option.uc_mac_addr, gs_uc_mac_address, sizeof(gs_uc_mac_address));
-
+	memcpy(ip64_eth_addr.addr, gs_uc_mac_address, sizeof(gs_uc_mac_address));
 	gs_gmac_dev.p_hw = GMAC;
 
 	/* Init GMAC driver structure */
@@ -70,26 +70,11 @@ init(void)
 	gmac_dev_set_rx_callback(&gs_gmac_dev, GMAC_QUE_0,rx_input);
 
 	/* Init MAC PHY driver */
-	if (ethernet_phy_init(GMAC, 0, sysclk_get_cpu_hz()/2)
+	if (ethernet_phy_init(GMAC, 0, sysclk_get_cpu_hz())
 					!= GMAC_OK) {
-		printf("PHY Initialize ERROR!\r");
+		printf("PHY Initialize ERROR!\n");
 		return;
 	}
-
-	/* Auto Negotiate, work in RMII mode */
-	if (ethernet_phy_auto_negotiate(GMAC, 1) != GMAC_OK) {
-
-		printf("Auto Negotiate ERROR!\r");
-		return;
-	}
-
-	/* Establish ethernet link */
-	while (ethernet_phy_set_link(GMAC, 1, 1) != GMAC_OK) {
-		printf("Set link ERROR!\r");
-		return;
-	}
-
-	printf("-- Link detected. \r");
 
 	process_start(&ksz8863_process, NULL);
 
@@ -98,14 +83,28 @@ init(void)
 void rx_input(uint32_t ul_status)
 {
 	process_poll(&ksz8863_process);
-	memset(ip64_packet_buffer,0,ip64_packet_buffer_maxlen);
 }
 
 PROCESS_THREAD(ksz8863_process, ev, data)
 {
   uint32_t ul_frm_size;
-  static uint32_t i;
   PROCESS_BEGIN();
+
+  /* Auto Negotiate, work in RMII mode */
+  	if (ethernet_phy_auto_negotiate1(GMAC, 1) != GMAC_OK) {
+  		printf("Auto Negotiate ERROR!\r");
+  	}
+
+  	if(ethernet_phy_auto_negotiate2(GMAC, 1) != GMAC_OK){
+  		PROCESS_YIELD();
+  	}
+  	ethernet_phy_auto_negotiate3(GMAC, 1);
+  /* Establish ethernet link */
+  	if(ethernet_phy_set_link(GMAC, 1, 1) != GMAC_OK) {
+  		printf("Set link ERROR!\n");
+  	}
+
+  	printf("-- Link detected. \n");
 
   while(1) {
 	  PROCESS_YIELD_UNTIL(ev == PROCESS_EVENT_POLL);
@@ -115,11 +114,8 @@ PROCESS_THREAD(ksz8863_process, ev, data)
 
 	if (ul_frm_size > 0) {
 		/* Handle input frame */
-		printf("%d",ul_frm_size);
-		for(i=0;i<ul_frm_size;i++)
-			printf(",0x%x",ip64_packet_buffer[i]);
-		printf("\n");
 		IP64_INPUT(ip64_packet_buffer, ul_frm_size);
+		process_poll(&ksz8863_process);
 	}
   }
 

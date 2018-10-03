@@ -442,7 +442,7 @@ uint32_t gmac_dev_read(gmac_device_t* p_gmac_dev, gmac_quelist_t queue_idx, uint
 
 		/* A start of frame has been received, discard previous fragments */
 		if ((p_rx_td->status.val & GMAC_RXD_SOF) == GMAC_RXD_SOF) {
-			printf("t\n");
+
 			/* Skip previous fragment */
 			while (us_tmp_idx != p_gmac_queue->us_rx_idx) {
 				p_rx_td = &p_gmac_queue->p_rx_dscr[p_gmac_queue->us_rx_idx];
@@ -821,8 +821,8 @@ void gmac_handler(gmac_device_t* p_gmac_dev, gmac_quelist_t queue_idx)
 		}
 		/* Clear status */
 		gmac_clear_rx_status(p_hw, ul_rx_status_flag);
-		printf("r\n");
 
+		__DSB();
 		/* Invoke callbacks */
 		if (p_gmac_queue->func_rx_cb) {
 			p_gmac_queue->func_rx_cb(ul_rx_status_flag);

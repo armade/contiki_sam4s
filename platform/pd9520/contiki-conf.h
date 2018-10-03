@@ -184,7 +184,6 @@ typedef unsigned short uip_stats_t;
 #define UIP_CONF_LOGGING         0
 
 
-#define UIP_CONF_IPV6_RPL		1
 
 #include <ctype.h>
 #define ctk_arch_isprint isprint

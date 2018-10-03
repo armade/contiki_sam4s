@@ -332,6 +332,13 @@ int KSZ8863_reset(void)
     return KSZ8863_start();
 }
 
+int KSZ8863_setup_MAC_addr(const unsigned char *addr)
+{
+    unsigned char *MAC_addr = (unsigned char *)addr;
+
+    return KSZ8863_write(MAC_addr, MAC_address0, 6);
+}
+
 /* ------------------------------------------------------------------------ */
 
 static uint16_t spi2mdiobits(int phy_id, uint8_t spi_val, uint8_t spireg, uint8_t mdio_reg, uint16_t initmdioval)
@@ -483,7 +490,6 @@ uint8_t gmac_phy_read(Gmac* p_gmac, uint8_t uc_phy_address, uint8_t uc_address,
 	int phy_id = uc_phy_address;
 	int regnum = uc_address;
 	uint16_t mdio_val;
-	int ret;
 
 	// KSZ8863 doesn't support broadcast PHY address
 	if (phy_id == 0)
@@ -496,7 +502,7 @@ uint8_t gmac_phy_read(Gmac* p_gmac, uint8_t uc_phy_address, uint8_t uc_address,
 	}
 
 	// read phy 1 link status first
-	ret = get_spi2mdioreg(phy_id, MII_BMSR, &mdio_val);
+	get_spi2mdioreg(phy_id, MII_BMSR, &mdio_val);
 
 	// Is it going to read phy link status?
 	if (regnum == MII_BMSR) {
@@ -542,7 +548,6 @@ uint8_t gmac_phy_write(Gmac* p_gmac, uint8_t uc_phy_address,
 	int phy_id = uc_phy_address;
 	int regnum = uc_address;
 	int phy_addr, i;
-	int ret=0;
 
 	// KSZ8863 doesn't support broadcast PHY address
 	if (phy_id == 0)
@@ -550,7 +555,7 @@ uint8_t gmac_phy_write(Gmac* p_gmac, uint8_t uc_phy_address,
 
 	for (i=0; i<ks8872_total_phy; i++) {
 		phy_addr = phy_id + i;
-		ret = set_mdio2spireg(phy_addr, regnum, ul_value);
+		set_mdio2spireg(phy_addr, regnum, ul_value);
 	}
 
 	return GMAC_OK;

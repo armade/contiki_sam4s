@@ -184,7 +184,9 @@ uint8_t ethernet_phy_set_link(Gmac *p_gmac, uint8_t uc_phy_addr,
  *
  * Return GMAC_OK if successfully, GMAC_TIMEOUT if timeout.
  */
-uint8_t ethernet_phy_auto_negotiate(Gmac *p_gmac, uint8_t uc_phy_addr);
+uint8_t ethernet_phy_auto_negotiate1(Gmac *p_gmac, uint8_t uc_phy_addr);
+uint8_t ethernet_phy_auto_negotiate2(Gmac *p_gmac, uint8_t uc_phy_addr);
+uint8_t ethernet_phy_auto_negotiate3(Gmac *p_gmac, uint8_t uc_phy_addr);
 
 /**
  * \brief Issue a SW reset to reset all registers of the PHY.

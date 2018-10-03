@@ -4,9 +4,9 @@ ifndef CONTIKI
   $(error CONTIKI not defined! You must specify where CONTIKI resides!)
 endif
 
-CONTIKI_TARGET_DIRS += 	.	sensors PD_FLASH io crypt crypt/uECC crypt/sha2 net net/ethernet_phy/ksz8061rnb
+CONTIKI_TARGET_DIRS += 	.	sensors PD_FLASH io crypt crypt/uECC crypt/sha2 net net/ethernet_phy/ksz8863
 		
-PLATFORM_NET_DRIVER = clock.c gmac_phy.c gmac_raw_2.c ethernet_phy.c init_net.c
+PLATFORM_NET_DRIVER = clock.c ksz8863_spi.c gmac_raw_2.c ethernet_phy.c init_net.c
 PLATFORM_FLASH_DRIVER = hw_spiflash.c hl_spiflash.c FLASH_driver.c
 PLATFORM_SENSOR_DRIVER = 	ADC_temp.c \
 							Soft_rgb.c  \
@@ -49,6 +49,7 @@ CONTIKI_SOURCEFILES += $(CONTIKI_TARGET_SOURCEFILES)
 CLEAN += *.pd9520
 
 CFLAGS += -D NETSTACK_CONF_WITH_IPV6=1
+CFLAGS += -DUIP_FALLBACK_INTERFACE=ip64_uip_fallback_interface
 
 ### Define the CPU directory
 CONTIKI_CPU=$(CONTIKI)/cpu/arm/same70

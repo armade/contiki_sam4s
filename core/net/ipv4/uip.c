@@ -78,6 +78,7 @@
 #include "net/ipv4/uip-neighbor.h"
 
 #include <string.h>
+#include <stdio.h>
 #include "sys/cc.h"
 
 /*---------------------------------------------------------------------------*/

@@ -17,23 +17,10 @@ I/O Configuration
 #include "gpio.h"
 #include "board-peripherals.h"
 
-#define DEBUGGING 1
-#if DEBUGGING
 
-#ifdef NODE_BMP280
-#define SCL            PIO_PB3
-#define SDA            PIO_PB2
-#endif
+#define SCL            PIO_PA4
+#define SDA            PIO_PA3
 
-#ifdef NODE_HTU21D
-#define SCL            PIO_PB2
-#define SDA            PIO_PB3
-#endif
-
-#else
-#define SCL            PIO_PB7
-#define SDA            PIO_PB6
-#endif
 
 
 

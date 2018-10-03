@@ -197,7 +197,7 @@ void Load_time_from_RTC(void)
 	//UnixtoRTC(&timer, Unix_time);
 
 	if(clock_gpbr->RTC_valid == 0xA7)
-		clock_quality(clock_gpbr->stranum);
+		clock_quality(clock_gpbr->stranum+1);
 	else
 		clock_quality(UNSYNC_TIME);
 
