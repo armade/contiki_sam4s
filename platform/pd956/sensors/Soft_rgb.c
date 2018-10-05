@@ -60,8 +60,9 @@ void TC2_Handler(void)
 		if(counter == RGB.led.r)	RGB_base->PIO_SODR = RGB_R_GPIO;
 		if(counter == RGB.led.g)	RGB_base->PIO_SODR = RGB_G_GPIO;
 		if(counter == RGB.led.b)	RGB_base->PIO_SODR = RGB_B_GPIO;
+		counter--;
 	}
-	counter--;
+
 }
 
 #define max_in  256 // Top end of INPUT range
@@ -69,14 +70,18 @@ void TC2_Handler(void)
 
 // exp return (int)(pow(input / max_in, gamma_var) * max_out + 0.5);
 // To simplify the expression the gamma value is chosen to 3
-int gamma_corr(int input)
+uint16_t gamma_corr(int input)
 {
-	uint64_t accu = input*input*input*max_out; // 33 bit max
+	uint64_t accu;
+	uint16_t ret;
+
+	accu = (uint64_t)input*input*input*max_out; // 33 bit max
 	//accu /= (max_in*max_in*max_in);
 	accu >>= 23;  // 1/(255^3)
 	accu++;// The last bit is 0.5 if we add 0.5 to 0.5 we get 1 :)
 
-	return (int) (accu>>1);
+	ret = (accu>>1);
+	return ret;
 }
 /*---------------------------------------------------------------------------*/
 /**
@@ -105,14 +110,14 @@ value_soft_RGB(uint16_t R,uint16_t G,uint16_t B, uint16_t brightness)
 int
 soft_RGB_value(int value)
 {
-	RGB_soft_t *temp = (RGB_soft_t *)&value;
+	RGB_soft_t *temp = (RGB_soft_t *)value;
 	if(value != SENSOR_ERROR){
 		effect_state = 255;
 		user_set.all = temp->all;
 		value_soft_RGB(temp->led.r,temp->led.g,temp->led.b,temp->led.brightness);
 		sensors_changed(&soft_RGB_ctrl_sensor);
 	}
-	return user_set.all;
+	return (int)&user_set.all;
 }
 /*---------------------------------------------------------------------------*/
 int
@@ -121,10 +126,10 @@ soft_RGB_init(void)
 	pmc_enable_periph_clk(RGB_TIMER_ID);
 #if !LOW_CLOCK //120Mhz
 	RGB_TIMER.TC_CMR= 2 + (2<<13); //2=MCK/32   2<<13=up rc compare
-	RGB_TIMER.TC_RC=30; //30 er 125kHz,  (125kHz/255 ~ 500Hz)
+	RGB_TIMER.TC_RC=105; // 120MHz/(32*105*256) = 140 HZ
 #else //30Mhz
 	RGB_TIMER.TC_CMR= 1 + (2<<13); //1=MCK/8   2<<13=up rc compare
-	RGB_TIMER.TC_RC=30; //30 er 125kHz,  (125kHz/255 ~ 500Hz)
+	RGB_TIMER.TC_RC=105; // 30MHz/(8*105*256) = 140 HZ
 #endif
 
 	//RGB_TIMER.TC_CCR=1;
@@ -133,7 +138,6 @@ soft_RGB_init(void)
 	NVIC_ClearPendingIRQ(RGB_TIMER_IRQ);
 	NVIC_SetPriority((IRQn_Type) RGB_TIMER_ID, 5); //level 0 is the highest interrupt priority (0-15)
 	NVIC_EnableIRQ(RGB_TIMER_IRQ);
-
 
 	pio_set_input(PIOA,PIO_PA3 | PIO_PA28,0); // NB: pa3 and pa28 is connected to pa9 and pa10.
 
@@ -178,7 +182,7 @@ soft_RGB_configure(int type, int enable)
 				return Sensor_status;
 
 			 if(enable == 1) {
-				 sensors_changed(&hard_RGB_ctrl_sensor);
+				 sensors_changed(&soft_RGB_ctrl_sensor);
 			 }else if(enable == 7){
 				 effect_state = 255;
 				 counter = 0;
@@ -197,7 +201,7 @@ soft_RGB_configure(int type, int enable)
 					 RGB_tmp.led = (leds_t){0,0,256,256};
 					 RGB_COLORLOOP_RUN(NULL);
 					 Sensor_status |= (1<<12);
-					 sensors_changed(&hard_RGB_ctrl_sensor);
+					 sensors_changed(&soft_RGB_ctrl_sensor);
 				 }
 			 } else if(enable == 11){
 				 if(Sensor_status == SENSOR_STATUS_READY){
@@ -205,7 +209,7 @@ soft_RGB_configure(int type, int enable)
 					 RGB_tmp.led = (leds_t){256,256,256,256};
 					 RGB_RANDOM_RUN(NULL);
 					 Sensor_status |= (2<<12);
-					 sensors_changed(&hard_RGB_ctrl_sensor);
+					 sensors_changed(&soft_RGB_ctrl_sensor);
 				 }
 			 }
 			 break;
@@ -268,7 +272,7 @@ RGB_RANDOM_RUN(void *data)
 		return;
 
 	csprng_get((unsigned char *)&rnd[0],4);
-	RGB_tmp.led.brightness = (rnd[0] & 127) + 128;
+	RGB_tmp.led.brightness = (rnd[0] & 127)+64;
 
 	next = rnd[1]&127;
 
@@ -276,7 +280,7 @@ RGB_RANDOM_RUN(void *data)
 		next = 5;
 
 	// NB: user can't see the value update on the PWM signal. It would just confuse them.
-	value_soft_RGB(RGB_tmp.led.r,RGB_tmp.led.g,RGB_tmp.led.b,RGB_tmp.led.brightness);
+	value_soft_RGB(256,200,88,RGB_tmp.led.brightness);
 	ctimer_set(&RGB_effect_timer, next, RGB_RANDOM_RUN, NULL);
 }
 

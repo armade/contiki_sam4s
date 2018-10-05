@@ -436,7 +436,7 @@ uint32_t gmac_dev_read(gmac_device_t* p_gmac_dev, gmac_quelist_t queue_idx, uint
 
 	/* Set the default return value */
 	*p_rcv_size = 0;
-	//printf("v\n");
+
 	/* Process received RX descriptor */
 	while ((p_rx_td->addr.val & GMAC_RXD_OWNERSHIP) == GMAC_RXD_OWNERSHIP) {
 
@@ -478,7 +478,7 @@ uint32_t gmac_dev_read(gmac_device_t* p_gmac_dev, gmac_quelist_t queue_idx, uint
 			if ((tmp_ul_frame_size + us_buffer_length) > ul_frame_size) {
 				us_buffer_length = ul_frame_size - tmp_ul_frame_size;
 			}
-
+			__DSB();
 			memcpy(p_tmp_frame,
 					(void *)(p_rx_td->addr.val & GMAC_RXD_ADDR_MASK),
 					us_buffer_length);

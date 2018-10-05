@@ -39,7 +39,7 @@
 #include "contiki.h"
 #include "httpd-simple.h"
 #include "net/ipv6/uip-ds6-route.h"
-//#include "batmon-sensor.h"
+#include "ip64-addrmap.h"
 #include "lib/sensors.h"
 #include "lib/list.h"
 #include "board-peripherals.h"
@@ -297,7 +297,6 @@ static page_t http_motor_cfg_page = {
 };
 #endif
 
-#ifdef NODE_LIGHT
 static char generate_light_config(struct httpd_state *s);
 
 static page_t http_light_cfg_page = {
@@ -306,7 +305,6 @@ static page_t http_light_cfg_page = {
   "light Config",
   generate_light_config,
 };
-#endif
 
 #ifdef NODE_HARD_LIGHT
 static char generate_hard_light_config(struct httpd_state *s);
@@ -352,6 +350,7 @@ struct httpd_state {
   const page_t *page;
   uip_ds6_route_t *r;
   uip_ds6_nbr_t *nbr;
+  struct ip64_addrmap_entry *ip6to4entry;
   httpd_simple_script_t script;
   int content_length;
   int tmp_buf_len;
@@ -574,18 +573,19 @@ PT_THREAD(generate_index(struct httpd_state *s))
   /* ND Cache */
    PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<fieldset>"));
   PT_WAIT_THREAD(&s->generate_pt,
-                   enqueue_chunk(s, 0, "<h1>Neighbors</h1>"));
+                   enqueue_chunk(s, 0, "<h1>IP6 to iP4 entries</h1>"));
 
   PT_WAIT_THREAD(&s->generate_pt,
                      enqueue_chunk(s, 0, "<p>"));
 
-  for(s->nbr = nbr_table_head(ds6_neighbors); s->nbr != NULL;
-      s->nbr = nbr_table_next(ds6_neighbors, s->nbr)) {
+
+  for(s->ip6to4entry = ip64_addrmap_list(); s->ip6to4entry != NULL;
+      s->ip6to4entry = list_item_next(s->ip6to4entry)) {
 
     PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "\n"));
 
     memset(ipaddr_buf, 0, IPADDR_BUF_LEN);
-    ipaddr_sprintf(ipaddr_buf, IPADDR_BUF_LEN, &s->nbr->ipaddr);
+    ipaddr_sprintf(ipaddr_buf, IPADDR_BUF_LEN, &s->ip6to4entry->ip6addr);
     PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "%s", ipaddr_buf));
 
     memset(ipaddr_buf, 0, IPADDR_BUF_LEN);
@@ -596,54 +596,9 @@ PT_THREAD(generate_index(struct httpd_state *s))
   PT_WAIT_THREAD(&s->generate_pt,
                        enqueue_chunk(s, 0, "</p>"));
   PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "</fieldset>"));
+
 //======================================================================================
-  /* Default Route */
-  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<fieldset>"));
-  PT_WAIT_THREAD(&s->generate_pt,
-                    enqueue_chunk(s, 0, "<h1>Default Route</h1>"));
-  PT_WAIT_THREAD(&s->generate_pt,
-                      enqueue_chunk(s, 0, "<p>"));
-  memset(ipaddr_buf, 0, IPADDR_BUF_LEN);
-  ipaddr_sprintf(ipaddr_buf, IPADDR_BUF_LEN,
-                                 uip_ds6_defrt_choose());
-  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "%s", ipaddr_buf));
-  PT_WAIT_THREAD(&s->generate_pt,
-                      enqueue_chunk(s, 0, "</p>"));
-  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "</fieldset>"));
-//======================================================================================
-  /* Routes */
-  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<fieldset>"));
-  PT_WAIT_THREAD(&s->generate_pt,
-                      enqueue_chunk(s, 0, "<h1>Routes</h1>"));
 
-  PT_WAIT_THREAD(&s->generate_pt,
-                      enqueue_chunk(s, 0, "<p>"));
-
-  for(s->r = uip_ds6_route_head(); s->r != NULL;
-      s->r = uip_ds6_route_next(s->r)) {
-    PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "\n"));
-
-    memset(ipaddr_buf, 0, IPADDR_BUF_LEN);
-    ipaddr_sprintf(ipaddr_buf, IPADDR_BUF_LEN, &s->r->ipaddr);
-    PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "%s", ipaddr_buf));
-
-    PT_WAIT_THREAD(&s->generate_pt,
-                   enqueue_chunk(s, 0, " / %u via ", s->r->length));
-
-    memset(ipaddr_buf, 0, IPADDR_BUF_LEN);
-    ipaddr_sprintf(ipaddr_buf, IPADDR_BUF_LEN,
-                                   uip_ds6_route_nexthop(s->r));
-    PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "%s", ipaddr_buf));
-
-    PT_WAIT_THREAD(&s->generate_pt,
-                   enqueue_chunk(s, 0,
-                                 ", lifetime=%lus<br>", s->r->state.lifetime));
-  }
-
-  PT_WAIT_THREAD(&s->generate_pt,
-                      enqueue_chunk(s, 0, "</p>"));
-  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "</fieldset>"));
-//======================================================================================
   /* Sensors */
   PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<fieldset>"));
   PT_WAIT_THREAD(&s->generate_pt,
@@ -651,6 +606,15 @@ PT_THREAD(generate_index(struct httpd_state *s))
 
   PT_WAIT_THREAD(&s->generate_pt,
                       enqueue_chunk(s, 0, "<p>"));
+
+  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "\n"));
+  int temp = LM73_sensor.value(0);
+  int temp_high = temp/1000;
+  temp = temp - (temp_high*1000);
+
+  LM73_sensor.configure(SENSORS_ACTIVE,1); // Trig new convertion. Just for test we are 1 conversion behind.
+
+  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "LM73: %d.%d C", temp_high,temp));
 
   PT_WAIT_THREAD(&s->generate_pt,
                       enqueue_chunk(s, 0, "</p>"));
@@ -867,7 +831,6 @@ PT_THREAD(generate_step_motor_config(struct httpd_state *s))
 #endif
 
 /*---------------------------------------------------------------------------*/
-#ifdef NODE_LIGHT
 static
 PT_THREAD(generate_light_config(struct httpd_state *s))
 {
@@ -897,8 +860,11 @@ PT_THREAD(generate_light_config(struct httpd_state *s))
 
 //=====================================================================================
 
+
   static RGB_soft_t RGB;
-  RGB.all = soft_RGB_ctrl_sensor.value(SENSOR_ERROR);
+    RGB.all = ((RGB_soft_t *) soft_RGB_ctrl_sensor.value(SENSOR_ERROR))->all;
+
+
   PT_WAIT_THREAD(&s->generate_pt,
 		  	  enqueue_chunk(s, 0, "%sIntensity:%s", config_div_left, config_div_close));
   PT_WAIT_THREAD(&s->generate_pt,
@@ -962,11 +928,52 @@ PT_THREAD(generate_light_config(struct httpd_state *s))
                     enqueue_chunk(s, 0, CONTENT_CLOSE SECTION_CLOSE));
   PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "</fieldset>"));
     //=====================================================================================
+
+  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<fieldset>"));
+
+    PT_WAIT_THREAD(&s->generate_pt,
+                   enqueue_chunk(s, 0, "<h1>Effect</h1>"));
+
+    PT_WAIT_THREAD(&s->generate_pt,
+                   enqueue_chunk(s, 0,
+                                 "<form name=\"input\" action=\"%s\" ",
+  							   http_light_cfg_page.filename));
+    PT_WAIT_THREAD(&s->generate_pt,
+                   enqueue_chunk(s, 0, "method=\"post\" enctype=\""));
+    PT_WAIT_THREAD(&s->generate_pt,
+                   enqueue_chunk(s, 0, "application/x-www-form-urlencoded\" "));
+    PT_WAIT_THREAD(&s->generate_pt,
+                   enqueue_chunk(s, 0, "accept-charset=\"UTF-8\">"));
+
+
+    PT_WAIT_THREAD(&s->generate_pt,
+  		  	  enqueue_chunk(s, 0, "%sselect:%s", config_div_left, config_div_close));
+
+    PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "%s<select name=\"effectOption\">",config_div_right));
+    PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<option value=8selected='selected'>Off</option>"));
+    PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<option value=10>Colorloop</option>"));
+    PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<option value=11>Fire</option>"));
+    PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "</select>%s",config_div_close));
+
+    PT_WAIT_THREAD(&s->generate_pt,
+                         enqueue_chunk(s, 0,"<p>"));
+     PT_WAIT_THREAD(&s->generate_pt,
+                    enqueue_chunk(s, 0,
+                                  "<input type=\"submit\" value=\"Submit\">"));
+     PT_WAIT_THREAD(&s->generate_pt,
+                         enqueue_chunk(s, 0,"</p>"));
+
+    PT_WAIT_THREAD(&s->generate_pt,
+                         enqueue_chunk(s, 0, "</form>"));
+
+    PT_WAIT_THREAD(&s->generate_pt,
+                      enqueue_chunk(s, 0, CONTENT_CLOSE SECTION_CLOSE));
+    PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "</fieldset>"));
+  //====================================================================================
   PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 1, http_bottom));
 
   PT_END(&s->generate_pt);
 }
-#endif
 
 /*---------------------------------------------------------------------------*/
 #ifdef NODE_HARD_LIGHT
@@ -1577,9 +1584,7 @@ init(void)
   list_add(pages_list, &http_motor_cfg_page);
 #endif
 
-#ifdef NODE_LIGHT
   list_add(pages_list, &http_light_cfg_page);
-#endif
 
 #ifdef NODE_HARD_LIGHT
   list_add(pages_list, &http_hard_light_cfg_page);

@@ -100,9 +100,9 @@ PROCESS_THREAD(ksz8863_process, ev, data)
   	}
   	ethernet_phy_auto_negotiate3(GMAC, 1);
   /* Establish ethernet link */
-  	if(ethernet_phy_set_link(GMAC, 1, 1) != GMAC_OK) {
-  		printf("Set link ERROR!\n");
-  	}
+  	/*if(ul_frm_size = ethernet_phy_set_link(GMAC, 1, 1) != GMAC_OK) {
+  		printf("Set link ERROR (%d)!\n",ul_frm_size);
+  	}*/
 
   	printf("-- Link detected. \n");
 

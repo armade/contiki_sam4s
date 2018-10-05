@@ -3,8 +3,7 @@
 
 #define boot
 
-#define LM73_ADDRESS 	0b1001101
-#define LM73			(1<<2)
+
 
 void lm73_set_resolution(uint16_t res);
 uint16_t lm73_get_resolution(void);

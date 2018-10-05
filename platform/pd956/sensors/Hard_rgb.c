@@ -240,7 +240,7 @@ RGB_RANDOM_RUN(void *data)
 		return;
 
 	csprng_get((unsigned char *)&rnd[0],4);
-	RGB_tmp.led.brightness = (rnd[0] & 127) + 128;
+	RGB_tmp.led.brightness = (rnd[0] & 127)+64;
 
 	next = rnd[1]&127;
 
@@ -248,7 +248,7 @@ RGB_RANDOM_RUN(void *data)
 		next = 5;
 
 	// NB: user can't see the value update on the PWM signal. It would just confuse them.
-	value_hard_RGB(RGB_tmp.led.r,RGB_tmp.led.g,RGB_tmp.led.b,RGB_tmp.led.brightness);
+	value_hard_RGB(256,200,88,RGB_tmp.led.brightness);
 	ctimer_set(&RGB_effect_timer, next, RGB_RANDOM_RUN, NULL);
 }
 

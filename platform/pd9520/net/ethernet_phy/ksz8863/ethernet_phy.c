@@ -205,66 +205,61 @@ uint8_t ethernet_phy_set_link(Gmac *p_gmac, uint8_t uc_phy_addr,
 	uint32_t ul_stat1;
 	uint32_t ul_stat2;
 	uint8_t uc_phy_address, uc_speed, uc_fd;
-	uint8_t uc_rc;
+	uint8_t uc_rc = GMAC_OK;
 
 
 	uc_phy_address = uc_phy_addr;
-
+	printf("gmac_phy_read  9!\n");
 	uc_rc = gmac_phy_read(p_gmac, uc_phy_address, MII_BMSR, &ul_stat1);
 	if (uc_rc != GMAC_OK) {
 		/* Disable PHY management and start the GMAC transfer */
-
+		printf("gmac_phy_read (%d)ERROR!\n",uc_rc);
 		return uc_rc;
 	}
 
-	if ((ul_stat1 & MII_LINK_STATUS) == 0) {
-		/* Disable PHY management and start the GMAC transfer */
-
-		return GMAC_INVALID;
-	}
-
+	printf("gmac_phy_read  7!\n");
 	if (uc_apply_setting_flag == 0) {
 		/* Disable PHY management and start the GMAC transfer */
-
+		printf("uc_apply_setting_flag!\n");
 		return uc_rc;
 	}
-
+	printf("gmac_phy_read  6!\n");
 	/* Read advertisement */
 	uc_rc = gmac_phy_read(p_gmac, uc_phy_address, MII_PCR1, &ul_stat2);
 	if (uc_rc != GMAC_OK) {
 		/* Disable PHY management and start the GMAC transfer */
-
+		printf("gmac_phy_read2 (%d)ERROR!\n",uc_rc);
 		return uc_rc;
 	}
-
+	printf("gmac_phy_read  5!\n");
 	if ((ul_stat1 & MII_100BASE_TX_FD) && (ul_stat2 & MII_OMI_100BASE_TX_FD)) {
 		/* Set GMAC for 100BaseTX and Full Duplex */
 		uc_speed = true;
 		uc_fd = true;
 	}
-
+	printf("gmac_phy_read  4!\n");
 	if ((ul_stat1 & MII_10BASE_T_FD) && (ul_stat2 & MII_OMI_10BASE_T_FD)) {
 		/* Set MII for 10BaseT and Full Duplex */
 		uc_speed = false;
 		uc_fd = true;
 	}
-
+	printf("gmac_phy_read  3!\n");
 	if ((ul_stat1 & MII_100BASE_TX_HD) && (ul_stat2 & MII_OMI_100BASE_TX_HD)) {
 		/* Set MII for 100BaseTX and Half Duplex */
 		uc_speed = true;
 		uc_fd = false;
 	}
-
+	printf("gmac_phy_read  2!\n");
 	if ((ul_stat1 & MII_10BASE_T_HD) && (ul_stat2 & MII_OMI_10BASE_T_HD)) {
 		/* Set MII for 10BaseT and Half Duplex */
 		uc_speed = false;
 		uc_fd = false;
 	}
-
+	printf("gmac_phy_read  1!\n");
 	gmac_set_speed(p_gmac, uc_speed);
 	gmac_enable_full_duplex(p_gmac, uc_fd);
-
-	return uc_rc;
+	printf("gmac_phy_read2 DONE!\n");
+	return GMAC_OK;
 }
 
 

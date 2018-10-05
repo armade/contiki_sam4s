@@ -31,111 +31,127 @@
 extern void
 new_net_config(void);
 
-#ifdef NODE_LIGHT
-static int
-RGB_blue_post_handler(char *key, int key_len, char *val, int val_len)
+static int effectOption_post_handler(char *key, int key_len, char *val, int val_len)
 {
-  int ret = HTTPD_SIMPLE_POST_HANDLER_UNKNOWN;
-  RGB_soft_t tmp;
-  if(key_len != strlen("RGB_blue") ||
-     strncasecmp(key, "RGB_blue", strlen("RGB_blue")) != 0) {
-    /* Not ours */
-    return HTTPD_SIMPLE_POST_HANDLER_UNKNOWN;
-  }
+	int ret = HTTPD_SIMPLE_POST_HANDLER_UNKNOWN;
+	RGB_soft_t tmp;
+	if(key_len != strlen("effectOption")
+			|| strncasecmp(key, "effectOption", strlen("effectOption")) != 0){
+		/* Not ours */
+		return HTTPD_SIMPLE_POST_HANDLER_UNKNOWN;
+	}
+	ret = strtoul(val, NULL, 10);
 
-  ret = atoi(val);
+	if(ret < 10 || ret > 11){
+		return HTTPD_SIMPLE_POST_HANDLER_ERROR;
+	}
 
-   if(ret < 0 ||
-      ret > 256) {
-     return HTTPD_SIMPLE_POST_HANDLER_ERROR;
-   }
+	  soft_RGB_ctrl_sensor.configure(SENSORS_ACTIVE,7);
+	  soft_RGB_ctrl_sensor.configure(SENSORS_ACTIVE,ret);
 
-   tmp.all = soft_RGB_ctrl_sensor.value(SENSOR_ERROR);
+
+	return HTTPD_SIMPLE_POST_HANDLER_OK;
+}
+
+
+static int RGB_blue_post_handler(char *key, int key_len, char *val, int val_len)
+{
+	int ret = HTTPD_SIMPLE_POST_HANDLER_UNKNOWN;
+	RGB_soft_t tmp;
+	if(key_len != strlen("RGB_blue")
+			|| strncasecmp(key, "RGB_blue", strlen("RGB_blue")) != 0){
+		/* Not ours */
+		return HTTPD_SIMPLE_POST_HANDLER_UNKNOWN;
+	}
+
+	ret = strtoul(val, NULL, 10);
+	printf("B:%d\n", ret);
+	if(ret < 0 || ret > 256){
+		return HTTPD_SIMPLE_POST_HANDLER_ERROR;
+	}
+
+	tmp.all = ((RGB_soft_t *) soft_RGB_ctrl_sensor.value(SENSOR_ERROR))->all;
 	tmp.led.b = ret;
-	soft_RGB_ctrl_sensor.value(tmp.all);
+	soft_RGB_ctrl_sensor.value((int) &tmp.all);
 
-   return HTTPD_SIMPLE_POST_HANDLER_OK;
+	return HTTPD_SIMPLE_POST_HANDLER_OK;
 }
 
 /*---------------------------------------------------------------------------*/
 
-static int
-RGB_green_post_handler(char *key, int key_len, char *val, int val_len)
+static int RGB_green_post_handler(char *key, int key_len, char *val,
+		int val_len)
 {
-  int ret = HTTPD_SIMPLE_POST_HANDLER_UNKNOWN;
-  RGB_soft_t tmp;
-  if(key_len != strlen("RGB_green") ||
-     strncasecmp(key, "RGB_green", strlen("RGB_green")) != 0) {
-    /* Not ours */
-    return HTTPD_SIMPLE_POST_HANDLER_UNKNOWN;
-  }
+	int ret = HTTPD_SIMPLE_POST_HANDLER_UNKNOWN;
+	RGB_soft_t tmp;
+	if(key_len != strlen("RGB_green")
+			|| strncasecmp(key, "RGB_green", strlen("RGB_green")) != 0){
+		/* Not ours */
+		return HTTPD_SIMPLE_POST_HANDLER_UNKNOWN;
+	}
 
-  ret = atoi(val);
+	ret = strtoul(val, NULL, 10);
+	printf("G:%d\n", ret);
+	if(ret < 0 || ret > 256){
+		return HTTPD_SIMPLE_POST_HANDLER_ERROR;
+	}
 
-   if(ret < 0 ||
-      ret > 256) {
-     return HTTPD_SIMPLE_POST_HANDLER_ERROR;
-   }
+	tmp.all = ((RGB_soft_t *) soft_RGB_ctrl_sensor.value(SENSOR_ERROR))->all;
+	tmp.led.g = ret;
+	soft_RGB_ctrl_sensor.value((int) &tmp.all);
 
-   tmp.all = soft_RGB_ctrl_sensor.value(SENSOR_ERROR);
-  tmp.led.g = ret;
-  soft_RGB_ctrl_sensor.value(tmp.all);
-
-   return HTTPD_SIMPLE_POST_HANDLER_OK;
+	return HTTPD_SIMPLE_POST_HANDLER_OK;
 }
 
 /*---------------------------------------------------------------------------*/
-static int
-RGB_red_post_handler(char *key, int key_len, char *val, int val_len)
+static int RGB_red_post_handler(char *key, int key_len, char *val, int val_len)
 {
-  int ret = HTTPD_SIMPLE_POST_HANDLER_UNKNOWN;
-  RGB_soft_t tmp;
-  if(key_len != strlen("RGB_red") ||
-     strncasecmp(key, "RGB_red", strlen("RGB_red")) != 0) {
-    /* Not ours */
-    return HTTPD_SIMPLE_POST_HANDLER_UNKNOWN;
-  }
+	int ret = HTTPD_SIMPLE_POST_HANDLER_UNKNOWN;
+	RGB_soft_t tmp;
+	if(key_len != strlen("RGB_red")
+			|| strncasecmp(key, "RGB_red", strlen("RGB_red")) != 0){
+		/* Not ours */
+		return HTTPD_SIMPLE_POST_HANDLER_UNKNOWN;
+	}
 
-  ret = atoi(val);
+	ret = strtoul(val, NULL, 10);
+	printf("R:%d\n", ret);
+	if(ret < 0 || ret > 256){
+		return HTTPD_SIMPLE_POST_HANDLER_ERROR;
+	}
 
-   if(ret < 0 ||
-      ret > 256) {
-     return HTTPD_SIMPLE_POST_HANDLER_ERROR;
-   }
+	tmp.all = ((RGB_soft_t *) soft_RGB_ctrl_sensor.value(SENSOR_ERROR))->all;
+	tmp.led.r = ret;
+	soft_RGB_ctrl_sensor.value((int) &tmp.all);
 
-   tmp.all = soft_RGB_ctrl_sensor.value(SENSOR_ERROR);
-   tmp.led.r = ret;
-   soft_RGB_ctrl_sensor.value(tmp.all);
-
-   return HTTPD_SIMPLE_POST_HANDLER_OK;
+	return HTTPD_SIMPLE_POST_HANDLER_OK;
 }
 
 /*---------------------------------------------------------------------------*/
-static int
-RGB_brightness_post_handler(char *key, int key_len, char *val, int val_len)
+static int RGB_brightness_post_handler(char *key, int key_len, char *val,
+		int val_len)
 {
-  int ret = HTTPD_SIMPLE_POST_HANDLER_UNKNOWN;
-  RGB_soft_t tmp;
-  if(key_len != strlen("RGB_brightness") ||
-     strncasecmp(key, "RGB_brightness", strlen("RGB_brightness")) != 0) {
-    /* Not ours */
-    return HTTPD_SIMPLE_POST_HANDLER_UNKNOWN;
-  }
+	int ret = HTTPD_SIMPLE_POST_HANDLER_UNKNOWN;
+	RGB_soft_t tmp;
+	if(key_len != strlen("RGB_brightness")
+			|| strncasecmp(key, "RGB_brightness", strlen("RGB_brightness"))
+					!= 0){
+		/* Not ours */
+		return HTTPD_SIMPLE_POST_HANDLER_UNKNOWN;
+	}
 
-  ret = atoi(val);
+	ret = strtoul(val, NULL, 10);
+	printf("I:%d\n", ret);
+	if(ret < 0 || ret > 256){
+		return HTTPD_SIMPLE_POST_HANDLER_ERROR;
+	}
 
-   if(ret < 0 ||
-      ret > 256) {
-     return HTTPD_SIMPLE_POST_HANDLER_ERROR;
-   }
+	tmp.all = ((RGB_soft_t *) soft_RGB_ctrl_sensor.value(SENSOR_ERROR))->all;
+	tmp.led.brightness = ret;
+	soft_RGB_ctrl_sensor.value((int) &tmp.all);
 
-   tmp.all = soft_RGB_ctrl_sensor.value(SENSOR_ERROR);
-   tmp.led.brightness = ret;
-   soft_RGB_ctrl_sensor.value(tmp.all);
-
-   return HTTPD_SIMPLE_POST_HANDLER_OK;
+	return HTTPD_SIMPLE_POST_HANDLER_OK;
 }
-#endif
 
 #ifdef NODE_HARD_LIGHT
 static int
@@ -349,19 +365,17 @@ timezone_post_handler(char *key, int key_len, char *val, int val_len)
 
 
 /*---------------------------------------------------------------------------*/
-#if defined(NODE_LIGHT) || defined(NODE_HARD_LIGHT)
 HTTPD_SIMPLE_POST_HANDLER(RGB_blue,RGB_blue_post_handler);
 HTTPD_SIMPLE_POST_HANDLER(RGB_green,RGB_green_post_handler);
 HTTPD_SIMPLE_POST_HANDLER(RGB_red,RGB_red_post_handler);
 HTTPD_SIMPLE_POST_HANDLER(RGB_brightness,RGB_brightness_post_handler);
-#endif
 #ifdef NODE_STEP_MOTOR
 HTTPD_SIMPLE_POST_HANDLER(Step_motor_position,step_motor_position_post_handler);
 #endif
 #ifdef NODE_4_ch_relay
 HTTPD_SIMPLE_POST_HANDLER(Relay,Relay_post_handler);
 #endif
-
+HTTPD_SIMPLE_POST_HANDLER(effectOption,effectOption_post_handler);
 /*---------------------------------------------------------------------------*/
 
 /*---------------------------------------------------------------------------*/
@@ -372,12 +386,11 @@ HTTPD_SIMPLE_POST_HANDLER(timezone,timezone_post_handler);
 void
 register_http_post_handlers(void)
 {
-#if defined(NODE_LIGHT) || defined(NODE_HARD_LIGHT)
 	httpd_simple_register_post_handler(&RGB_blue_handler);
 	httpd_simple_register_post_handler(&RGB_green_handler);
 	httpd_simple_register_post_handler(&RGB_red_handler);
 	httpd_simple_register_post_handler(&RGB_brightness_handler);
-#endif
+	httpd_simple_register_post_handler(&effectOption_handler);
 #ifdef NODE_STEP_MOTOR
 	httpd_simple_register_post_handler(&Step_motor_position_handler);
 #endif

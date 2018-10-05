@@ -121,8 +121,8 @@ void SoftI2CSync(void);
 
 //uint8_t SoftI2Cread_char_register(uint8_t Addr, uint8_t reg);
 //void SoftI2Cwrite_char_register(uint8_t Addr, uint8_t reg, uint8_t data);
-uint16_t SoftI2Cread_int_register(uint8_t Addr, uint8_t reg);
-void SoftI2Cwrite_int_register(uint8_t Addr, uint8_t reg, uint16_t data);
+//uint16_t SoftI2Cread_int_register(uint8_t Addr, uint8_t reg);
+//void SoftI2Cwrite_int_register(uint8_t Addr, uint8_t reg, uint16_t data);
 
 //uint16_t SoftI2Cread_register(uint8_t Addr, uint8_t reg, uint8_t *Data, uint8_t len);
 #endif

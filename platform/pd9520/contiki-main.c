@@ -79,7 +79,6 @@ int main()
 	}
 
 	flash_init_df();
-	//net_init_eth();
 
 	// Don't start USB on endnodes
 #if !LOW_CLOCK //120Mhz
@@ -232,6 +231,6 @@ void board_init(void)
 
 void enable_cache(void)
 {
-	SCB_EnableICache();
-	SCB_EnableDCache();
+	//SCB_EnableICache();
+	//SCB_EnableDCache();
 }

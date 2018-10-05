@@ -85,7 +85,7 @@ void gpsd_arch_init(void)
 	// Enabling the peripheral clock
 	sysclk_enable_peripheral_clock(ID_UART1);
 	pio_set_peripheral(PIOA, PIO_PERIPH_C, PIO_PA5);
-	pio_set_peripheral(PIOA, PIO_PERIPH_C, PIO_PA4);
+	pio_set_peripheral(PIOA, PIO_PERIPH_C, PIO_PA6);
 
 	// Initialize UART
 	uart_init(UART1,&uart_settings);
@@ -93,6 +93,7 @@ void gpsd_arch_init(void)
 	uart_enable((Uart *)UART1);
 
 	NVIC_EnableIRQ((IRQn_Type)ID_UART1);
+	NVIC_SetPriority((IRQn_Type) ID_UART1, 12);//level 0 is the highest interrupt priority (0-15)
 
 	// Enable UART IRQ
 	uart_enable_interrupt(UART1, US_IER_RXRDY);

@@ -34,108 +34,103 @@ extern void
 new_net_config(void);
 
 #ifdef NODE_LIGHT
-static int
-RGB_blue_post_handler(char *key, int key_len, char *val, int val_len)
+static int RGB_blue_post_handler(char *key, int key_len, char *val, int val_len)
 {
-  int ret = HTTPD_SIMPLE_POST_HANDLER_UNKNOWN;
-  RGB_soft_t tmp;
-  if(key_len != strlen("RGB_blue") ||
-     strncasecmp(key, "RGB_blue", strlen("RGB_blue")) != 0) {
-    /* Not ours */
-    return HTTPD_SIMPLE_POST_HANDLER_UNKNOWN;
-  }
+	int ret = HTTPD_SIMPLE_POST_HANDLER_UNKNOWN;
+	RGB_soft_t tmp;
+	if(key_len != strlen("RGB_blue")
+			|| strncasecmp(key, "RGB_blue", strlen("RGB_blue")) != 0){
+		/* Not ours */
+		return HTTPD_SIMPLE_POST_HANDLER_UNKNOWN;
+	}
 
-  ret = atoi(val);
+	ret = strtoul(val, NULL, 10);
+	printf("B:%d\n", ret);
+	if(ret < 0 || ret > 256){
+		return HTTPD_SIMPLE_POST_HANDLER_ERROR;
+	}
 
-   if(ret < 0 ||
-      ret > 256) {
-     return HTTPD_SIMPLE_POST_HANDLER_ERROR;
-   }
-
-   tmp.all = soft_RGB_ctrl_sensor.value(SENSOR_ERROR);
+	tmp.all = ((RGB_soft_t *) soft_RGB_ctrl_sensor.value(SENSOR_ERROR))->all;
 	tmp.led.b = ret;
-	soft_RGB_ctrl_sensor.value(tmp.all);
+	soft_RGB_ctrl_sensor.value((int) &tmp.all);
 
-   return HTTPD_SIMPLE_POST_HANDLER_OK;
+	return HTTPD_SIMPLE_POST_HANDLER_OK;
 }
 
 /*---------------------------------------------------------------------------*/
 
-static int
-RGB_green_post_handler(char *key, int key_len, char *val, int val_len)
+static int RGB_green_post_handler(char *key, int key_len, char *val,
+		int val_len)
 {
-  int ret = HTTPD_SIMPLE_POST_HANDLER_UNKNOWN;
-  RGB_soft_t tmp;
-  if(key_len != strlen("RGB_green") ||
-     strncasecmp(key, "RGB_green", strlen("RGB_green")) != 0) {
-    /* Not ours */
-    return HTTPD_SIMPLE_POST_HANDLER_UNKNOWN;
-  }
+	int ret = HTTPD_SIMPLE_POST_HANDLER_UNKNOWN;
+	RGB_soft_t tmp;
+	if(key_len != strlen("RGB_green")
+			|| strncasecmp(key, "RGB_green", strlen("RGB_green")) != 0){
+		/* Not ours */
+		return HTTPD_SIMPLE_POST_HANDLER_UNKNOWN;
+	}
 
-  ret = atoi(val);
+	ret = strtoul(val, NULL, 10);
+	printf("G:%d\n", ret);
+	if(ret < 0 || ret > 256){
+		return HTTPD_SIMPLE_POST_HANDLER_ERROR;
+	}
 
-   if(ret < 0 ||
-      ret > 256) {
-     return HTTPD_SIMPLE_POST_HANDLER_ERROR;
-   }
+	tmp.all = ((RGB_soft_t *) soft_RGB_ctrl_sensor.value(SENSOR_ERROR))->all;
+	tmp.led.g = ret;
+	soft_RGB_ctrl_sensor.value((int) &tmp.all);
 
-   tmp.all = soft_RGB_ctrl_sensor.value(SENSOR_ERROR);
-  tmp.led.g = ret;
-  soft_RGB_ctrl_sensor.value(tmp.all);
-
-   return HTTPD_SIMPLE_POST_HANDLER_OK;
+	return HTTPD_SIMPLE_POST_HANDLER_OK;
 }
 
 /*---------------------------------------------------------------------------*/
-static int
-RGB_red_post_handler(char *key, int key_len, char *val, int val_len)
+static int RGB_red_post_handler(char *key, int key_len, char *val, int val_len)
 {
-  int ret = HTTPD_SIMPLE_POST_HANDLER_UNKNOWN;
-  RGB_soft_t tmp;
-  if(key_len != strlen("RGB_red") ||
-     strncasecmp(key, "RGB_red", strlen("RGB_red")) != 0) {
-    /* Not ours */
-    return HTTPD_SIMPLE_POST_HANDLER_UNKNOWN;
-  }
+	int ret = HTTPD_SIMPLE_POST_HANDLER_UNKNOWN;
+	RGB_soft_t tmp;
+	if(key_len != strlen("RGB_red")
+			|| strncasecmp(key, "RGB_red", strlen("RGB_red")) != 0){
+		/* Not ours */
+		return HTTPD_SIMPLE_POST_HANDLER_UNKNOWN;
+	}
 
-  ret = atoi(val);
+	ret = strtoul(val, NULL, 10);
+	printf("R:%d\n", ret);
+	if(ret < 0 || ret > 256){
+		return HTTPD_SIMPLE_POST_HANDLER_ERROR;
+	}
 
-   if(ret < 0 ||
-      ret > 256) {
-     return HTTPD_SIMPLE_POST_HANDLER_ERROR;
-   }
+	tmp.all = ((RGB_soft_t *) soft_RGB_ctrl_sensor.value(SENSOR_ERROR))->all;
+	tmp.led.r = ret;
+	soft_RGB_ctrl_sensor.value((int) &tmp.all);
 
-   tmp.all = soft_RGB_ctrl_sensor.value(SENSOR_ERROR);
-   tmp.led.r = ret;
-   soft_RGB_ctrl_sensor.value(tmp.all);
-
-   return HTTPD_SIMPLE_POST_HANDLER_OK;
+	return HTTPD_SIMPLE_POST_HANDLER_OK;
 }
 
 /*---------------------------------------------------------------------------*/
-static int
-RGB_brightness_post_handler(char *key, int key_len, char *val, int val_len)
+static int RGB_brightness_post_handler(char *key, int key_len, char *val,
+		int val_len)
 {
-  int ret = HTTPD_SIMPLE_POST_HANDLER_UNKNOWN;
-  RGB_soft_t tmp;
-  if(key_len != strlen("RGB_brightness") ||
-     strncasecmp(key, "RGB_brightness", strlen("RGB_brightness")) != 0) {
-    /* Not ours */
-    return HTTPD_SIMPLE_POST_HANDLER_UNKNOWN;
-  }
+	int ret = HTTPD_SIMPLE_POST_HANDLER_UNKNOWN;
+	RGB_soft_t tmp;
+	if(key_len != strlen("RGB_brightness")
+			|| strncasecmp(key, "RGB_brightness", strlen("RGB_brightness"))
+					!= 0){
+		/* Not ours */
+		return HTTPD_SIMPLE_POST_HANDLER_UNKNOWN;
+	}
 
-  ret = atoi(val);
+	ret = strtoul(val, NULL, 10);
+	printf("I:%d\n", ret);
+	if(ret < 0 || ret > 256){
+		return HTTPD_SIMPLE_POST_HANDLER_ERROR;
+	}
 
-   if(ret < 0 ||
-      ret > 256) {
-     return HTTPD_SIMPLE_POST_HANDLER_ERROR;
-   }
+	tmp.all = ((RGB_soft_t *) soft_RGB_ctrl_sensor.value(SENSOR_ERROR))->all;
+	tmp.led.brightness = ret;
+	soft_RGB_ctrl_sensor.value((int) &tmp.all);
 
-   tmp.all = soft_RGB_ctrl_sensor.value(SENSOR_ERROR);
-   tmp.led.brightness = ret;
-   soft_RGB_ctrl_sensor.value(tmp.all);
-
-   return HTTPD_SIMPLE_POST_HANDLER_OK;
+	return HTTPD_SIMPLE_POST_HANDLER_OK;
 }
 #endif
 

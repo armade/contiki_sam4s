@@ -1,6 +1,11 @@
 CONTIKI_PROJECT = hello-world
 all: $(CONTIKI_PROJECT)
 
+
+ifeq ($(UUID),)
+ UUID = 12345678PD
+endif
+
 CFLAGS += -D NODE_GPS=1
 APPS += mqtt servreg-hack ntpd gpsd ftp
 

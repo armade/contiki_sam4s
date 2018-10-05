@@ -45,6 +45,7 @@
 #include "ntpd.h"
 #include "httpd-simple.h"
 #include "httpd_post_handlers.h"
+#include "sensors.h"
 
 #ifdef NODE_GPS
 #include "gpsd.h"
@@ -55,6 +56,18 @@
 PROCESS(hello_world_process, "Hello world process");
 AUTOSTART_PROCESSES(&hello_world_process);
 /*---------------------------------------------------------------------------*/
+
+static void trigger_sensors(void)
+{
+	const struct sensors_sensor *sensors_ptr;
+	for (sensors_ptr = sensors_first(); sensors_ptr != NULL; sensors_ptr = sensors_next(sensors_ptr))
+	{
+		sensors_ptr->configure(SENSORS_ACTIVE, 1);
+	}
+}
+
+
+
 PROCESS_THREAD(hello_world_process, ev, data)
 {
   PROCESS_BEGIN();
@@ -69,7 +82,7 @@ PROCESS_THREAD(hello_world_process, ev, data)
      uip_ipaddr(&netmask, 255, 255, 255, 0);
      ip64_set_ipv4_address(&ipv4addr, &netmask);
 
-
+     trigger_sensors();
 
 
 

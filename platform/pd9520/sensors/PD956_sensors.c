@@ -9,9 +9,8 @@
 /** \brief Exports a global symbol to be used by the sensor API */
 SENSORS(
 		&SAM4S_ADC_TS_sensor
-#ifdef NODE_LIGHT
+		,&LM73_sensor
 		,&soft_RGB_ctrl_sensor
-#endif
 
 #ifdef NODE_HARD_LIGHT
 		,&hard_RGB_ctrl_sensor
