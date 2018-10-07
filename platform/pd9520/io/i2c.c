@@ -4,6 +4,7 @@
  *  Created on: 04/10/2018
  *      Author: pm
  */
+#include <stdio.h>
 
 #include "same70.h"
 #include "twihs.h"

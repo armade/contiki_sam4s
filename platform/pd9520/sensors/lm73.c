@@ -235,7 +235,7 @@ static int lm73_get_temperature(int type)
 {
 	int16_t dat;
 	float temperature;
-	// In power down mode the temperature register will read -256ºC
+	// In power down mode the temperature register will read -256ï¿½C
 	// after a oneshot request. When the measurement is done the
 	// register will be updated with the correct value.
 	do{
@@ -251,22 +251,22 @@ static int lm73_get_temperature(int type)
 /*---------------------------------------------------------------------------*/
 /**
  * \brief Returns a reading from the sensor
- * \return Temperature (ºC * 1000).
+ * \return Temperature (ï¿½C * 1000).
  */
 static int lm73_get_temperature(int type)
 {
 	volatile int16_t dat;
 	volatile int32_t tmp;
-	int ret;
-
-	// In power down mode the temperature register will read -256ºC
+	if(sensor_status == SENSOR_STATUS_DISABLED)
+			return SENSOR_ERROR;
+	// In power down mode the temperature register will read -256ï¿½C
 	// after a oneshot request. When the measurement is done the
 	// register will be updated with the correct value.
 	tmp = 0x8000;
 
 	do{
 		//I2C_r(LM73_ADDRESS, 0x00, (uint8_t *)&dat, sizeof(dat));
-		ret = I2C_r(LM73_ADDRESS, 0x00, (uint8_t *)&dat, 2);
+		I2C_r(LM73_ADDRESS, 0x00, (uint8_t *)&dat, 2);
 		Swap16(dat);
 		tmp = dat;
 		printf("lm73 temp raw = 0x%x  (0x%x)\n",dat,tmp);
@@ -280,7 +280,7 @@ static int lm73_get_temperature(int type)
 
 	tmp = dat;
 	tmp *= 1000; // preserve some decimals
-	tmp = tmp >> 7; // Divide by 128 to get ºC
+	tmp = tmp >> 7; // Divide by 128 to get ï¿½C
 
 	printf("lm73 temp = %d\n",tmp);
 	return tmp;

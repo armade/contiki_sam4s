@@ -3,7 +3,7 @@
 #include "include/same70.h"
 #include "pmc.h"
 #include "clock.h"
-#include "rtc.h"
+#include "drivers/rtc.h"
 
 static volatile clock_time_t ticks;
 static volatile clock_time_t offset = 0;

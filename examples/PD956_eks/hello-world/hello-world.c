@@ -46,6 +46,7 @@
 #include "httpd-simple.h"
 #include "httpd_post_handlers.h"
 #include "sensors.h"
+#include "board-peripherals.h"
 
 #ifdef NODE_GPS
 #include "gpsd.h"
@@ -68,34 +69,36 @@ static void trigger_sensors(void)
 
 
 
-PROCESS_THREAD(hello_world_process, ev, data)
-{
-  PROCESS_BEGIN();
-  uip_ip4addr_t ipv4addr, netmask;
-  printf("Hello, world\n");
-  
-  /* Set us up as a RPL root node. */
-   rpl_dag_root_init_dag();
-   ip64_init();
-   /* Initialize the IP64 module so we'll start translating packets */
-   uip_ipaddr(&ipv4addr, 55, 55, 55, 7);
-     uip_ipaddr(&netmask, 255, 255, 255, 0);
-     ip64_set_ipv4_address(&ipv4addr, &netmask);
+PROCESS_THREAD(hello_world_process, ev, data) {
+	PROCESS_BEGIN()
+	;
+	uip_ip4addr_t ipv4addr, netmask;
+	printf("Hello, world\n");
 
-     trigger_sensors();
+	/* Set us up as a RPL root node. */
+	rpl_dag_root_init_dag();
+	ip64_init();
+	/* Initialize the IP64 module so we'll start translating packets */
+	uip_ipaddr(&ipv4addr, 10, 42, 0, 7);
+	uip_ipaddr(&netmask, 255, 255, 255, 0);
+	ip64_set_ipv4_address(&ipv4addr, &netmask);
 
+
+
+	trigger_sensors();
 
 
 #ifdef NODE_GPS
 	process_start(&gpsd_process, NULL);
 #endif
-     process_start(&httpd_simple_process, NULL);
-     register_http_post_handlers();
+	process_start(&httpd_simple_process, NULL);
+	register_http_post_handlers();
 
-	  while(1) {
-	    PROCESS_WAIT_EVENT();
-	  }
-  PROCESS_END();
+	while (1) {
+		PROCESS_WAIT_EVENT()
+		;
+	}
+PROCESS_END();
 }
 /*---------------------------------------------------------------------------*/
 

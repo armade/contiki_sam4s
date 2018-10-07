@@ -242,7 +242,7 @@
 #   define OPTIMIZE_HIGH __attribute__((optimize("s")))
 #endif
 
-#include "interrupt_sam_nvic.h"
+//#include "interrupt_sam_nvic.h"
 
 /*! \name Usual Types
  */

@@ -7,6 +7,7 @@
 #include <stdint.h>
 #include "csprng.h"
 #include "board-peripherals.h"
+#include "drivers/pmc.h"
 
 /*---------------------------------------------------------------------------*/
 #define DEBUG 0
@@ -167,7 +168,7 @@ soft_RGB_configure(int type, int enable)
 			RGB_reload.all = user_set.all;
 			soft_RGB_init();
 			Sensor_status = SENSOR_STATUS_INITIALISED;
-			value_soft_RGB(128,50,128,128);
+
 			break;
 
 		case SENSORS_ACTIVE:
@@ -179,6 +180,7 @@ soft_RGB_configure(int type, int enable)
 			 }else if(enable == 7){
 				 effect_state = 255;
 				 counter = 0;
+				 value_soft_RGB(255,255,255,255);
 				 RGB_TIMER.TC_CCR=1;
 				 RGB_TIMER.TC_CCR=4;
 				 Sensor_status = SENSOR_STATUS_READY;
@@ -186,10 +188,10 @@ soft_RGB_configure(int type, int enable)
 				 effect_state = 255;
 				 RGB_TIMER.TC_CCR=2;
 				 RGB_base->PIO_OER =  RGB_R_GPIO | RGB_G_GPIO | RGB_B_GPIO;
-				 RGB_base->PIO_CODR = RGB_R_GPIO | RGB_G_GPIO | RGB_B_GPIO;
+				 RGB_base->PIO_SODR = RGB_R_GPIO | RGB_G_GPIO | RGB_B_GPIO;
 				 Sensor_status = SENSOR_STATUS_INITIALISED;
 			 } else if(enable == 10){
-				 if(Sensor_status == SENSOR_STATUS_READY){
+				 if((Sensor_status&0xfff) == SENSOR_STATUS_READY){
 					 effect_state = 0;
 					 RGB_tmp.led = (leds_t){0,0,256,256};
 					 RGB_COLORLOOP_RUN(NULL);
@@ -197,7 +199,7 @@ soft_RGB_configure(int type, int enable)
 					 sensors_changed(&soft_RGB_ctrl_sensor);
 				 }
 			 } else if(enable == 11){
-				 if(Sensor_status == SENSOR_STATUS_READY){
+				 if((Sensor_status&0xfff) == SENSOR_STATUS_READY){
 					 effect_state = 0;
 					 RGB_tmp.led = (leds_t){256,256,256,256};
 					 RGB_RANDOM_RUN(NULL);
@@ -265,15 +267,15 @@ RGB_RANDOM_RUN(void *data)
 		return;
 
 	csprng_get((unsigned char *)&rnd[0],4);
-	RGB_tmp.led.brightness = (rnd[0] & 127)+64;
+	RGB_tmp.led.brightness = (rnd[0] & 127)+128;
 
-	next = rnd[1]&127;
+	next = rnd[1]&0xff;
 
 	if(next < 5)
 		next = 5;
 
 	// NB: user can't see the value update on the PWM signal. It would just confuse them.
-	value_soft_RGB(256,200,88,RGB_tmp.led.brightness);
+	value_soft_RGB(256,170,0,RGB_tmp.led.brightness);
 	ctimer_set(&RGB_effect_timer, next, RGB_RANDOM_RUN, NULL);
 }
 

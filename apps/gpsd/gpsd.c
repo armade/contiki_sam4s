@@ -81,7 +81,7 @@ int parse_sentence(char *line)
 
 
 
-				if( (frame_rmc.time.hours == -1) ||( clock_quality(-1)==GPS_TIME))
+				/*if( (frame_rmc.time.hours == -1) ||( clock_quality(-1)==GPS_TIME))
 					break;
 				time.tm_hour = frame_rmc.time.hours;
 				time.tm_min =  frame_rmc.time.minutes;
@@ -90,10 +90,12 @@ int parse_sentence(char *line)
 				time.tm_mday = frame_rmc.date.day;
 				time.tm_year = frame_rmc.date.year+2000;
 
+				//frame_rmc.date.year is 80 meaning 1980 when RTC is runnung from 0.
+
 				clock_time_t unixtime = RtctoUnix(&time);
 
 				clock_set_unix_time(unixtime,1);
-				clock_quality(GPS_TIME);
+				clock_quality(GPS_TIME);*/
 
 			}
 			else {
@@ -155,7 +157,7 @@ int parse_sentence(char *line)
 				//tm_t time;
 				clock_time_t timezone_offset;
 
-				if( (frame_zda.time.hours == -1) || (clock_quality(-1)==GPS_TIME))
+				if( (frame_zda.time.hours == -1) || (clock_quality(-1)==GPS_TIME) || (frame_zda.date.year < 2017))
 					break;
 
 				time.tm_hour = frame_zda.time.hours;
@@ -174,6 +176,7 @@ int parse_sentence(char *line)
 				if(frame_zda.hour_offset<0)
 					timezone_offset *= -1;
 
+				// NEEDAFIX: RTC is starting from 1980.
 				clock_set_unix_timezone(timezone_offset);
 				clock_set_unix_time(unixtime,1);
 				clock_quality(GPS_TIME);

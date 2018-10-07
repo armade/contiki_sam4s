@@ -32,14 +32,14 @@ static const char init_cmd[]={
 	"$PMTK386,0.27*08\r\n" //Set static threshold to 0.27[m/s] (1 [km/hr])
 };
 /*
-	18 NMEA_SEN_MCHN, // PMTKCHN interval – GPS channel status ---- info here >> http://snoob-community.wikispaces.com/PMTKCHN
+	18 NMEA_SEN_MCHN, // PMTKCHN interval ï¿½ GPS channel status ---- info here >> http://snoob-community.wikispaces.com/PMTKCHN
 	   decoding >>  $PMTKCHN,aabbc,...*XX\r\n
 			 aa => SVid: Space Vehicle Id
 			   bb => SNR: Signal to Noise Ratio
 				 c => Status:
-					  • 0 == Idle
-					  • 1 == Searching
-					  • 2 == Tracking
+					  ï¿½ 0 == Idle
+					  ï¿½ 1 == Searching
+					  ï¿½ 2 == Tracking
 */
 
 static volatile char *config_init = (volatile char *)&init_cmd[0];
@@ -58,7 +58,7 @@ void UART1_Handler(void)
 	if(UART1->UART_IMR & US_CSR_TXEMPTY){
 
 		UART1->UART_THR = init_cmd[++cmd_index];
-		//uart_write(UART1,*config_init++);
+		uart_write(UART1,*config_init++);
 
 		if(cmd_index == sizeof(init_cmd)){
 			uart_disable_interrupt(UART1,US_IDR_TXEMPTY);

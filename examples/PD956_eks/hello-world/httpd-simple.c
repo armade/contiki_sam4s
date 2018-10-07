@@ -950,7 +950,8 @@ PT_THREAD(generate_light_config(struct httpd_state *s))
   		  	  enqueue_chunk(s, 0, "%sselect:%s", config_div_left, config_div_close));
 
     PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "%s<select name=\"effectOption\">",config_div_right));
-    PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<option value=8selected='selected'>Off</option>"));
+    PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<option value=7>On</option>"));
+    PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<option value=8 selected='selected'>Off</option>"));
     PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<option value=10>Colorloop</option>"));
     PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<option value=11>Fire</option>"));
     PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "</select>%s",config_div_close));

@@ -126,7 +126,7 @@ int main()
 		// This will stop the clock.
 		// Not worth it since we power down
 		// when needed.
-		//sleepmgr_enter_sleep();
+		sleepmgr_enter_sleep();
 	}
 	return 0;
 }
@@ -205,11 +205,11 @@ void initSWO(void)
 	PMC->PMC_SCER = PMC_SCDR_PCK3;
 	CoreDebug->DEMCR = (1<<24); //Set the TRCENA bit to 1 into the Debug Exception and Monitor Register (0xE000EDFC) to enable the use of trace and debug blocks
 
-	TPI->SPPR = 2;//Write 0x2 into the Selected Pin Protocol Register. Select the Serial Wire output – NRZ
+	TPI->SPPR = 2;//Write 0x2 into the Selected Pin Protocol Register. Select the Serial Wire output ï¿½ NRZ
 	TPI->FFCR = 0x100; //Write 0x100 into the Formatter and Flush Control Register
 	TPI->ACPR = SWOPrescaler;//Set the suitable clock prescaler value into the Async Clock Prescaler Register to scale the baud rate of the asynchronous output (this can be done automatically by the debugging tool).
 
-	ITM->LAR = 0xC5ACCE55; //Enable the write accesses into the ITM registers by writing “0xC5ACCE55” into the Lock Access Register
+	ITM->LAR = 0xC5ACCE55; //Enable the write accesses into the ITM registers by writing ï¿½0xC5ACCE55ï¿½ into the Lock Access Register
 	ITM->TCR = 0x10009;// Write 0x00010015 into the Trace Control register
 	//ITM->TPR = ITM_TPR_PRIVMASK_Msk; // ITM Trace Privilege Register
 	ITM->TER |= 1;//Write 0x1 into the Trace Enable register: Enable the Stimulus port 0

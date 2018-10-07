@@ -42,11 +42,10 @@ static int effectOption_post_handler(char *key, int key_len, char *val, int val_
 	}
 	ret = strtoul(val, NULL, 10);
 
-	if(ret < 10 || ret > 11){
+	if(ret < 7 || ret > 11){
 		return HTTPD_SIMPLE_POST_HANDLER_ERROR;
 	}
 
-	  soft_RGB_ctrl_sensor.configure(SENSORS_ACTIVE,7);
 	  soft_RGB_ctrl_sensor.configure(SENSORS_ACTIVE,ret);
 
 
