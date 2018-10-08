@@ -36,9 +36,7 @@ SENSORS(
 		,&HTU21D_sensor
 #endif
 
-#ifdef NODE_GPS
 		,&GPS_sensor
-#endif
 
 #ifdef NODE_ROUTER
 

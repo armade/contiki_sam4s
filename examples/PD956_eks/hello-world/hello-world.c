@@ -43,6 +43,7 @@
 #include "net/netstack.h"
 #include "net/rpl/rpl-dag-root.h"
 #include "ntpd.h"
+#include "weather.h"
 #include "httpd-simple.h"
 #include "httpd_post_handlers.h"
 #include "sensors.h"
@@ -93,6 +94,8 @@ PROCESS_THREAD(hello_world_process, ev, data) {
 #endif
 	process_start(&httpd_simple_process, NULL);
 	register_http_post_handlers();
+
+	//process_start(&weather_process, NULL);
 
 	while (1) {
 		PROCESS_WAIT_EVENT()

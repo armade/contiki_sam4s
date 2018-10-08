@@ -45,6 +45,7 @@
 #include "board-peripherals.h"
 #include "clock.h"
 #include "platform-conf.h"
+#include "contiki-conf.h"
 
 #include <stdint.h>
 #include <string.h>
@@ -140,8 +141,7 @@ PROCESS(httpd_simple_process, "PD956 Web Server");
 #define REQUEST_TYPE_POST 2
 /*---------------------------------------------------------------------------*/
 /* Temporary buffer for holding escaped HTML used by html_escape_quotes */
-#define HTML_ESCAPED_BUFFER_SIZE 128
-static char html_escaped_buf[HTML_ESCAPED_BUFFER_SIZE];
+
 /*---------------------------------------------------------------------------*/
 static const char *NOT_FOUND = "<html><body bgcolor=\"white\">"
                                "<center>"
@@ -328,7 +328,16 @@ static page_t http_relay4_cfg_page = {
 };
 #endif
 
+static char generate_maps_config(struct httpd_state *s);
 
+static page_t http_maps_cfg_page = {
+  NULL,
+  "maps.html",
+  "Map",
+  generate_maps_config,
+};
+
+//http://api.openweathermap.org/data/2.5/weather?lat=56.1837005&lon=9.5350504&appid=c592e14137c3471fa9627b44f6649db4
 
 /*---------------------------------------------------------------------------*/
 static uint16_t numtimes;
@@ -395,30 +404,7 @@ url_unescape(const char *src, size_t srclen, char *dst, size_t dstlen)
   return i == srclen;
 }
 /*---------------------------------------------------------------------------*/
-static char*
-html_escape_quotes(const char *src, size_t srclen)
-{
-  size_t srcpos, dstpos;
-  memset(html_escaped_buf, 0, HTML_ESCAPED_BUFFER_SIZE);
-  for(srcpos = dstpos = 0;
-      srcpos < srclen && dstpos < HTML_ESCAPED_BUFFER_SIZE - 1; srcpos++) {
-    if(src[srcpos] == '\0') {
-      break;
-    } else if(src[srcpos] == '"') {
-      if(dstpos + 7 > HTML_ESCAPED_BUFFER_SIZE) {
-        break;
-      }
 
-      strcpy(&html_escaped_buf[dstpos], "&quot;");
-      dstpos += 6;
-    } else {
-      html_escaped_buf[dstpos++] = src[srcpos];
-    }
-  }
-
-  html_escaped_buf[HTML_ESCAPED_BUFFER_SIZE - 1] = '\0';
-  return html_escaped_buf;
-}
 
 int
 ipaddr_sprintf(char *buf, uint8_t buf_len, const uip_ipaddr_t *addr)
@@ -608,14 +594,64 @@ PT_THREAD(generate_index(struct httpd_state *s))
                       enqueue_chunk(s, 0, "<p>"));
 
   PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "\n"));
-  int temp = LM73_sensor.value(0);
-  int temp_high = temp/1000;
+  /////////////////////////////////////////////////////
+  static int temp;
+  static int temp_high;
+
+  temp = LM73_sensor.value(0);
+  temp_high = temp/1000;
+  temp = temp - (temp_high*1000);
+  LM73_sensor.configure(SENSORS_ACTIVE,1); // Trig new convertion. Just for test we are 1 conversion behind.
+  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "%sLM73:%s %s%d.%d C%s",config_div_left,config_div_close,config_div_right, temp_high,temp,config_div_close));
+  /////////////////////////////////////////////////////
+  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<br>"));
+  temp = SAM4S_ADC_TS_sensor.value(1);
+  temp_high = temp/1000;
   temp = temp - (temp_high*1000);
 
-  LM73_sensor.configure(SENSORS_ACTIVE,1); // Trig new convertion. Just for test we are 1 conversion behind.
+  SAM4S_ADC_TS_sensor.configure(SENSORS_ACTIVE,1); // Trig new convertion.
+  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "%sADC:%s %s%d.%d C %s",config_div_left,config_div_close,config_div_right, temp_high,temp,config_div_close));
+  /////////////////////////////////////////////////////
+  static float value;
+  static int low, high;
 
-  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "LM73: %d.%d C", temp_high,temp));
+  /////////////////////////////////////////////////////
+  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<br>"));
 
+  temp = GPS_sensor.value(GPS_SENSOR_TYPE_LAT);
+  value = *(float *)temp;
+
+  high = value;
+  low = (value - high) * 10000000;
+  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "%sLatitude:%s %s%d.%.7d%s",config_div_left,config_div_close, config_div_right,high, low,config_div_close));
+  /////////////////////////////////////////////////////
+  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<br>"));
+
+  temp = GPS_sensor.value(GPS_SENSOR_TYPE_LONG);
+  value = *(float *)temp;
+
+  high = value;
+  low = (value - high) * 10000000;
+  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "%sLongitude:%s  %s%d.%.7d %s",config_div_left,config_div_close, config_div_right,high, low,config_div_close));
+  /////////////////////////////////////////////////////
+  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<br>"));
+
+  temp = GPS_sensor.value(GPS_SENSOR_TYPE_ALT);
+  value = *(float *)temp;
+
+  high = value;
+  low = (value - high) * 10000000;
+  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "%sAltitude:%s %s%d.%.7d%s",config_div_left,config_div_close, config_div_right,high, low,config_div_close));
+  /////////////////////////////////////////////////////
+  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<br>"));
+
+  temp = GPS_sensor.value(GPS_SENSOR_TYPE_SPEED);
+  value = *(float *)temp;
+
+  high = value;
+  low = (value - high) * 10000;
+  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "%sSpeed:%s %s%d.%d%s",config_div_left,config_div_close, config_div_right,high, low,config_div_close));
+  /////////////////////////////////////////////////////
   PT_WAIT_THREAD(&s->generate_pt,
                       enqueue_chunk(s, 0, "</p>"));
   PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "</fieldset>"));
@@ -1158,6 +1194,124 @@ PT_THREAD(generate_relay4_config(struct httpd_state *s))
 #endif
 
 
+static
+PT_THREAD(generate_maps_config(struct httpd_state *s))
+{
+
+  PT_BEGIN(&s->generate_pt);
+
+  /* Generate top matter (doctype, title, nav links etc) */
+  PT_WAIT_THREAD(&s->generate_pt,
+                 generate_top_matter(s, http_maps_cfg_page.title,
+                                     http_config_css2));
+
+  /////////////////////////////////////////////////////
+  float value;
+  int ret;
+  static int low_lat, high_lat;
+  static int low_lon, high_lon;
+
+  ret = GPS_sensor.value(GPS_SENSOR_TYPE_LAT);
+
+  if(ret == SENSOR_ERROR)
+	  goto MAPS_EXIT;
+    value = *(float *)ret;
+
+    high_lat = value;
+    low_lat = (value - high_lat) * 10000000;
+
+    ret = GPS_sensor.value(GPS_SENSOR_TYPE_LONG);
+  if(ret == SENSOR_ERROR)
+	  goto MAPS_EXIT;
+    value = *(float *)ret;
+
+    high_lon = value;
+    low_lon = (value - high_lon) * 10000000;
+
+  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<fieldset>"));
+
+  PT_WAIT_THREAD(&s->generate_pt,
+                 enqueue_chunk(s, 0, "<h1>%s</h1>", http_maps_cfg_page.title));
+
+  PT_WAIT_THREAD(&s->generate_pt,
+                   enqueue_chunk(s, 0, "<link rel=\"stylesheet\" href=\"https://unpkg.com/leaflet@1.3.4/dist/leaflet.css\""));
+  PT_WAIT_THREAD(&s->generate_pt,
+                       enqueue_chunk(s, 0, "integrity=\"sha512-puBpdR0798OZvTTbP4A8Ix/l+A4dHDD0DGqYW6RQ+9jxkRFclaxxQb/SJAWZfWAkuyeQUytO7+7N4QKrDh+drA==\""));
+                    		   PT_WAIT_THREAD(&s->generate_pt,
+                    		                        enqueue_chunk(s, 0, "crossorigin=\"\"/>"));
+
+  PT_WAIT_THREAD(&s->generate_pt,
+                     enqueue_chunk(s, 0, "<script src=\"https://unpkg.com/leaflet@1.3.4/dist/leaflet.js\""));
+  PT_WAIT_THREAD(&s->generate_pt,
+                       enqueue_chunk(s, 0, "integrity=\"sha512-nMMmRyTVoLYqjP9hrbed9S+FzjZHW5gY1TWCHA5ckwXZBadntCNs8kEqAWdrb9O7rxbCaA4lKTIWjDXZxflOcA==\""));
+  PT_WAIT_THREAD(&s->generate_pt,
+                       enqueue_chunk(s, 0, "crossorigin=\"\"></script>"));
+  PT_WAIT_THREAD(&s->generate_pt,
+                       enqueue_chunk(s, 0, "<div id=\"mapid\" style=\"height: 600px;\"></div>"));
+  PT_WAIT_THREAD(&s->generate_pt,
+                     enqueue_chunk(s, 0, "<script>"));
+  PT_WAIT_THREAD(&s->generate_pt,
+                       enqueue_chunk(s, 0, "var mymap = L.map('mapid').setView([%d.%.7d, %d.%.7d], 18);",high_lat,low_lat,high_lon,low_lon));
+
+  PT_WAIT_THREAD(&s->generate_pt,
+                       enqueue_chunk(s, 0, "L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token=pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcmZ3N3gifQ.rJcFIG214AriISLbB6B5aw', {"));
+  PT_WAIT_THREAD(&s->generate_pt,
+                       enqueue_chunk(s, 0, "maxZoom: 23,"));
+  PT_WAIT_THREAD(&s->generate_pt,
+                       enqueue_chunk(s, 0, "attribution: 'Map data &copy; <a href=\"https://www.openstreetmap.org/\">OpenStreetMap</a> contributors, ' +"));
+  PT_WAIT_THREAD(&s->generate_pt,
+                       enqueue_chunk(s, 0, "'<a href=\"https://creativecommons.org/licenses/by-sa/2.0/\">CC-BY-SA</a>, ' +"));
+  PT_WAIT_THREAD(&s->generate_pt,
+                       enqueue_chunk(s, 0, "'Imagery © <a href=\"https://www.mapbox.com/\">Mapbox</a>',"));
+  PT_WAIT_THREAD(&s->generate_pt,
+                       enqueue_chunk(s, 0, "id: 'mapbox.streets'"));
+  PT_WAIT_THREAD(&s->generate_pt,
+                       enqueue_chunk(s, 0, "}).addTo(mymap);"));
+
+  PT_WAIT_THREAD(&s->generate_pt,
+                       enqueue_chunk(s, 0, "L.marker([%d.%.7d, %d.%.7d]).addTo(mymap)",high_lat,low_lat,high_lon,low_lon));
+  PT_WAIT_THREAD(&s->generate_pt,
+                       enqueue_chunk(s, 0, ".bindPopup(\"<b>You are here!</b><br />(%d.%.7d, %d.%.7d).\").openPopup();",high_lat,low_lat,high_lon,low_lon));
+
+  PT_WAIT_THREAD(&s->generate_pt,
+                       enqueue_chunk(s, 0, "L.circle([%d.%.7d, %d.%.7d ], 5, {",high_lat,low_lat,high_lon,low_lon));
+  PT_WAIT_THREAD(&s->generate_pt,
+                       enqueue_chunk(s, 0, "color: 'red',"));
+  PT_WAIT_THREAD(&s->generate_pt,
+                       enqueue_chunk(s, 0, "fillColor: '#f03',"));
+  PT_WAIT_THREAD(&s->generate_pt,
+                       enqueue_chunk(s, 0, "fillOpacity: 0.5"));
+  PT_WAIT_THREAD(&s->generate_pt,
+                       enqueue_chunk(s, 0, "}).addTo(mymap).bindPopup(\"I am a circle.\");"));
+
+  PT_WAIT_THREAD(&s->generate_pt,
+                       enqueue_chunk(s, 0, "var popup = L.popup();"));
+
+  PT_WAIT_THREAD(&s->generate_pt,
+                       enqueue_chunk(s, 0, "function onMapClick(e) {"));
+  PT_WAIT_THREAD(&s->generate_pt,
+                       enqueue_chunk(s, 0, "popup"));
+  PT_WAIT_THREAD(&s->generate_pt,
+                       enqueue_chunk(s, 0, ".setLatLng(e.latlng)"));
+  PT_WAIT_THREAD(&s->generate_pt,
+                       enqueue_chunk(s, 0, ".setContent(\"You clicked the map at \" + e.latlng.toString())"));
+  PT_WAIT_THREAD(&s->generate_pt,
+                       enqueue_chunk(s, 0, ".openOn(mymap);"));
+  PT_WAIT_THREAD(&s->generate_pt,
+                       enqueue_chunk(s, 0, "}"));
+
+  PT_WAIT_THREAD(&s->generate_pt,
+                       enqueue_chunk(s, 0, "mymap.on('click', onMapClick);"));
+  PT_WAIT_THREAD(&s->generate_pt,
+                       enqueue_chunk(s, 0, "</script>"));
+MAPS_EXIT:
+  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "</fieldset>"));
+    //=====================================================================================
+  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 1, http_bottom));
+
+  PT_END(&s->generate_pt);
+}
+
 /*---------------------------------------------------------------------------*/
 static void
 lock_obtain(struct httpd_state *s)
@@ -1595,7 +1749,7 @@ init(void)
   list_add(pages_list, &http_relay4_cfg_page);
 #endif
 
-
+  list_add(pages_list, &http_maps_cfg_page);
 }
 /*---------------------------------------------------------------------------*/
 PROCESS_THREAD(httpd_simple_process, ev, data)

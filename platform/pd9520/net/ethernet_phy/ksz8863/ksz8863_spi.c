@@ -339,6 +339,31 @@ int KSZ8863_setup_MAC_addr(const unsigned char *addr)
     return KSZ8863_write(MAC_addr, MAC_address0, 6);
 }
 
+ int KSZ8863_ack_interrupt(void)
+{
+    uint8_t spi_val;
+    int ret;
+
+    KSZ8863_read(&spi_val, LinkChangeInterrupt, 1);
+
+    spi_val |= 1 << (0);
+    spi_val |= 1 << (1);
+
+    return KSZ8863_write(&spi_val, LinkChangeInterrupt, 1);
+}
+
+int KSZ8863_config_intr(void)
+{
+    uint8_t spi_val;
+
+    KSZ8863_read(&spi_val, InterruptEnable, 1);
+
+    spi_val |= 1 << (0);
+    spi_val |= 1 << (1);
+
+    return KSZ8863_write(&spi_val, InterruptEnable, 1);
+}
+
 /* ------------------------------------------------------------------------ */
 
 static uint16_t spi2mdiobits(int phy_id, uint8_t spi_val, uint8_t spireg, uint8_t mdio_reg, uint16_t initmdioval)
@@ -503,6 +528,21 @@ uint8_t gmac_phy_read(Gmac* p_gmac, uint8_t uc_phy_address, uint8_t uc_address,
 
 	// read phy 1 link status first
 	get_spi2mdioreg(phy_id, MII_BMSR, &mdio_val);
+
+	if(regnum == MII_PCR1)
+	{
+		// return phy 1 register if phy 1 is linkup, otherwise, return phy 2 register status
+		if ((mdio_val & MII_LINK_STATUS) == MII_LINK_STATUS){
+			KSZ8863_read(&mdio_val, regnum, 1);
+			*p_value = mdio_val;
+			return GMAC_OK;
+		}
+		else{
+			KSZ8863_read(&mdio_val, 0x2E, 1);
+			*p_value = mdio_val;
+			return GMAC_OK;
+		}
+	}
 
 	// Is it going to read phy link status?
 	if (regnum == MII_BMSR) {

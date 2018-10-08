@@ -30,6 +30,8 @@ uint32_t lm73_temperature_conversion_time = 14;
 static uint8_t LM73_addr;
 #define LM73_ADDRESS 	LM73_addr
 
+static int temperature = SENSOR_ERROR;
+
 static struct ctimer startup_timer;
 /*---------------------------------------------------------------------------*/
 
@@ -143,7 +145,6 @@ void lm73_set_resolution(uint16_t res)
 
 	if(new_res < 4){
 		I2C_r(LM73_ADDRESS, 0x04, &CR_register, sizeof(CR_register));
-		printf("%s reg4 = 0x%x\n",__func__,CR_register);
 		CR_register &= ~(0b11 << 5);
 		CR_register |= (new_res << 5);
 		I2C_w(LM73_ADDRESS, 0x04, &CR_register, sizeof(CR_register));
@@ -157,7 +158,6 @@ uint16_t lm73_get_resolution(void)
 	uint8_t CR_register;
 
 	I2C_r(LM73_ADDRESS, 0x04, &CR_register, sizeof(CR_register));
-	printf("%s reg4 = 0x%x\n",__func__,CR_register);
 	CR_register &= (0b11 << 5);
 	CR_register >>= 5;
 
@@ -169,7 +169,6 @@ void lm73_set_mode_power_down(void)
 	uint8_t CR_register;
 
 	I2C_r(LM73_ADDRESS, 0x01, &CR_register, sizeof(CR_register));
-	printf("%s reg1 = 0x%x\n",__func__,CR_register);
 	CR_register |= (1 << 7);
 	I2C_w(LM73_ADDRESS, 0x01, &CR_register, sizeof(CR_register));
 }
@@ -179,7 +178,6 @@ void lm73_clr_mode_power_down(void)
 	uint8_t CR_register;
 
 	I2C_r(LM73_ADDRESS, 0x01, &CR_register, sizeof(CR_register));
-	printf("%s reg1 = 0x%x\n",__func__,CR_register);
 	CR_register &= (1 << 7);
 	I2C_w(LM73_ADDRESS, 0x01, &CR_register, sizeof(CR_register));
 }
@@ -189,7 +187,6 @@ void lm73_oneshot(void) // 14-112ms depending on resolution
 	uint8_t CR_register;
 
 	I2C_r(LM73_ADDRESS, 0x01, &CR_register, sizeof(CR_register));
-	printf("%s reg1 = 0x%x\n",__func__,CR_register);
 	CR_register |= (1 << 2);
 	I2C_w(LM73_ADDRESS, 0x01, &CR_register, sizeof(CR_register));
 }
@@ -253,12 +250,12 @@ static int lm73_get_temperature(int type)
  * \brief Returns a reading from the sensor
  * \return Temperature (�C * 1000).
  */
-static int lm73_get_temperature(int type)
+static int lm73_get_temperature()
 {
 	volatile int16_t dat;
 	volatile int32_t tmp;
 	if(sensor_status == SENSOR_STATUS_DISABLED)
-			return SENSOR_ERROR;
+		return SENSOR_ERROR;
 	// In power down mode the temperature register will read -256�C
 	// after a oneshot request. When the measurement is done the
 	// register will be updated with the correct value.
@@ -269,8 +266,7 @@ static int lm73_get_temperature(int type)
 		I2C_r(LM73_ADDRESS, 0x00, (uint8_t *)&dat, 2);
 		Swap16(dat);
 		tmp = dat;
-		printf("lm73 temp raw = 0x%x  (0x%x)\n",dat,tmp);
-		asm volatile("NOP");
+		//printf("lm73 temp raw = 0x%x  (0x%x)\n",dat,tmp);
 	}while(((tmp == 0x8000)||(tmp == 0)));
 	 // 14-112ms depending on resolution. Here 114ms
 
@@ -282,16 +278,21 @@ static int lm73_get_temperature(int type)
 	tmp *= 1000; // preserve some decimals
 	tmp = tmp >> 7; // Divide by 128 to get �C
 
-	printf("lm73 temp = %d\n",tmp);
+	//printf("lm73 temp = %d\n",tmp);
 	return tmp;
 }
 #endif
-volatile int temp_val;
+
 static void lm73_notify_ready(void *not_used)
 {
 	sensor_status = SENSOR_STATUS_READY;
-	temp_val = lm73_get_temperature(temp_val);
+	temperature = lm73_get_temperature();
 	sensors_changed(&LM73_sensor);
+}
+
+static int lm73_get_value(int type)
+{
+	return temperature;
 }
 
 /*---------------------------------------------------------------------------*/
@@ -360,6 +361,6 @@ static int lm73_status(int type)
 }
 
 /*---------------------------------------------------------------------------*/
-SENSORS_SENSOR(LM73_sensor, "LM73", lm73_get_temperature, lm73_init,
+SENSORS_SENSOR(LM73_sensor, "LM73", lm73_get_value, lm73_init,
 		lm73_status);
 /*---------------------------------------------------------------------------*/

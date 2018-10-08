@@ -198,4 +198,6 @@ uint8_t ethernet_phy_auto_negotiate3(Gmac *p_gmac, uint8_t uc_phy_addr);
  */
 uint8_t ethernet_phy_reset(Gmac *p_gmac, uint8_t uc_phy_addr);
 
+uint32_t ethernet_phy_Basic_Status_Register(Gmac *p_gmac, uint8_t uc_phy_addr);
+
 #endif /* #ifndef ETHERNET_PHY_H_INCLUDED */
