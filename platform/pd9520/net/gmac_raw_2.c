@@ -90,22 +90,22 @@ extern "C" {
 #define GMAC_TX_BUFFERS 8
 #define GMAC_RX_BUFFERS 18
 /** TX descriptor lists */
-COMPILER_ALIGNED(8)
+COMPILER_ALIGNED(16)
 static gmac_tx_descriptor_t gs_tx_desc_null, gs_tx_desc[GMAC_TX_BUFFERS];
 /** TX callback lists */
 static gmac_dev_tx_cb_t gs_tx_callback[GMAC_TX_BUFFERS];
 /** RX descriptors lists */
-COMPILER_ALIGNED(8)
+COMPILER_ALIGNED(16)
 static gmac_rx_descriptor_t gs_rx_desc_null, gs_rx_desc[GMAC_RX_BUFFERS];
 /** Send Buffer. Section 3.6 of AMBA 2.0 spec states that burst should not cross the
  * 1K Boundaries. Receive buffer manager write operations are burst of 2 words => 3 lsb bits
  * of the address shall be set to 0.
  */
-COMPILER_ALIGNED(8)
+COMPILER_ALIGNED(16)
 static uint8_t gs_uc_tx_buffer[GMAC_TX_BUFFERS * GMAC_TX_UNITSIZE];
 
 /** Receive Buffer */
-COMPILER_ALIGNED(8)
+COMPILER_ALIGNED(16)
 static uint8_t gs_uc_rx_buffer[GMAC_RX_BUFFERS * GMAC_RX_UNITSIZE];
 
 /**
@@ -600,7 +600,8 @@ uint32_t gmac_dev_write(gmac_device_t* p_gmac_dev, gmac_quelist_t queue_idx, voi
 	}
 
 	circ_inc(&p_gmac_queue->us_tx_head, p_gmac_queue->us_tx_list_size);
-
+	__ISB();
+	__DSB();
 	/* Now start to transmit if it is still not done */
 	gmac_start_transmission(p_hw);
 

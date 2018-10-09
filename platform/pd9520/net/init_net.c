@@ -103,7 +103,7 @@ PROCESS_THREAD(ksz8863_process, ev, data)
 {
   uint32_t ul_frm_size;
   PROCESS_BEGIN();
-#if 0
+#if 1
   /* Auto Negotiate, work in RMII mode */
   	if (ethernet_phy_auto_negotiate1(GMAC, 1) != GMAC_OK) {
   		printf("Auto Negotiate ERROR!\r");
@@ -180,7 +180,7 @@ PROCESS_THREAD(ksz8863_link_process, ev, data)
 	  if(ul_value & MII_LINK_STATUS) // link up
 	  {
 		  gmac_dev_reset(&gs_gmac_dev, GMAC_QUE_0);
-		  /* Auto Negotiate, work in RMII mode */
+		  // Auto Negotiate, work in RMII mode
 		  	if (ethernet_phy_auto_negotiate1(GMAC, 1) != GMAC_OK) {
 		  		printf("Auto Negotiate ERROR!\r");
 		  	}
@@ -188,8 +188,8 @@ PROCESS_THREAD(ksz8863_link_process, ev, data)
 		  	while(ethernet_phy_auto_negotiate2(GMAC, 1) != GMAC_OK){
 		  		PROCESS_YIELD();
 		  	}
-		  	ethernet_phy_auto_negotiate3(GMAC, 1);
-		   /*Establish ethernet link */
+		  	//ethernet_phy_auto_negotiate3(GMAC, 1);
+		   //Establish ethernet link
 		  	ul_frm_size = ethernet_phy_set_link(GMAC, 1, 1);
 		  	if(ul_frm_size != GMAC_OK) {
 		  		printf("Set link ERROR (%d)!\n",ul_frm_size);

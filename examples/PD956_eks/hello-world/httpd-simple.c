@@ -337,6 +337,15 @@ static page_t http_maps_cfg_page = {
   generate_maps_config,
 };
 
+static char generate_weather_config(struct httpd_state *s);
+
+static page_t http_weather_cfg_page = {
+  NULL,
+  "weather.html",
+  "Weather",
+  generate_weather_config,
+};
+
 //http://api.openweathermap.org/data/2.5/weather?lat=56.1837005&lon=9.5350504&appid=c592e14137c3471fa9627b44f6649db4
 
 /*---------------------------------------------------------------------------*/
@@ -1204,7 +1213,7 @@ PT_THREAD(generate_maps_config(struct httpd_state *s))
   PT_WAIT_THREAD(&s->generate_pt,
                  generate_top_matter(s, http_maps_cfg_page.title,
                                      http_config_css2));
-
+  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<fieldset>"));
   /////////////////////////////////////////////////////
   float value;
   int ret;
@@ -1213,22 +1222,28 @@ PT_THREAD(generate_maps_config(struct httpd_state *s))
 
   ret = GPS_sensor.value(GPS_SENSOR_TYPE_LAT);
 
-  if(ret == SENSOR_ERROR)
-	  goto MAPS_EXIT;
+  if(ret == SENSOR_ERROR){
+  	  PT_WAIT_THREAD(&s->generate_pt,
+  	                   enqueue_chunk(s, 0, "<h1>No GPS signal</h1>"));
+  	  goto MAPS_EXIT;
+    }
     value = *(float *)ret;
 
     high_lat = value;
     low_lat = (value - high_lat) * 10000000;
 
     ret = GPS_sensor.value(GPS_SENSOR_TYPE_LONG);
-  if(ret == SENSOR_ERROR)
-	  goto MAPS_EXIT;
+    if(ret == SENSOR_ERROR){
+      	  PT_WAIT_THREAD(&s->generate_pt,
+      	                   enqueue_chunk(s, 0, "<h1>No GPS signal</h1>"));
+      	  goto MAPS_EXIT;
+        }
     value = *(float *)ret;
 
     high_lon = value;
     low_lon = (value - high_lon) * 10000000;
 
-  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<fieldset>"));
+
 
   PT_WAIT_THREAD(&s->generate_pt,
                  enqueue_chunk(s, 0, "<h1>%s</h1>", http_maps_cfg_page.title));
@@ -1306,6 +1321,175 @@ PT_THREAD(generate_maps_config(struct httpd_state *s))
                        enqueue_chunk(s, 0, "</script>"));
 MAPS_EXIT:
   PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "</fieldset>"));
+    //=====================================================================================
+  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 1, http_bottom));
+
+  PT_END(&s->generate_pt);
+}
+
+
+static
+PT_THREAD(generate_weather_config(struct httpd_state *s))
+{
+
+  PT_BEGIN(&s->generate_pt);
+
+  /* Generate top matter (doctype, title, nav links etc) */
+  PT_WAIT_THREAD(&s->generate_pt,
+                 generate_top_matter(s, http_maps_cfg_page.title,
+                                     http_config_css2));
+  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<fieldset>"));
+  /////////////////////////////////////////////////////
+  float value;
+  int ret;
+  static int low_lat, high_lat;
+  static int low_lon, high_lon;
+
+  ret = GPS_sensor.value(GPS_SENSOR_TYPE_LAT);
+
+  if(ret == SENSOR_ERROR){
+	  PT_WAIT_THREAD(&s->generate_pt,
+	                   enqueue_chunk(s, 0, "<h1>No GPS signal</h1>"));
+	  goto WEATHER_EXIT;
+  }
+    value = *(float *)ret;
+
+    high_lat = value;
+    low_lat = (value - high_lat) * 10000000;
+
+    ret = GPS_sensor.value(GPS_SENSOR_TYPE_LONG);
+    if(ret == SENSOR_ERROR){
+    	  PT_WAIT_THREAD(&s->generate_pt,
+    	                   enqueue_chunk(s, 0, "<h1>No GPS signal</h1>"));
+    	  goto WEATHER_EXIT;
+      }
+    value = *(float *)ret;
+
+    high_lon = value;
+    low_lon = (value - high_lon) * 10000000;
+
+
+
+  PT_WAIT_THREAD(&s->generate_pt,
+                 enqueue_chunk(s, 0, "<h1>%s</h1>", http_weather_cfg_page.title));
+
+  PT_WAIT_THREAD(&s->generate_pt,
+                   enqueue_chunk(s, 0, "<h2 %s</h2>", "id=\"Location\"> Getting data "));
+
+  PT_WAIT_THREAD(&s->generate_pt,
+                      enqueue_chunk(s, 0, "<img id=\"w_icon\" height=\"75\" width=\"75\" alt=\"icon\"/> "));
+  PT_WAIT_THREAD(&s->generate_pt,
+                     enqueue_chunk(s, 0, "<p id=\"myT\"></p>\n"));
+  PT_WAIT_THREAD(&s->generate_pt,
+                     enqueue_chunk(s, 0, "<p id=\"myH\"></p>\n"));
+  PT_WAIT_THREAD(&s->generate_pt,
+                     enqueue_chunk(s, 0, "<p id=\"myP\"></p>\n"));
+  PT_WAIT_THREAD(&s->generate_pt,
+                     enqueue_chunk(s, 0, "<p id=\"myW\"></p>\n"));
+  PT_WAIT_THREAD(&s->generate_pt,
+                     enqueue_chunk(s, 0, "<p id=\"mySunRise\"></p>\n"));
+  PT_WAIT_THREAD(&s->generate_pt,
+                     enqueue_chunk(s, 0, "<p id=\"mySunSet\"></p>\n"));
+
+  PT_WAIT_THREAD(&s->generate_pt,
+                     enqueue_chunk(s, 0, "<script>\n"));
+  PT_WAIT_THREAD(&s->generate_pt,
+                     enqueue_chunk(s, 0, " const http = new XMLHttpRequest() \n"));
+
+  PT_WAIT_THREAD(&s->generate_pt,
+                     enqueue_chunk(s, 0, "http.open(\"GET\", \"http://api.openweathermap.org/data/2.5/weather?lat=%d.%.7d&lon=%d.%.7d&appid=c592e14137c3471fa9627b44f6649db4\")\n ",high_lat,low_lat,high_lon,low_lon));
+  PT_WAIT_THREAD(&s->generate_pt,
+                     enqueue_chunk(s, 0, "http.send() \n"));
+
+  PT_WAIT_THREAD(&s->generate_pt,
+                     enqueue_chunk(s, 0, "http.onload = () => got_request(http.responseText) \n"));
+
+  PT_WAIT_THREAD(&s->generate_pt,
+                     enqueue_chunk(s, 0, "function got_request(txt){\n"));
+  PT_WAIT_THREAD(&s->generate_pt,
+                     enqueue_chunk(s, 0, "obj = JSON.parse(txt);\n"));
+  PT_WAIT_THREAD(&s->generate_pt,
+                     enqueue_chunk(s, 0, "var tmp;\n"));
+  PT_WAIT_THREAD(&s->generate_pt,
+                     enqueue_chunk(s, 0, "var tmp2;\n"));
+  PT_WAIT_THREAD(&s->generate_pt,
+                       enqueue_chunk(s, 0, "var hours;\n"));
+  PT_WAIT_THREAD(&s->generate_pt,
+                       enqueue_chunk(s, 0, "var minutes;\n"));
+  PT_WAIT_THREAD(&s->generate_pt,
+                       enqueue_chunk(s, 0, "var seconds;\n"));
+  PT_WAIT_THREAD(&s->generate_pt,
+                         enqueue_chunk(s, 0, "var date;\n"));
+  PT_WAIT_THREAD(&s->generate_pt,
+                           enqueue_chunk(s, 0, "var formattedTime;\n"));
+
+  PT_WAIT_THREAD(&s->generate_pt,
+                     enqueue_chunk(s, 0, "document.getElementById(\"Location\").innerHTML = obj.name + \" (\" + obj.sys.country + \")\";\n"));
+
+  PT_WAIT_THREAD(&s->generate_pt,
+                     enqueue_chunk(s, 0, "tmp = obj.main.temp-273.15;\n"));
+  PT_WAIT_THREAD(&s->generate_pt,
+                     enqueue_chunk(s, 0, "document.getElementById(\"myT\").innerHTML = \"Temperature: \"+tmp.toFixed(2) +\"[°C]\";\n"));
+
+  PT_WAIT_THREAD(&s->generate_pt,
+                     enqueue_chunk(s, 0, "tmp = obj.main.humidity;\n"));
+  PT_WAIT_THREAD(&s->generate_pt,
+                     enqueue_chunk(s, 0, "document.getElementById(\"myH\").innerHTML = \"Humidity: \"+tmp.toFixed(2) + \"[%%]\";\n"));
+
+  PT_WAIT_THREAD(&s->generate_pt,
+                     enqueue_chunk(s, 0, "tmp = obj.main.pressure;\n"));
+  PT_WAIT_THREAD(&s->generate_pt,
+                     enqueue_chunk(s, 0, "document.getElementById(\"myP\").innerHTML = \"Pressure: \"+tmp.toFixed(2) + \"[hPa]\";\n"));
+
+  PT_WAIT_THREAD(&s->generate_pt,
+                     enqueue_chunk(s, 0, "tmp = obj.wind.deg;\n"));
+  PT_WAIT_THREAD(&s->generate_pt,
+                     enqueue_chunk(s, 0, "tmp2 = obj.wind.speed;\n"));
+  PT_WAIT_THREAD(&s->generate_pt,
+                     enqueue_chunk(s, 0, "document.getElementById(\"myW\").innerHTML = \"Wind: Direction \"+tmp.toFixed(2) + \"[°]\" + \",  Speed \"+tmp2.toFixed(2) + \"[m/s]\";\n"));
+
+  PT_WAIT_THREAD(&s->generate_pt,
+                     enqueue_chunk(s, 0, "tmp = obj.sys.sunrise;\n"));
+  PT_WAIT_THREAD(&s->generate_pt,
+                       enqueue_chunk(s, 0, "date = new Date(tmp*1000);\n"));
+  PT_WAIT_THREAD(&s->generate_pt,
+                       enqueue_chunk(s, 0, "hours = date.getHours();\n"));
+  PT_WAIT_THREAD(&s->generate_pt,
+                       enqueue_chunk(s, 0, "minutes = \"0\" + date.getMinutes();\n"));
+  PT_WAIT_THREAD(&s->generate_pt,
+                         enqueue_chunk(s, 0, "seconds = \"0\" + date.getSeconds();\n"));
+  PT_WAIT_THREAD(&s->generate_pt,
+                           enqueue_chunk(s, 0, "formattedTime = hours + ':' + minutes.substr(-2) + ':' + seconds.substr(-2);\n"));
+  PT_WAIT_THREAD(&s->generate_pt,
+                     enqueue_chunk(s, 0, "document.getElementById(\"mySunRise\").innerHTML = \"Sunrise: \" + formattedTime + \"   (\"+tmp + \"[s])\";\n"));
+
+  PT_WAIT_THREAD(&s->generate_pt,
+                     enqueue_chunk(s, 0, "tmp = obj.sys.sunset;\n"));
+  PT_WAIT_THREAD(&s->generate_pt,
+                         enqueue_chunk(s, 0, "date = new Date(tmp*1000);\n"));
+    PT_WAIT_THREAD(&s->generate_pt,
+                         enqueue_chunk(s, 0, "hours = date.getHours();\n"));
+    PT_WAIT_THREAD(&s->generate_pt,
+                         enqueue_chunk(s, 0, "minutes = \"0\" + date.getMinutes();\n"));
+    PT_WAIT_THREAD(&s->generate_pt,
+                           enqueue_chunk(s, 0, "seconds = \"0\" + date.getSeconds();\n"));
+    PT_WAIT_THREAD(&s->generate_pt,
+                             enqueue_chunk(s, 0, "formattedTime = hours + ':' + minutes.substr(-2) + ':' + seconds.substr(-2);\n"));
+  PT_WAIT_THREAD(&s->generate_pt,
+                     enqueue_chunk(s, 0, "document.getElementById(\"mySunSet\").innerHTML = \"Sunset: \" + formattedTime + \"   (\"+tmp + \"[s])\";\n"));
+
+  PT_WAIT_THREAD(&s->generate_pt,
+                       enqueue_chunk(s, 0, "var test = obj.weather[0].icon;"));
+  PT_WAIT_THREAD(&s->generate_pt,
+                       enqueue_chunk(s, 0, "document.getElementById('w_icon').src = \"http://openweathermap.org/img/w/\" + test + \".png\";"));
+  PT_WAIT_THREAD(&s->generate_pt,
+                     enqueue_chunk(s, 0, "}\n"));
+  PT_WAIT_THREAD(&s->generate_pt,
+                     enqueue_chunk(s, 0, "</script>\n"));
+
+
+WEATHER_EXIT:
+  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "</fieldset>\n"));
     //=====================================================================================
   PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 1, http_bottom));
 
@@ -1750,6 +1934,8 @@ init(void)
 #endif
 
   list_add(pages_list, &http_maps_cfg_page);
+
+  list_add(pages_list, &http_weather_cfg_page);
 }
 /*---------------------------------------------------------------------------*/
 PROCESS_THREAD(httpd_simple_process, ev, data)

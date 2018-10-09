@@ -363,19 +363,19 @@ uint8_t ethernet_phy_auto_negotiate3(Gmac *p_gmac, uint8_t uc_phy_addr)
 
 	/* Set up the GMAC link speed */
 	if ((ul_phy_anar & ul_phy_analpar) & MII_100TX_FDX) {
-		/* Set MII for 100BaseTX and Full Duplex */
+		printf(" Set MII for 100BaseTX and Full Duplex");
 		uc_speed = true;
 		uc_fd = true;
 	} else if ((ul_phy_anar & ul_phy_analpar) & MII_10_FDX) {
-		/* Set MII for 10BaseT and Full Duplex */
+		printf(" Set MII for 10BaseT and Full Duplex ");
 		uc_speed = false;
 		uc_fd = true;
 	} else if ((ul_phy_anar & ul_phy_analpar) & MII_100TX_HDX) {
-		/* Set MII for 100BaseTX and half Duplex */
+		printf(" Set MII for 100BaseTX and half Duplex ");
 		uc_speed = true;
 		uc_fd = false;
 	} else if ((ul_phy_anar & ul_phy_analpar) & MII_10_HDX) {
-		/* Set MII for 10BaseT and half Duplex */
+		printf(" Set MII for 10BaseT and half Duplex ");
 		uc_speed = false;
 		uc_fd = false;
 	}
@@ -384,7 +384,7 @@ uint8_t ethernet_phy_auto_negotiate3(Gmac *p_gmac, uint8_t uc_phy_addr)
 	gmac_enable_full_duplex(p_gmac, uc_fd);
 
 	/* Select Media Independent Interface type */
-	gmac_select_mii_mode(p_gmac, ETH_PHY_MODE);
+	//gmac_select_mii_mode(p_gmac, ETH_PHY_MODE);
 
 	gmac_enable_transmit(GMAC, true);
 	gmac_enable_receive(GMAC, true);

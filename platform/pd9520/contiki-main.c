@@ -46,7 +46,7 @@ volatile devicecert_t device_certificate = (devicecert_t) {
 
 uint8_t sleepmgr_locks[SLEEPMGR_NR_OF_MODES];
 //rtimer_clock_t static rtime_now,rtime_old;
-extern int net_init_eth(void);
+
 int main()
 {
 	uint8_t version_var;
@@ -79,12 +79,12 @@ int main()
 	}
 
 	flash_init_df();
-
+/*	USB not implemented yet
 	// Don't start USB on endnodes
 #if !LOW_CLOCK //120Mhz
 	memcpy(cdc_serial_number,(void *)&device_certificate.crt.snr,device_certificate.crt.snlen);
 	udc_start();
-#endif
+#endif*/
 	printf("Initialising\n");
 
 	clock_init();
@@ -231,6 +231,6 @@ void board_init(void)
 
 void enable_cache(void)
 {
-	//SCB_EnableICache();
+	SCB_EnableICache();
 	//SCB_EnableDCache();
 }
