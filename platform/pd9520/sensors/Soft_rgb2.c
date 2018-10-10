@@ -17,21 +17,21 @@
 #define PRINTF(...)
 #endif
 
-#define RGB_R_GPIO            (PIO_PC8)
-#define RGB_G_GPIO            (PIO_PC7)
-#define RGB_B_GPIO            (PIO_PC6)
-Pio *RGB_base = (Pio *)PIOC;
+#define RGB_R_GPIO            (PIO_PC11)
+#define RGB_G_GPIO            (PIO_PC10)
+#define RGB_B_GPIO            (PIO_PC9)
+Pio *RGB2_base = (Pio *)PIOC;
 
-struct ctimer RGB_effect_timer;
+struct ctimer RGB2_effect_timer;
 static unsigned effect_state;
-static RGB_soft_t RGB_tmp;
+static RGB2_soft_t RGB_tmp;
 static void RGB_COLORLOOP_RUN(void *data);
 static void RGB_RANDOM_RUN(void *data);
 static void RGB_RAPID_RED_RUN(void *data);
 
-static volatile RGB_soft_t RGB; // True output
-static volatile RGB_soft_t RGB_reload; // True reload output
-static RGB_soft_t user_set; // User set value (not modified by brightness)
+static volatile RGB2_soft_t RGB; // True output
+static volatile RGB2_soft_t RGB_reload; // True reload output
+static RGB2_soft_t user_set; // User set value (not modified by brightness)
 
 static uint16_t counter=256;
 
@@ -47,21 +47,21 @@ static int Sensor_status = SENSOR_STATUS_DISABLED;
      ___  ___
   ___|  |_|  |
 */
-void TC2_Handler(void)
+void TC3_Handler(void) // waist of resources but we have plenty timers in same70 and this is easier
 {
-	RGB_TIMER.TC_SR;
+	RGB2_TIMER.TC_SR;
 
 	if(counter == 0)
 	{
 		counter = 256;
 		RGB.all = RGB_reload.all;
-		RGB_base->PIO_SODR = RGB_R_GPIO | RGB_G_GPIO | RGB_B_GPIO;
+		RGB2_base->PIO_SODR = RGB_R_GPIO | RGB_G_GPIO | RGB_B_GPIO;
 	}
 	else
 	{
-		if(counter == RGB.led.r)	RGB_base->PIO_CODR = RGB_R_GPIO;
-		if(counter == RGB.led.g)	RGB_base->PIO_CODR = RGB_G_GPIO;
-		if(counter == RGB.led.b)	RGB_base->PIO_CODR = RGB_B_GPIO;
+		if(counter == RGB.led.r)	RGB2_base->PIO_CODR = RGB_R_GPIO;
+		if(counter == RGB.led.g)	RGB2_base->PIO_CODR = RGB_G_GPIO;
+		if(counter == RGB.led.b)	RGB2_base->PIO_CODR = RGB_B_GPIO;
 		counter--;
 	}
 
@@ -90,9 +90,9 @@ static uint16_t gamma_corr(int input)
  * \brief Set value (0-256)
  */
 static int
-value_soft_RGB(uint16_t R,uint16_t G,uint16_t B, uint16_t brightness)
+value_soft_RGB2(uint16_t R,uint16_t G,uint16_t B, uint16_t brightness)
 {
-	static RGB_soft_t tmp;
+	static RGB2_soft_t tmp;
 
 	if((brightness>256))		brightness = 256;
 	if((R > 256))				R=256;
@@ -110,38 +110,38 @@ value_soft_RGB(uint16_t R,uint16_t G,uint16_t B, uint16_t brightness)
 }
 
 int
-soft_RGB_value(int value)
+soft_RGB2_value(int value)
 {
-	RGB_soft_t *temp = (RGB_soft_t *)value;
+	RGB2_soft_t *temp = (RGB2_soft_t *)value;
 	if(value != SENSOR_ERROR){
 		effect_state = 255;
 		user_set.all = temp->all;
-		value_soft_RGB(temp->led.r,temp->led.g,temp->led.b,temp->led.brightness);
+		value_soft_RGB2(temp->led.r,temp->led.g,temp->led.b,temp->led.brightness);
 		sensors_changed(&soft_RGB_ctrl_sensor);
 	}
 	return (int)&user_set.all;
 }
 /*---------------------------------------------------------------------------*/
 int
-soft_RGB_init(void)
+soft_RGB2_init(void)
 {
-	pmc_enable_periph_clk(RGB_TIMER_ID);
-	RGB_TIMER.TC_CMR= 3 + (2<<13); //1=MCK/128   2<<13=up rc compare
-	RGB_TIMER.TC_RC=30; // 150MHz/(128*30*256) = 152 HZ
+	pmc_enable_periph_clk(RGB2_TIMER_ID);
+	RGB2_TIMER.TC_CMR= 3 + (2<<13); //1=MCK/128   2<<13=up rc compare
+	RGB2_TIMER.TC_RC=30; // 150MHz/(128*30*256) = 152 HZ
 
-	//RGB_TIMER.TC_CCR=1;
-	//RGB_TIMER.TC_CCR=4;
-	RGB_TIMER.TC_IER=1<<4; //CPCS
-	NVIC_ClearPendingIRQ(RGB_TIMER_IRQ);
-	NVIC_SetPriority((IRQn_Type) RGB_TIMER_ID, 5); //level 0 is the highest interrupt priority (0-15)
-	NVIC_EnableIRQ(RGB_TIMER_IRQ);
+	//RGB2_TIMER.TC_CCR=1;
+	//RGB2_TIMER.TC_CCR=4;
+	RGB2_TIMER.TC_IER=1<<4; //CPCS
+	NVIC_ClearPendingIRQ(RGB2_TIMER_IRQ);
+	NVIC_SetPriority((IRQn_Type) RGB2_TIMER_ID, 5); //level 0 is the highest interrupt priority (0-15)
+	NVIC_EnableIRQ(RGB2_TIMER_IRQ);
 
 
 	// Enable PIO to controle the pin
-	RGB_base->PIO_PER  = RGB_R_GPIO | RGB_G_GPIO | RGB_B_GPIO;
+	RGB2_base->PIO_PER  = RGB_R_GPIO | RGB_G_GPIO | RGB_B_GPIO;
 	// high and Output
-	RGB_base->PIO_SODR = RGB_R_GPIO | RGB_G_GPIO | RGB_B_GPIO;
-	RGB_base->PIO_OER  = RGB_R_GPIO | RGB_G_GPIO | RGB_B_GPIO;
+	RGB2_base->PIO_SODR = RGB_R_GPIO | RGB_G_GPIO | RGB_B_GPIO;
+	RGB2_base->PIO_OER  = RGB_R_GPIO | RGB_G_GPIO | RGB_B_GPIO;
 	return 1;
 }
 /*---------------------------------------------------------------------------*/
@@ -156,7 +156,7 @@ soft_RGB_init(void)
  * When type == SENSORS_ACTIVE and enable==0 we disable the sensor
  */
 static int
-soft_RGB_configure(int type, int enable)
+soft_RGB2_configure(int type, int enable)
 {
 	switch(type) {
 
@@ -167,7 +167,7 @@ soft_RGB_configure(int type, int enable)
 			user_set.led.b = 255;
 
 			RGB_reload.all = user_set.all;
-			soft_RGB_init();
+			soft_RGB2_init();
 			Sensor_status = SENSOR_STATUS_INITIALISED;
 
 			break;
@@ -181,20 +181,20 @@ soft_RGB_configure(int type, int enable)
 			 }else if(enable == 7){
 				 effect_state = 255;
 				 counter = 0;
-				 value_soft_RGB(255,255,255,255);
-				 RGB_TIMER.TC_CCR=1;
-				 RGB_TIMER.TC_CCR=4;
+				 value_soft_RGB2(255,255,255,255);
+				 RGB2_TIMER.TC_CCR=1;
+				 RGB2_TIMER.TC_CCR=4;
 				 Sensor_status = SENSOR_STATUS_READY;
 			 } else if(enable == 8){
 				 effect_state = 255;
-				 RGB_TIMER.TC_CCR=2;
-				 RGB_base->PIO_OER =  RGB_R_GPIO | RGB_G_GPIO | RGB_B_GPIO;
-				 RGB_base->PIO_SODR = RGB_R_GPIO | RGB_G_GPIO | RGB_B_GPIO;
+				 RGB2_TIMER.TC_CCR=2;
+				 RGB2_base->PIO_OER =  RGB_R_GPIO | RGB_G_GPIO | RGB_B_GPIO;
+				 RGB2_base->PIO_SODR = RGB_R_GPIO | RGB_G_GPIO | RGB_B_GPIO;
 				 Sensor_status = SENSOR_STATUS_INITIALISED;
 			 } else if(enable == 10){
 				 if((Sensor_status&0xfff) == SENSOR_STATUS_READY){
 					 effect_state = 0;
-					 RGB_tmp.led = (leds_t){0,0,256,256};
+					 RGB_tmp.led = (leds2_t){0,0,256,256};
 					 RGB_COLORLOOP_RUN(NULL);
 					 Sensor_status |= (1<<12);
 					 sensors_changed(&soft_RGB_ctrl_sensor);
@@ -202,7 +202,7 @@ soft_RGB_configure(int type, int enable)
 			 } else if(enable == 11){
 				 if((Sensor_status&0xfff) == SENSOR_STATUS_READY){
 					 effect_state = 0;
-					 RGB_tmp.led = (leds_t){256,256,256,256};
+					 RGB_tmp.led = (leds2_t){256,256,256,256};
 					 RGB_RANDOM_RUN(NULL);
 					 Sensor_status |= (2<<12);
 					 sensors_changed(&soft_RGB_ctrl_sensor);
@@ -210,7 +210,7 @@ soft_RGB_configure(int type, int enable)
 			 }else if(enable == 12){
 				 if((Sensor_status&0xfff) == SENSOR_STATUS_READY){
 					 effect_state = 0;
-					 RGB_tmp.led = (leds_t){256,256,256,256};
+					 RGB_tmp.led = (leds2_t){256,0,0,256};
 					 RGB_RAPID_RED_RUN(NULL);
 					 Sensor_status |= (3<<12);
 					 sensors_changed(&soft_RGB_ctrl_sensor);
@@ -222,12 +222,12 @@ soft_RGB_configure(int type, int enable)
 }
 /*---------------------------------------------------------------------------*/
 static int
-soft_RGB_status(int type)
+soft_RGB2_status(int type)
 {
 	return Sensor_status;
 }
 /*---------------------------------------------------------------------------*/
-SENSORS_SENSOR(soft_RGB_ctrl_sensor, "RGB", soft_RGB_value, soft_RGB_configure, soft_RGB_status);
+SENSORS_SENSOR(soft_RGB2_ctrl_sensor, "RGB2", soft_RGB2_value, soft_RGB2_configure, soft_RGB2_status);
 /*---------------------------------------------------------------------------*/
 
 
@@ -262,8 +262,8 @@ RGB_COLORLOOP_RUN(void *data)
 			return;
 	}
 
-	value_soft_RGB(RGB_tmp.led.r,RGB_tmp.led.g,RGB_tmp.led.b,RGB_tmp.led.brightness);
-	ctimer_set(&RGB_effect_timer, next, RGB_COLORLOOP_RUN, NULL);
+	value_soft_RGB2(RGB_tmp.led.r,RGB_tmp.led.g,RGB_tmp.led.b,RGB_tmp.led.brightness);
+	ctimer_set(&RGB2_effect_timer, next, RGB_COLORLOOP_RUN, NULL);
 }
 
 static void
@@ -284,8 +284,8 @@ RGB_RANDOM_RUN(void *data)
 		next = 5;
 
 	// NB: user can't see the value update on the PWM signal. It would just confuse them.
-	value_soft_RGB(256,170,0,RGB_tmp.led.brightness);
-	ctimer_set(&RGB_effect_timer, next, RGB_RANDOM_RUN, NULL);
+	value_soft_RGB2(256,170,0,RGB_tmp.led.brightness);
+	ctimer_set(&RGB2_effect_timer, next, RGB_RANDOM_RUN, NULL);
 }
 
 static void
@@ -299,8 +299,9 @@ RGB_RAPID_RED_RUN(void *data)
 	RGB_tmp.led.brightness ^= 256;
 
 	// NB: user can't see the value update on the PWM signal. It would just confuse them.
-	value_soft_RGB(256,0,0,RGB_tmp.led.brightness);
-	ctimer_set(&RGB_effect_timer, next, RGB_RAPID_RED_RUN, NULL);
+	value_soft_RGB2(256,0,0,RGB_tmp.led.brightness);
+	ctimer_set(&RGB2_effect_timer, next, RGB_RAPID_RED_RUN, NULL);
 }
+
 /*---------------------------------------------------------------------------*/
 

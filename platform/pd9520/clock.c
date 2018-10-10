@@ -100,14 +100,18 @@ clock_time_t clock_get_unix_time(void)
 
 void clock_set_unix_timezone(clock_time_t zone)
 {
-	Set_GPBR_val(timezone,zone);
+	//Set_GPBR_val(timezone,zone);
+	set_eeprom(timezone, zone);
 }
 /*
  * unix time as local time UTC + timezone
  */
 clock_time_t clock_get_unix_localtime(void)
 {
-	return clock_get_unix_time() + clock_gpbr->timezone;
+	uint16_t zone;
+
+	get_eeprom(timezone, zone);
+	return clock_get_unix_time() + zone;
 }
 
 /// Interface to RTC so we can store/load time
@@ -180,6 +184,10 @@ void Load_time_from_RTC(void)
 	tm_t timer;
 	volatile clock_time_t Unix_time;
 	int32_t ul_time;
+	uint16_t zone;
+
+	get_eeprom(timezone, zone);
+	//Set_GPBR_val(timezone,zone);
 
 	do{
 		ul_time = RTC->RTC_TIMR;
@@ -273,4 +281,41 @@ int clock_quality(int stranum_new)
 	if(clock_gpbr->stranum < 15)
 		ctimer_set(&stranum_timer, 1 * 60 * 60 * CLOCK_SECOND, Increment_stranum, NULL); // 1 hr interval
 	return 1;
+}
+
+uint16_t daylight_saving = 0;
+
+void calc_daylight_saving(tm_t *tm)
+{
+	if((tm->tm_mon<3) || (tm->tm_mon>10)){
+		daylight_saving = 0; //normal time
+	}else
+	if((tm->tm_mon>3) && (tm->tm_mon<10)){
+		daylight_saving = 1;// summer time
+	}else
+	if(tm->tm_mon == 3)	{
+		if(tm->tm_wday == 7){ 			// sunday
+			if((tm->tm_mday + 7) > 31) 	// last sunday
+				if(tm->tm_hour >= 1) 	// Change at 0100 UTC
+					daylight_saving = 1;
+		}
+		daylight_saving = 0;
+	}else
+	if(tm->tm_mon == 10)	{
+		if(tm->tm_wday == 7){ 			// sunday
+			if((tm->tm_mday + 7) > 31) 	// last sunday
+				if(tm->tm_hour >= 1)	// Change at 0100 UTC
+					daylight_saving = 0;
+		}
+		daylight_saving = 1;
+	}
+
+	if(daylight_saving == 1){
+		// set rtc alarm on last sunday in oct
+		clock_set_unix_timezone(2*60*60);
+	}
+	else{
+		// set rtc alarm on last sunday in marts
+		clock_set_unix_timezone(1*60*60);
+	}
 }

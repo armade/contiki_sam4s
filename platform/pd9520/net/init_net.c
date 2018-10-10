@@ -36,7 +36,7 @@ static void
 init(void)
 {
 
-	volatile uint32_t ul_delay;
+	//volatile uint32_t ul_delay;
 	gmac_options_t gmac_option;
 
 	get_eeprom(eepromMacAddress[0], gs_uc_mac_address[0]);
@@ -116,7 +116,7 @@ PROCESS_THREAD(ksz8863_process, ev, data)
    /*Establish ethernet link */
   	ul_frm_size = ethernet_phy_set_link(GMAC, 1, 1);
   	if(ul_frm_size != GMAC_OK) {
-  		printf("Set link ERROR (%d)!\n",ul_frm_size);
+  		printf("Set link ERROR (%d)!\n",(int)ul_frm_size);
   	}
 
   	printf("-- Link detected. \n");
@@ -167,7 +167,7 @@ extern int KSZ8863_config_intr(void);
 PROCESS_THREAD(ksz8863_link_process, ev, data)
 {
   uint32_t ul_value;
-  uint32_t ul_frm_size;
+  //uint32_t ul_frm_size;
   PROCESS_BEGIN();
 
   KSZ8863_config_intr();
@@ -181,19 +181,19 @@ PROCESS_THREAD(ksz8863_link_process, ev, data)
 	  {
 		  gmac_dev_reset(&gs_gmac_dev, GMAC_QUE_0);
 		  // Auto Negotiate, work in RMII mode
-		  	if (ethernet_phy_auto_negotiate1(GMAC, 1) != GMAC_OK) {
+		  	/*if (ethernet_phy_auto_negotiate1(GMAC, 1) != GMAC_OK) {
 		  		printf("Auto Negotiate ERROR!\r");
-		  	}
+		  	}*/
 
 		  	while(ethernet_phy_auto_negotiate2(GMAC, 1) != GMAC_OK){
 		  		PROCESS_YIELD();
 		  	}
 		  	//ethernet_phy_auto_negotiate3(GMAC, 1);
 		   //Establish ethernet link
-		  	ul_frm_size = ethernet_phy_set_link(GMAC, 1, 1);
-		  	if(ul_frm_size != GMAC_OK) {
-		  		printf("Set link ERROR (%d)!\n",ul_frm_size);
-		  	}
+		  //	ul_frm_size = ethernet_phy_set_link(GMAC, 1, 1);
+		  	//if(ul_frm_size != GMAC_OK) {
+		  //		printf("Set link ERROR (%d)!\n",ul_frm_size);
+		  //	}
 		  	link_status = 1;
 		  	printf("-- Link up. \n");
 	  }

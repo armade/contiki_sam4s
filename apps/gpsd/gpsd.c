@@ -155,7 +155,7 @@ int parse_sentence(char *line)
 
 			if (minmea_parse_zda(&frame_zda, line)) {
 				//tm_t time;
-				clock_time_t timezone_offset;
+				//clock_time_t timezone_offset;
 
 				if( (frame_zda.time.hours == -1) || (clock_quality(-1)==GPS_TIME) || (frame_zda.date.year < 2017))
 					break;
@@ -168,16 +168,16 @@ int parse_sentence(char *line)
 				time.tm_year = frame_zda.date.year;
 
 				clock_time_t unixtime = RtctoUnix(&time);
-				timezone_offset = frame_zda.hour_offset*60*60;
-				timezone_offset += frame_zda.minute_offset*60;
+				//timezone_offset = frame_zda.hour_offset*60*60;
+				//timezone_offset += frame_zda.minute_offset*60;
 				//Fields 5 and 6 together yield the total offset.
 				//For example, if field 5 is -5 and field 6 is +15,
 				//local time is 5 hours and 15 minutes earlier than GMT
-				if(frame_zda.hour_offset<0)
-					timezone_offset *= -1;
+				//if(frame_zda.hour_offset<0)
+				//	timezone_offset *= -1;
 
-				// NEEDAFIX: RTC is starting from 1980.
-				clock_set_unix_timezone(timezone_offset);
+
+				//clock_set_unix_timezone(timezone_offset);
 				clock_set_unix_time(unixtime,1);
 				clock_quality(GPS_TIME);
 

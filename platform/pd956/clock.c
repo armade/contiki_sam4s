@@ -104,14 +104,18 @@ clock_time_t clock_get_unix_time(void)
 
 void clock_set_unix_timezone(clock_time_t zone)
 {
-	Set_GPBR_val(timezone,zone);
+	//Set_GPBR_val(timezone,zone);
+	set_eeprom(timezone, zone);
 }
 /*
  * unix time as local time UTC + timezone
  */
 clock_time_t clock_get_unix_localtime(void)
 {
-	return clock_get_unix_time() + clock_gpbr->timezone;
+	uint16_t zone;
+
+	get_eeprom(timezone, zone);
+	return clock_get_unix_time() + zone;
 }
 
 /// Interface to RTC so we can store/load time
@@ -184,6 +188,10 @@ void Load_time_from_RTC(void)
 	tm_t timer;
 	volatile clock_time_t Unix_time;
 	int32_t ul_time;
+	uint16_t zone;
+
+	get_eeprom(timezone, zone);
+	//Set_GPBR_val(timezone,zone);
 
 	do{
 		ul_time = RTC->RTC_TIMR;

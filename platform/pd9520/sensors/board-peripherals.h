@@ -15,6 +15,7 @@
 #include "bmp-280-sensor.h"
 #include "htu21d-sensor.h"
 #include "GPS-sensor.h"
+#include "Soft_rgb2.h"
 
 //#define NODE_4_ch_relay
 //#define NODE_LIGHT

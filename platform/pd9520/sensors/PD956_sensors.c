@@ -11,7 +11,7 @@ SENSORS(
 		&SAM4S_ADC_TS_sensor
 		,&LM73_sensor
 		,&soft_RGB_ctrl_sensor
-
+		,&soft_RGB2_ctrl_sensor
 #ifdef NODE_HARD_LIGHT
 		,&hard_RGB_ctrl_sensor
 #endif

@@ -306,6 +306,15 @@ static page_t http_light_cfg_page = {
   generate_light_config,
 };
 
+static char generate_light2_config(struct httpd_state *s);
+
+static page_t http_light2_cfg_page = {
+  NULL,
+  "light2.html",
+  "light2 Config",
+  generate_light2_config,
+};
+
 #ifdef NODE_HARD_LIGHT
 static char generate_hard_light_config(struct httpd_state *s);
 
@@ -568,7 +577,7 @@ PT_THREAD(generate_index(struct httpd_state *s))
   /* ND Cache */
    PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<fieldset>"));
   PT_WAIT_THREAD(&s->generate_pt,
-                   enqueue_chunk(s, 0, "<h1>IP6 to iP4 entries</h1>"));
+                   enqueue_chunk(s, 0, "<h1>IPv6 to IPv4 entries</h1>"));
 
   PT_WAIT_THREAD(&s->generate_pt,
                      enqueue_chunk(s, 0, "<p>"));
@@ -980,8 +989,7 @@ PT_THREAD(generate_light_config(struct httpd_state *s))
                    enqueue_chunk(s, 0, "<h1>Effect</h1>"));
 
     PT_WAIT_THREAD(&s->generate_pt,
-                   enqueue_chunk(s, 0,
-                                 "<form name=\"input\" action=\"%s\" ",
+                   enqueue_chunk(s, 0,"<form name=\"input\" action=\"%s\" ",
   							   http_light_cfg_page.filename));
     PT_WAIT_THREAD(&s->generate_pt,
                    enqueue_chunk(s, 0, "method=\"post\" enctype=\""));
@@ -994,11 +1002,16 @@ PT_THREAD(generate_light_config(struct httpd_state *s))
     PT_WAIT_THREAD(&s->generate_pt,
   		  	  enqueue_chunk(s, 0, "%sselect:%s", config_div_left, config_div_close));
 
+    static int status;
+    status = soft_RGB_ctrl_sensor.status(0);
+    static char selected[] = "selected='selected'";
+
     PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "%s<select name=\"effectOption\">",config_div_right));
-    PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<option value=7>On</option>"));
-    PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<option value=8 selected='selected'>Off</option>"));
-    PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<option value=10>Colorloop</option>"));
-    PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<option value=11>Fire</option>"));
+    PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<option value=7 %s>On</option>",status==3?selected:""));
+    PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<option value=8 %s>Off</option>",status==1?selected:""));
+    PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<option value=10 %s>Colorloop</option>",status==4099?selected:""));
+    PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<option value=11 %s>Fire</option>",status==8195?selected:""));
+    PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<option value=12 %s>Rapid red</option>",status==12291?selected:""));
     PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "</select>%s",config_div_close));
 
     PT_WAIT_THREAD(&s->generate_pt,
@@ -1020,7 +1033,153 @@ PT_THREAD(generate_light_config(struct httpd_state *s))
 
   PT_END(&s->generate_pt);
 }
+/*---------------------------------------------------------------------------*/
+static
+PT_THREAD(generate_light2_config(struct httpd_state *s))
+{
 
+  PT_BEGIN(&s->generate_pt);
+
+  /* Generate top matter (doctype, title, nav links etc) */
+  PT_WAIT_THREAD(&s->generate_pt,
+                 generate_top_matter(s, http_light2_cfg_page.title,
+                                     http_config_css2));
+
+  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<fieldset>"));
+
+  PT_WAIT_THREAD(&s->generate_pt,
+                 enqueue_chunk(s, 0, "<h1>%s</h1>", http_light2_cfg_page.title));
+
+  PT_WAIT_THREAD(&s->generate_pt,
+                 enqueue_chunk(s, 0,
+                               "<form name=\"input\" action=\"%s\" ",
+							   http_light2_cfg_page.filename));
+  PT_WAIT_THREAD(&s->generate_pt,
+                 enqueue_chunk(s, 0, "method=\"post\" enctype=\""));
+  PT_WAIT_THREAD(&s->generate_pt,
+                 enqueue_chunk(s, 0, "application/x-www-form-urlencoded\" "));
+  PT_WAIT_THREAD(&s->generate_pt,
+                 enqueue_chunk(s, 0, "accept-charset=\"UTF-8\">"));
+
+//=====================================================================================
+
+
+  static RGB2_soft_t RGB;
+    RGB.all = ((RGB2_soft_t *) soft_RGB2_ctrl_sensor.value(SENSOR_ERROR))->all;
+
+
+  PT_WAIT_THREAD(&s->generate_pt,
+		  	  enqueue_chunk(s, 0, "%sIntensity:%s", config_div_left, config_div_close));
+  PT_WAIT_THREAD(&s->generate_pt,
+		  	  enqueue_chunk(s, 0, "%s<input type=\"number\" ", config_div_right));
+  PT_WAIT_THREAD(&s->generate_pt,
+		  	  enqueue_chunk(s, 0, "value=\"%u\" ", RGB.led.brightness));
+  PT_WAIT_THREAD(&s->generate_pt,
+		  	  enqueue_chunk(s, 0, "min=\"0\" max=\"255\" "
+                                     "name=\"RGB2_brightness\">%s",
+                               config_div_close));
+
+
+  PT_WAIT_THREAD(&s->generate_pt,
+		  	  enqueue_chunk(s, 0, "%sRed:%s", config_div_left, config_div_close));
+  PT_WAIT_THREAD(&s->generate_pt,
+		  	  enqueue_chunk(s, 0, "%s<input type=\"number\" ", config_div_right));
+  PT_WAIT_THREAD(&s->generate_pt,
+		  	  enqueue_chunk(s, 0, "value=\"%u\" ", RGB.led.r));
+  PT_WAIT_THREAD(&s->generate_pt,
+		  	  enqueue_chunk(s, 0, "min=\"0\" max=\"255\" "
+									   "name=\"RGB2_red\">%s",
+								 config_div_close));
+
+
+
+
+  PT_WAIT_THREAD(&s->generate_pt,
+		  	  enqueue_chunk(s, 0, "%sGreen:%s", config_div_left, config_div_close));
+  PT_WAIT_THREAD(&s->generate_pt,
+		  	  enqueue_chunk(s, 0, "%s<input type=\"number\" ", config_div_right));
+  PT_WAIT_THREAD(&s->generate_pt,
+		  	  enqueue_chunk(s, 0, "value=\"%u\" ", RGB.led.g));
+  PT_WAIT_THREAD(&s->generate_pt,
+		  	  enqueue_chunk(s, 0, "min=\"0\" max=\"255\" "
+                                          "name=\"RGB2_green\">%s",
+                                    config_div_close));
+
+  PT_WAIT_THREAD(&s->generate_pt,
+		  	  enqueue_chunk(s, 0, "%sBlue:%s", config_div_left, config_div_close));
+  PT_WAIT_THREAD(&s->generate_pt,
+		  	  enqueue_chunk(s, 0, "%s<input type=\"number\" ", config_div_right));
+  PT_WAIT_THREAD(&s->generate_pt,
+		  	  enqueue_chunk(s, 0, "value=\"%u\" ", RGB.led.b));
+  PT_WAIT_THREAD(&s->generate_pt,
+		  	  enqueue_chunk(s, 0, "min=\"0\" max=\"255\" "
+                                             "name=\"RGB2_blue\">%s",
+                                       config_div_close));
+
+  PT_WAIT_THREAD(&s->generate_pt,
+                       enqueue_chunk(s, 0,"<p>"));
+   PT_WAIT_THREAD(&s->generate_pt,
+                  enqueue_chunk(s, 0,
+                                "<input type=\"submit\" value=\"Submit\">"));
+   PT_WAIT_THREAD(&s->generate_pt,
+                       enqueue_chunk(s, 0,"</p>"));
+
+  PT_WAIT_THREAD(&s->generate_pt,
+                       enqueue_chunk(s, 0, "</form>"));
+
+  PT_WAIT_THREAD(&s->generate_pt,
+                    enqueue_chunk(s, 0, CONTENT_CLOSE SECTION_CLOSE));
+  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "</fieldset>"));
+    //=====================================================================================
+
+  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<fieldset>"));
+
+    PT_WAIT_THREAD(&s->generate_pt,
+                   enqueue_chunk(s, 0, "<h1>Effect</h1>"));
+    PT_WAIT_THREAD(&s->generate_pt,
+                   enqueue_chunk(s, 0, "<form name=\"input\"\" "));
+    PT_WAIT_THREAD(&s->generate_pt,
+                   enqueue_chunk(s, 0, "method=\"post\" enctype=\""));
+    PT_WAIT_THREAD(&s->generate_pt,
+                   enqueue_chunk(s, 0, "application/x-www-form-urlencoded\" "));
+    PT_WAIT_THREAD(&s->generate_pt,
+                   enqueue_chunk(s, 0, "accept-charset=\"UTF-8\">"));
+
+
+    PT_WAIT_THREAD(&s->generate_pt,
+  		  	  enqueue_chunk(s, 0, "%sselect:%s", config_div_left, config_div_close));
+
+    static int status;
+   status = soft_RGB2_ctrl_sensor.status(0);
+   static char selected[] = "selected='selected'";
+
+   PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "%s<select name=\"effectOption\">",config_div_right));
+   PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<option value=7 %s>On</option>",status==3?selected:""));
+   PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<option value=8 %s>Off</option>",status==1?selected:""));
+   PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<option value=10 %s>Colorloop</option>",status==4099?selected:""));
+   PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<option value=11 %s>Fire</option>",status==8195?selected:""));
+   PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<option value=12 %s>Rapid red</option>",status==12291?selected:""));
+   PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "</select>%s",config_div_close));
+
+    PT_WAIT_THREAD(&s->generate_pt,
+                         enqueue_chunk(s, 0,"<p>"));
+     PT_WAIT_THREAD(&s->generate_pt,
+                    enqueue_chunk(s, 0,
+                                  "<input type=\"submit\" value=\"Submit\">"));
+     PT_WAIT_THREAD(&s->generate_pt,
+                         enqueue_chunk(s, 0,"</p>"));
+
+    PT_WAIT_THREAD(&s->generate_pt,
+                         enqueue_chunk(s, 0, "</form>"));
+
+    PT_WAIT_THREAD(&s->generate_pt,
+                      enqueue_chunk(s, 0, CONTENT_CLOSE SECTION_CLOSE));
+    PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "</fieldset>"));
+  //====================================================================================
+  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 1, http_bottom));
+
+  PT_END(&s->generate_pt);
+}
 /*---------------------------------------------------------------------------*/
 #ifdef NODE_HARD_LIGHT
 static
@@ -1924,6 +2083,7 @@ init(void)
 #endif
 
   list_add(pages_list, &http_light_cfg_page);
+  list_add(pages_list, &http_light2_cfg_page);
 
 #ifdef NODE_HARD_LIGHT
   list_add(pages_list, &http_hard_light_cfg_page);

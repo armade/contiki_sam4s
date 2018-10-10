@@ -89,6 +89,7 @@ typedef struct {
     uint8_t version;	//56
     uint32_t Flash_unique_id[4];//72
     uint8_t masterpublic_key[64]; //136
+    uint16_t timezone;
 } tEepromContents; // Max 512 bytes
 
 #define  get_eeprom(x,b)    	eeprom_read(offsetof(tEepromContents, x), \
