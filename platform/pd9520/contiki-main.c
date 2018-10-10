@@ -75,6 +75,7 @@ int main()
 
 	if (!uECC_verify((void *)&masterpublic_key_eeprom, hash, sizeof(hash), (void *)&device_certificate.crt.signature, uECC_secp256r1())) {
 		printf("uECC_verify() failed\n");
+		leds_set(LEDS_GREEN | LEDS_RED);
 		while(1);
 	}
 
