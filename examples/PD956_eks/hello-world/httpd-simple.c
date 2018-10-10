@@ -1153,7 +1153,7 @@ PT_THREAD(generate_light2_config(struct httpd_state *s))
    status = soft_RGB2_ctrl_sensor.status(0);
    static char selected[] = "selected='selected'";
 
-   PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "%s<select name=\"effectOption\">",config_div_right));
+   PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "%s<select name=\"effectOption2\">",config_div_right));
    PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<option value=7 %s>On</option>",status==3?selected:""));
    PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<option value=8 %s>Off</option>",status==1?selected:""));
    PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<option value=10 %s>Colorloop</option>",status==4099?selected:""));
@@ -1436,7 +1436,7 @@ PT_THREAD(generate_maps_config(struct httpd_state *s))
   PT_WAIT_THREAD(&s->generate_pt,
                        enqueue_chunk(s, 0, "'<a href=\"https://creativecommons.org/licenses/by-sa/2.0/\">CC-BY-SA</a>, ' +"));
   PT_WAIT_THREAD(&s->generate_pt,
-                       enqueue_chunk(s, 0, "'Imagery © <a href=\"https://www.mapbox.com/\">Mapbox</a>',"));
+                       enqueue_chunk(s, 0, "'Imagery ï¿½ <a href=\"https://www.mapbox.com/\">Mapbox</a>',"));
   PT_WAIT_THREAD(&s->generate_pt,
                        enqueue_chunk(s, 0, "id: 'mapbox.streets'"));
   PT_WAIT_THREAD(&s->generate_pt,
