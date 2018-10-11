@@ -342,7 +342,6 @@ int KSZ8863_setup_MAC_addr(const unsigned char *addr)
  int KSZ8863_ack_interrupt(void)
 {
     uint8_t spi_val;
-    int ret;
 
     KSZ8863_read(&spi_val, LinkChangeInterrupt, 1);
 
@@ -533,12 +532,12 @@ uint8_t gmac_phy_read(Gmac* p_gmac, uint8_t uc_phy_address, uint8_t uc_address,
 	{
 		// return phy 1 register if phy 1 is linkup, otherwise, return phy 2 register status
 		if ((mdio_val & MII_LINK_STATUS) == MII_LINK_STATUS){
-			KSZ8863_read(&mdio_val, regnum, 1);
+			KSZ8863_read((void *)&mdio_val, regnum, 1);
 			*p_value = mdio_val;
 			return GMAC_OK;
 		}
 		else{
-			KSZ8863_read(&mdio_val, 0x2E, 1);
+			KSZ8863_read((void *)&mdio_val, 0x2E, 1);
 			*p_value = mdio_val;
 			return GMAC_OK;
 		}

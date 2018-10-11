@@ -13,7 +13,7 @@ PLATFORM_SENSOR_DRIVER = 	ADC_temp.c \
 							lm73.c \
 							button-sensor.c \
 							leds-arch.c \
-							PD956_sensors.c \
+							PD9520_sensors.c \
 							dht11.c \
 							step_motor.c \
 							4ch_relay.c \

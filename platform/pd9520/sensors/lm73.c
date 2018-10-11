@@ -76,7 +76,7 @@ uint8_t LM73_addr_holder[6] = {
 #define I2C_r	i2c_read
 #define I2C_w	i2c_write
 
-static uint8_t SoftI2Cread_char_register(uint8_t Addr, uint8_t reg, uint8_t *val, uint8_t size)
+/*static uint8_t SoftI2Cread_char_register(uint8_t Addr, uint8_t reg, uint8_t *val, uint8_t size)
 {
 	uint8_t lsb;
 
@@ -110,7 +110,7 @@ void SoftI2Cwrite_char_register(uint8_t Addr, uint8_t reg, uint8_t *val, uint8_t
 	SoftI2CStop();
 
 	return;
-}
+}*/
 
 uint16_t Detect_lm73_addr(void)
 {

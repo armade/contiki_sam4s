@@ -39,12 +39,12 @@ init(void)
 	//volatile uint32_t ul_delay;
 	gmac_options_t gmac_option;
 
-	get_eeprom(eepromMacAddress[0], gs_uc_mac_address[0]);
-	get_eeprom(eepromMacAddress[1], gs_uc_mac_address[1]);
-	get_eeprom(eepromMacAddress[2], gs_uc_mac_address[2]);
-	get_eeprom(eepromMacAddress[3], gs_uc_mac_address[3]);
-	get_eeprom(eepromMacAddress[4], gs_uc_mac_address[4]);
-	get_eeprom(eepromMacAddress[5], gs_uc_mac_address[5]);
+	get_eeprom(eepromMacAddress[2], gs_uc_mac_address[0]);
+	get_eeprom(eepromMacAddress[3], gs_uc_mac_address[1]);
+	get_eeprom(eepromMacAddress[4], gs_uc_mac_address[2]);
+	get_eeprom(eepromMacAddress[5], gs_uc_mac_address[3]);
+	get_eeprom(eepromMacAddress[6], gs_uc_mac_address[4]);
+	get_eeprom(eepromMacAddress[7], gs_uc_mac_address[5]);
 
 	/* Display MAC & IP settings */
 	printf("-- MAC %x:%x:%x:%x:%x:%x\n",

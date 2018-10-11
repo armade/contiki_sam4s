@@ -47,6 +47,7 @@
 #include "httpd_post_handlers.h"
 #include "sensors.h"
 #include "board-peripherals.h"
+#include "leds.h"
 
 #ifdef NODE_GPS
 #include "gpsd.h"
@@ -56,6 +57,8 @@
 /*---------------------------------------------------------------------------*/
 PROCESS(hello_world_process, "Hello world process");
 AUTOSTART_PROCESSES(&hello_world_process);
+
+PROCESS(button_process, "Hello world process");
 /*---------------------------------------------------------------------------*/
 
 static void trigger_sensors(void)
@@ -86,7 +89,7 @@ PROCESS_THREAD(hello_world_process, ev, data) {
 
 
 	trigger_sensors();
-
+	process_start(&button_process, NULL);
 
 #ifdef NODE_GPS
 	process_start(&gpsd_process, NULL);
@@ -102,6 +105,37 @@ PROCESS_THREAD(hello_world_process, ev, data) {
 PROCESS_END();
 }
 /*---------------------------------------------------------------------------*/
+struct etimer button_reload;
 
+PROCESS_THREAD(button_process, ev, data) {
+	PROCESS_BEGIN();
+	volatile static int timedif;
 
+	while (1) {
+		PROCESS_WAIT_EVENT();
+
+		if(ev == PROCESS_EVENT_TIMER && etimer_expired(&button_reload)) {
+			timedif = ((clock_time()*1000)/CLOCK_SECOND) - button_sensor.status(STATUS_ACTIVATION_TIME);
+
+			if((timedif >= (CLOCK_SECOND * 5)) && (timedif < (CLOCK_SECOND * 10))) {
+			  leds_set(LEDS_BLUE);
+			} else if((timedif >= (CLOCK_SECOND * 10)) && (timedif < (CLOCK_SECOND * 15)))  {
+			  leds_set(LEDS_BLUE | LEDS_RED);
+			}
+			if(button_sensor.value(0) == BUTTON_ACTIVE)
+				etimer_set(&button_reload, CLOCK_SECOND*1);
+		}
+
+		if(ev == sensors_event && data == &button_sensor) {
+			if(button_sensor.value(0) == BUTTON_ACTIVE)
+				etimer_set(&button_reload, CLOCK_SECOND*1);
+
+			if(button_sensor.value(0) == BUTTON_DEACTIVE){
+				leds_set(LEDS_GREEN);
+				etimer_stop(&button_reload);
+			}
+		}
+	}
+PROCESS_END();
+}
 

@@ -451,6 +451,7 @@ static inline uint32_t gmac_get_config(Gmac* p_gmac)
  */
 static inline void gmac_set_speed(Gmac* p_gmac, uint8_t uc_speed)
 {
+	uc_speed = uc_speed;
 	if (uc_speed) {
 		p_gmac->GMAC_NCFGR |= GMAC_NCFGR_SPD;
 	} else {
@@ -466,6 +467,7 @@ static inline void gmac_set_speed(Gmac* p_gmac, uint8_t uc_speed)
  */
 static inline void gmac_enable_full_duplex(Gmac* p_gmac, uint8_t uc_enable)
 {
+	uc_enable=uc_enable;
 	if (uc_enable) {
 		p_gmac->GMAC_NCFGR |= GMAC_NCFGR_FD;
 	} else {

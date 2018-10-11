@@ -232,25 +232,25 @@ uint8_t ethernet_phy_set_link(Gmac *p_gmac, uint8_t uc_phy_addr,
 	}else
 	if ((ul_stat1 & MII_100BASE_TX_FD) && (ul_stat2 & MII_OMI_100BASE_TX_FD)) {
 		/* Set GMAC for 100BaseTX and Full Duplex */
-		printf("100BaseTX and Full Duplex\n",uc_rc);
+		printf("100BaseTX and Full Duplex\n");
 		uc_speed = true;
 		uc_fd = true;
 	}else
 	if ((ul_stat1 & MII_10BASE_T_FD) && (ul_stat2 & MII_OMI_10BASE_T_FD)) {
 		/* Set MII for 10BaseT and Full Duplex */
-		printf("10BaseT and Full Duplex\n",uc_rc);
+		printf("10BaseT and Full Duplex\n");
 		uc_speed = false;
 		uc_fd = true;
 	}else
 	if ((ul_stat1 & MII_100BASE_TX_HD) && (ul_stat2 & MII_OMI_100BASE_TX_HD)) {
 		/* Set MII for 100BaseTX and Half Duplex */
-		printf("100BaseTX and Half Duplex\n",uc_rc);
+		printf("100BaseTX and Half Duplex\n");
 		uc_speed = true;
 		uc_fd = false;
 	}else
 	if ((ul_stat1 & MII_10BASE_T_HD) && (ul_stat2 & MII_OMI_10BASE_T_HD)) {
 		/* Set MII for 10BaseT and Half Duplex */
-		printf("10BaseT and Half Duplex\n",uc_rc);
+		printf("10BaseT and Half Duplex\n");
 		uc_speed = false;
 		uc_fd = false;
 	}
@@ -409,10 +409,9 @@ uint8_t ethernet_phy_reset(Gmac *p_gmac, uint8_t uc_phy_addr)
 
 uint32_t ethernet_phy_Basic_Status_Register(Gmac *p_gmac, uint8_t uc_phy_addr)
 {
-	uint8_t uc_rc;
 	uint32_t ul_value;
 
-	uc_rc = gmac_phy_read(p_gmac, uc_phy_addr, MII_BMSR, &ul_value);
+	gmac_phy_read(p_gmac, uc_phy_addr, MII_BMSR, &ul_value);
 
 	return ul_value;
 }

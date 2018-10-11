@@ -40,14 +40,14 @@
 #include "pio_handler.h"
 #include "board-peripherals.h"
 
-#define BUTTON_PIN            PIO_PA6
+#define BUTTON_PIN            PIO_PA1
 Pio *button_base = (Pio *)PIOA;
 
 #define BUTTON_READ_PIN(x)	((button_base->PIO_PDSR & x)?1:0)
 
 volatile uint8_t IRQ_type;
-#define falling_egde 	1
-#define rising_egde 	2
+#define falling_egde 	2
+#define rising_egde 	1
 
 
 static int sensor_status = SENSOR_STATUS_DISABLED;
@@ -59,17 +59,19 @@ clock_time_t rising_timestamp;
 static void
 button_detection_callback(uint32_t a, uint32_t b)
 {
-	sensors_changed(&button_sensor_PD956);
+	sensors_changed(&button_sensor);
 
 	// Change interrupt condition so we get interrupt on both falling and rising edge.
 	if ((IRQ_type == falling_egde) && (BUTTON_READ_PIN(BUTTON_PIN)==0)) {
 		// Rising Edge
 		button_base->PIO_REHLSR = BUTTON_PIN;
 		falling_timestamp = (clock_time()*1000)/CLOCK_SECOND; //ms
+		IRQ_type = rising_egde;
 	} else if((IRQ_type == rising_egde) && (BUTTON_READ_PIN(BUTTON_PIN)==1)){
 		// Falling Edge
 		button_base->PIO_FELLSR = BUTTON_PIN;
 		rising_timestamp = (clock_time()*1000)/CLOCK_SECOND; //ms
+		IRQ_type = falling_egde;
 	}
 }
 /*---------------------------------------------------------------------------*/
@@ -92,7 +94,7 @@ button_sensor_configure(int type, int enable)
 			IRQ_type = falling_egde;
 			NVIC_EnableIRQ((IRQn_Type)ID_PIOA);
 
-			enable = SENSOR_STATUS_INITIALISED;
+			sensor_status = SENSOR_STATUS_INITIALISED;
 			break;
 
 		case SENSORS_ACTIVE:
@@ -122,10 +124,13 @@ button_sensor_status(int type)
 		return sensor_status;
 
 	if(type == STATUS_TIME)
-		return falling_timestamp-rising_timestamp;//ms
+		return rising_timestamp-falling_timestamp;//ms
+
+	if(type == STATUS_ACTIVATION_TIME)
+		return falling_timestamp;//ms
 
 	return SENSOR_ERROR;
 }
 /*---------------------------------------------------------------------------*/
-SENSORS_SENSOR(button_sensor_PD956, "Button sensor",button_sensor_value, button_sensor_configure, button_sensor_status);
+SENSORS_SENSOR(button_sensor, "Button sensor",button_sensor_value, button_sensor_configure, button_sensor_status);
 /*---------------------------------------------------------------------------*/

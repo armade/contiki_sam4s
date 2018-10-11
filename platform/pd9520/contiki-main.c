@@ -202,7 +202,7 @@ void set_linkaddr(void)
 void initSWO(void)
 {
 	uint32_t SWOSpeed = 6000000; //6000kbps, default for JLinkSWOViewer
-    uint32_t SWOPrescaler = (150000000 / SWOSpeed) - 1; // SWOSpeed in Hz, note that F_CPU is expected to be 150000000 in this case
+    uint32_t SWOPrescaler = (M_CPU / SWOSpeed) - 1; // SWOSpeed in Hz, note that F_CPU is expected to be 150000000 in this case
 
 	PMC->PMC_PCK[3] = 4 ;
 	PMC->PMC_SCER = PMC_SCDR_PCK3;

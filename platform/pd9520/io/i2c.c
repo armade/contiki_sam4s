@@ -10,6 +10,7 @@
 #include "twihs.h"
 #include "gpio.h"
 #include "drivers/pmc.h"
+#include "platform-conf.h"
 
 #define SCL            PIO_PA4
 #define SDA            PIO_PA3
@@ -156,7 +157,7 @@ unsigned TWI_Write(Twihs *pTwi, unsigned char address, unsigned iaddress, unsign
 void init_i2c(void)
 {
 	pmc_enable_periph_clk(ID_TWIHS0);
-	TWI_Master(TWIHS0, 400000, 150000000);
+	TWI_Master(TWIHS0, 400000, M_CPU);
 }
 
 int i2c_write(uint8_t addr, uint8_t reg, uint8_t *val, uint8_t size)

@@ -73,7 +73,7 @@ void flash_init_df(void)
 	}
 	else{
 		flash_size = sf_totalsize();
-		printf("Serial FLASH found (%d)\n\r",flash_size);
+		printf("Serial FLASH found (%dMiB)\n\r",((int)flash_size)>>20);
 	}
 
 	flash_enter_deep_sleep();

@@ -5,23 +5,23 @@
 # My current version of ubuntu has installed a arm gcc with errors. Point to one that works until they have fixed this.
 ifeq ($(UBUNTUBREAK),1)
 cc_path = /home/peter/GNUARM/gcc-arm-none-eabi-7-2018-q2-update-linux/gcc-arm-none-eabi-7-2018-q2-update/bin
-CC      = $(cc_path)/arm-none-eabi-gcc
-CPP     = $(cc_path)/arm-none-eabi-cpp
-LD      = $(cc_path)/arm-none-eabi-gcc
-AR      = $(cc_path)/arm-none-eabi-ar
-OBJCOPY = $(cc_path)/arm-none-eabi-objcopy
-OBJDUMP = $(cc_path)/arm-none-eabi-objdump
-NM      = $(cc_path)/arm-none-eabi-nm
-SIZE    = $(cc_path)/arm-none-eabi-size
+	CC      = $(cc_path)/arm-none-eabi-gcc
+	CPP     = $(cc_path)/arm-none-eabi-cpp
+	LD      = $(cc_path)/arm-none-eabi-gcc
+	AR      = $(cc_path)/arm-none-eabi-ar
+	OBJCOPY = $(cc_path)/arm-none-eabi-objcopy
+	OBJDUMP = $(cc_path)/arm-none-eabi-objdump
+	NM      = $(cc_path)/arm-none-eabi-nm
+	SIZE    = $(cc_path)/arm-none-eabi-size
 else
-CC      = arm-none-eabi-gcc
-CPP     = arm-none-eabi-cpp
-LD      = arm-none-eabi-gcc
-AR      = arm-none-eabi-ar
-OBJCOPY = arm-none-eabi-objcopy
-OBJDUMP = arm-none-eabi-objdump
-NM      = arm-none-eabi-nm
-SIZE    = arm-none-eabi-size
+	CC      = arm-none-eabi-gcc
+	CPP     = arm-none-eabi-cpp
+	LD      = arm-none-eabi-gcc
+	AR      = arm-none-eabi-ar
+	OBJCOPY = arm-none-eabi-objcopy
+	OBJDUMP = arm-none-eabi-objdump
+	NM      = arm-none-eabi-nm
+	SIZE    = arm-none-eabi-size
 endif
 
 
@@ -29,6 +29,9 @@ LDSCRIPT = $(CONTIKI_CPU)/flash.ld
 #-march=armv7-m
 CFLAGS += 	-mcpu=cortex-m7\
 			-march=armv7e-m\
+			-mtune=cortex-m7\
+			-mfloat-abi=hard\
+			-mfpu=fpv5-d16\
 			-mthumb\
 			-mlittle-endian\
 			-O2 \
@@ -44,7 +47,7 @@ CFLAGS += 	-mcpu=cortex-m7\
 			-D SAME70 
 
 LDFLAGS += -mcpu=cortex-m7 -march=armv7e-m -mthumb -nostartfiles -specs=nosys.specs
-LDFLAGS += -T $(LDSCRIPT) -g3 
+LDFLAGS += -T $(LDSCRIPT) -g3 -mfloat-abi=hard -mfpu=fpv5-d16 -mtune=cortex-m7 -mlittle-endian
 LDFLAGS += -Wl,--gc-sections,--sort-section=alignment
 
 OBJCOPY_FLAGS += -O binary --gap-fill 0xff
