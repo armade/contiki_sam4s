@@ -123,9 +123,14 @@ button_sensor_status(int type)
 	if(type == STATUS_STATE)
 		return sensor_status;
 
+	// Returns how long the button was pressed
+	//NB: returns negative number if still active
 	if(type == STATUS_TIME)
 		return rising_timestamp-falling_timestamp;//ms
 
+	// Returns timestamp for activation.
+	// Can be used to give feedback on how long
+	// time the button is current active. clock_now() - activation time.
 	if(type == STATUS_ACTIVATION_TIME)
 		return falling_timestamp;//ms
 
