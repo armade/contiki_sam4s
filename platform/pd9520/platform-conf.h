@@ -3,23 +3,18 @@
 #include "stdint.h"
 #include "sha256.h"
 #include "uECC.h"
-#ifndef LOW_CLOCK
-#define LOW_CLOCK 1
-#endif
 
-#if LOW_CLOCK
-/* The frequency of the main processor */
-#define F_CPU 30000000 		//2.0mA max + 4mA ADC + 12-14mA radio ~ 18-20mA
-#else
-/* The frequency of the main processor */
-#define F_CPU 120000000  	//6.9mA max  + 4mA ADC + 12-14mA radio ~ 25-27mA
-#endif
+
+#define F_CPU 300000000
+#define M_CPU 150000000
+
 
 #define XMEM_ERASE_UNIT_SIZE (64 * 1024L)
 #define CFS_XMEM_CONF_OFFSET    (2 * XMEM_ERASE_UNIT_SIZE)
 #define CFS_XMEM_CONF_SIZE      (1 * XMEM_ERASE_UNIT_SIZE)
 
-// timer 0 is on timestamp dig2 (Not implemented yet) TIOA0
+// ID_TC0 is used by flash
+#define FLASH_TIMER_ID	ID_TC0
 
 #define RGB_TIMER 		TC0->TC_CHANNEL[2]
 #define RGB_TIMER_ID 	ID_TC2
@@ -96,6 +91,7 @@ typedef struct {
     uint16_t timezone;
 } tEepromContents; // Max 512 bytes
 
+
 #define  get_eeprom(x,b)    	eeprom_read(offsetof(tEepromContents, x), \
                                        (uint8_t*)&b, \
 										sizeof(typeof(((tEepromContents*)0)->x)))
@@ -104,5 +100,71 @@ typedef struct {
 										(uint8_t*)&b, \
 										sizeof(typeof(((tEepromContents*)0)->x)))
 
+
+typedef struct { //cal for 1 analog 20mA IO
+	float adc_multiplier_amps;
+	float adc_zerooffset_amps;
+} anaio_cal_20mA_2_t; //8 byte
+
+
+typedef struct{
+	float PSU_read_mul;
+	float PSU_read_zero;
+	float PSU_set_mul;
+	float PSU_set_zero;
+	float Analog_curr_in_mul;
+	float Analog_curr_in_zero;
+	float Analog_curr_out_mul;
+	float Analog_curr_out_zero;
+	float Analog_volt_set_mul;
+	float Analog_volt_set_zero;
+	float Analog_volt_read_mul;
+	float Analog_volt_read_zero;
+	float Analog_volt_current_read_mul;
+	float Analog_volt_current_read_zero;
+	float Digital_curr_read_mul;
+	float Digital_curr_read_zero;
+	float Digital_curr_set_mul;
+	float Digital_curr_set_zero;
+	float DUT_ana_mul;
+	float DUT_ana_zero;
+	float Commenmode_error_voltage_current;
+}multiio_cal_t;
+
+typedef struct { //cal for modulet selv
+	char snr[24];
+	char hwguid[24];
+	unsigned s0,s1,s2,s3;
+	char sig[128];
+} module_cal_1_t; //192
+
+typedef struct {
+	float clocktrim;
+	float supply_ad_to_volt;
+	float tdiode_tref;
+	float tdiode_vref;
+} device_cal_data_t;
+
+typedef struct { //cal for alle IO
+	unsigned cpu_wdtword, cpu_resvd1, cpu_resvd2, cpu_resvd3; //reserve 4 words at start, cpu uses first.
+	union {
+		struct {
+			unsigned i_version;
+			module_cal_1_t     module; //192 byte
+			multiio_cal_t multiio_cal;
+			device_cal_data_t	device_calib;//16*1	=  16 bytes;
+			anaio_cal_20mA_2_t ana[1]; //8 byte
+			anaio_cal_20mA_2_t	light[2];
+
+			unsigned char macaddr[6];
+			unsigned char dummy[2];
+			unsigned tag;
+			unsigned checksumfix;
+		};
+		unsigned ul[128-4];
+	};
+} internal_cpu_userpage_9520_1_t;
+
+extern volatile internal_cpu_userpage_9520_1_t hwio_cal_userpage_internal;
 
 #endif /* __PLATFORM_CONF_H__ */

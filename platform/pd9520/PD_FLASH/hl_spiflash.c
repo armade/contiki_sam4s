@@ -1,12 +1,9 @@
-
+#include "hw_spiflash.h"
 #include "hl_spiflash.h"
+#include "stdio.h"
 
-
-#define FLASHTRACE(s)
-#define FLASHTRACE1(s,v)
-
-#define FLASHTRACE(s)
-#define FLASHTRACE1(s,v)
+#define FLASHTRACE(s)		printf("%s\n",s)
+#define FLASHTRACE1(s,v)	printf("%s : %d\n",s,v)
 
 
 #ifndef sf_flashchip_info
@@ -68,6 +65,7 @@ unsigned sf_abit(int chipno)
 		case CHIP_N25Q64:    return 23;
 		case CHIP_MX25L25645G: return 25;
 		case CHIP_MT25QL256ABA:   return 25;
+		case CHIP_MT25QL128ABA:   return 24;							  
 		default: return 0;
 	}
 }
@@ -273,23 +271,19 @@ int sf_flashinit(void)
 {
 	unsigned m,i,good,retrying;
 
-	FLASHTRACE("init before hw");
 	hw_spi_init();
-	FLASHTRACE("init after hw");
 
 #ifdef MRAM_INITIAL_AB_CMD
 	sm_enable();
 	sm_rw(0xAB); //MRAM resume from power down
 	sm_disable();
 #endif
-	FLASHTRACE("init after mram");
 
 	good=0;
 	sf_tlongdelay();
 	for (i=0; i<SF_MAXFLASHCHIPS; ++i) {
 		retrying=0;
 retry_recovery:
-		FLASHTRACE1("select",i);
 		sf_select_write(i);
 		sf_flashchip_info[i]=CHIP_NOTPRESENT;
 

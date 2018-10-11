@@ -115,7 +115,7 @@ unsigned TWI_Read(Twihs *pTwi, unsigned char address, unsigned iaddress, unsigne
 		{
 
 			if(!--timeout) {
-				printf("timeout i2c (addr:0x%x, reg: 0x%x num:%d)\n",address,iaddress,num);
+				//printf("timeout i2c (addr:0x%x, reg: 0x%x num:%d)\n",address,iaddress,num);
 				return 1;
 			}
 		}
@@ -140,7 +140,7 @@ unsigned TWI_Write(Twihs *pTwi, unsigned char address, unsigned iaddress, unsign
 		{
 
 			if(!--timeout) {
-				printf("timeout i2c (addr:0x%x, reg: 0x%x num:%d)\n",address,iaddress,num);
+				//printf("timeout i2c (addr:0x%x, reg: 0x%x num:%d)\n",address,iaddress,num);
 				return 1;
 			}
 		}

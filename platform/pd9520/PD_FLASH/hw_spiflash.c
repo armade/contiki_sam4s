@@ -3,13 +3,30 @@
 #include "hw_spiflash.h"
 #include "hl_spiflash.h"
 #include "spi_master.h"
+#include "drivers/pmc.h"
+#include "platform-conf.h"
 
-#define SPI_FLASH SPI0
+#define FLASH_SPI_ID ID_QSPI
+#define SPI_FLASH QSPI
 #define NUMCS_FLASH 0
 
 #define MAXFLASHCHIPS 1
 
-#define SPCK_F        60000000 /// SPI clock frequency, in Hz.
+#define SPCK 75000000		// SPI clock frequency, in Hz.
+
+
+/** Calculates the value of the CSR SCBR field given the baudrate and MCK. */
+#define QSPI_SCBR(masterClock,baudrate) \
+	((uint32_t) (masterClock / baudrate) << 8)
+
+/** Calculates the value of the CSR DLYBS field given the desired delay (in ns) */
+#define QSPI_DLYBS(masterClock,delay) \
+	((uint32_t) (((masterClock / 1000000) * delay) / 1000) << 16)
+
+#define CSRxF_Q          (\
+						 QSPI_DLYBS(M_CPU, 250) | \
+						 QSPI_SCBR(M_CPU, SPCK))
+
 
 
 #if SF_MAXFLASHCHIPS!=1
@@ -26,26 +43,38 @@ void sf_waiting(void)
 
 
 
-
-static void tdelay(void) //min 250ns delay, and at least 10 bit times with lowest bitrate
+void Configure_flash_delay_timer(void)
 {
-	volatile uint8_t i;
-	for(i=0;i<30;i++)
-		asm volatile("NOP");
+	pmc_enable_periph_clk(FLASH_TIMER_ID);
+	TC0->TC_CHANNEL[0].TC_CCR =  TC_CCR_CLKDIS;
+	TC0->TC_CHANNEL[0].TC_IDR =  0xFFFFFFFF;
+	TC0->TC_CHANNEL[0].TC_SR;
+	TC0->TC_CHANNEL[0].TC_CMR = 1; //E70:1=mck div 8
+	TC0->TC_CHANNEL[0].TC_CCR = TC_CCR_CLKEN | TC_CCR_SWTRG;
 }
 
-static void delay_microseconds(unsigned tik)
+void tdelay(void) //min 250ns delay, og mindst 10 bittider ved laveste bitrate
 {
-	volatile uint32_t i;
-	uint32_t time = tik*120;
-
-	for(i=0;i<time;i++)
-		asm volatile("NOP");
+	unsigned dt,t0;
+	t0=TC0->TC_CHANNEL[0].TC_CV; //18.75MHz, 9.4 clk per 500ns, det er 11 bittider ved 22MHz
+	do {
+		dt=(TC0->TC_CHANNEL[0].TC_CV-t0)&0xFFFF;
+	} while (dt<10);
 }
 
-void sf_tshortdelay(void) //min 30us
+void delay_microseconds(unsigned tik)
 {
-	delay_microseconds(30);
+	unsigned dt,t0,t1;
+	t1=TC0->TC_CHANNEL[0].TC_CV;
+	dt=0;
+	//tik*=19; //150MHz /8 = 18.75 MHz
+
+	tik=(tik*19)-(tik>>2);
+	do {
+		t0=t1;
+		t1=TC0->TC_CHANNEL[0].TC_CV;
+		dt+=(t1-t0)&0xFFFF;
+	} while (dt<tik);
 }
 
 void sf_tlongdelay(void) //min 400us
@@ -53,52 +82,55 @@ void sf_tlongdelay(void) //min 400us
 	delay_microseconds(400);
 }
 
-
-static void s_selectChip(Spi *p_spi, unsigned char id)
+void sf_tshortdelay(void) //min 30us
 {
-	spi_set_peripheral_chip_select_value(p_spi, (~(1 << id)));
+	delay_microseconds(30);
 }
 
-#define NONE_CHIP_SELECT_ID 0x0f
-static void s_unselectChip(Spi *p_spi)
+static void s_unselectChip(Qspi *p_spi)
 {
 
-	tdelay();
-	while (!spi_is_tx_empty(p_spi));
-	spi_set_peripheral_chip_select_value(p_spi, NONE_CHIP_SELECT_ID);
-	spi_set_lastxfer(p_spi);
-	tdelay();
+	p_spi->QSPI_CR = QSPI_CR_QSPIEN | QSPI_CR_LASTXFER;
 }
 
+void f_disable(void) //min 50ns = 8 bus cycles
+{
+	sf_tshortdelay();
+	s_unselectChip(SPI_FLASH);
 
+}
 
 
 void sf_disable(void) //min 50ns = 8 bus cycles
 {
-	s_unselectChip(SPI_FLASH);
-	tdelay();
-	SPI_FLASH->SPI_MR &= ~(SPI_MR_WDRBT);
+	//QSPI errata workaround version
+		QSPI->QSPI_CR = QSPI_CR_LASTXFER;
+		tdelay();
+		SPI_FLASH->QSPI_MR =  QSPI_MR_CSMODE(1) /*uden wdrbt flag*/; /*WDRBT flaget bruger vi som CS-indikator-variabel*/
+
 }
 
 void sf_enable(void)
 {
 	//se om vi allerede er enabled, i saa fald disable
-	if (SPI_FLASH->SPI_MR & SPI_MR_WDRBT)
-		sf_disable();
+		if (QSPI->QSPI_MR & QSPI_MR_WDRBT) sf_disable();
+		SPI_FLASH->QSPI_MR =  QSPI_MR_CSMODE(1)|QSPI_MR_WDRBT; /*WDRBT flaget bruger vi som CS-indikator-variabel*/
+		//autoenabler ved 1. byte
 
-	SPI_FLASH->SPI_MR |= SPI_MR_WDRBT;
-	s_selectChip(SPI_FLASH,0);
 }
 
 
 
 unsigned char sf_rw(unsigned char data)
 {
-	Spi *p_spi=SPI_FLASH;
-	while (!spi_is_tx_ready(p_spi));
-	spi_write_single(p_spi, data);
-	while (!spi_is_rx_ready(p_spi));
-	return  p_spi->SPI_RDR;
+	volatile Qspi *spi = SPI_FLASH;
+
+	while (!(spi->QSPI_SR & QSPI_SR_TDRE))			//SPI Ready
+		;
+	spi->QSPI_TDR = data;							//Clock Data byte ud
+	while (!(spi->QSPI_SR & (QSPI_SR_RDRF)))
+		; 									   		//Byte clocket ud/ind
+	return spi->QSPI_RDR;							//Data byte som er clocket ind
 }
 
 
@@ -114,43 +146,52 @@ unsigned char sf_r(void)
 
 void sf_startstreamread(void)
 {
-	volatile Spi *p_spi=SPI_FLASH;
-	while (!(p_spi->SPI_SR & SPI_SR_TDRE)) ;
-	p_spi->SPI_TDR = 0;
+	volatile Qspi *spi=SPI_FLASH;
+		while (!(spi->QSPI_SR & QSPI_SR_TDRE)) ;
+		spi->QSPI_TDR = 0;
+
 }
 
 
 unsigned char sf_sread(void)
 {
 
-	volatile Spi *p_spi=SPI_FLASH;
-	unsigned hold;
+	volatile Qspi *spi=SPI_FLASH;
+		unsigned hold;
 
- 	while ((p_spi->SPI_SR & (SPI_SR_TDRE|SPI_SR_RDRF)) != (SPI_SR_TDRE|SPI_SR_RDRF)) { }
-	hold=p_spi->SPI_RDR;
-	p_spi->SPI_TDR = hold;
- 	return hold;
+	 	while ((spi->QSPI_SR & (QSPI_SR_TDRE|QSPI_SR_RDRF)) != (QSPI_SR_TDRE|QSPI_SR_RDRF)) { }
+		//while (!(spi->SPI_SR & AT91C_SPI_TDRE)) ;
+		hold=spi->QSPI_RDR;
+		spi->QSPI_TDR = hold;
+	 	return hold;
+
 }
 
 unsigned char sf_endstreamread(void)  //the failing sf_read ends up with 01000006 in SR here= TX empty, TDRE not empty, RFRF full
 {
-	volatile Spi *p_spi=SPI_FLASH;
-	unsigned d;
-	while ((p_spi->SPI_SR & (SPI_SR_TDRE|SPI_SR_RDRF)) != (SPI_SR_TDRE|SPI_SR_RDRF)) { }
-	d=  p_spi->SPI_RDR;
-	return d;
+
+	volatile Qspi *spi=SPI_FLASH;
+		unsigned d;
+		while ((spi->QSPI_SR & (QSPI_SR_TDRE|QSPI_SR_RDRF)) != (QSPI_SR_TDRE|QSPI_SR_RDRF)) { }
+		d=  spi->QSPI_RDR;
+		return d;
+
 }
 
 void hw_spi_init(void)
 {
-	struct spi_device device;
+	volatile Qspi *spi = SPI_FLASH;
 
-	device.id =0;
+	pmc_enable_periph_clk(ID_QSPI);  				// Enable FLASH SPI peripheral
 
-	spi_master_init(SPI_FLASH);
-	spi_master_setup_device(SPI_FLASH, &device,	SPI_MODE_0, SPCK_F, 0);
-	spi_set_transfer_delay(SPI_FLASH, device.id, 15, 0);
-	spi_set_bits_per_transfer(SPI_FLASH, device.id,	8);
+  	spi->QSPI_CR = QSPI_CR_SWRST;	  					//Reset SPI
+  	spi->QSPI_CR = QSPI_CR_SWRST;	  					//Twice, according to framework...
 
-	spi_enable(SPI_FLASH);
+	spi->QSPI_CR = QSPI_CR_QSPIEN;					//Enable the SPI TX & RX
+	while(!(spi->QSPI_SR & QSPI_SR_QSPIENS));
+
+	spi->QSPI_MR =  QSPI_MR_CSMODE(1) | QSPI_MR_WDRBT_ENABLED;			//Chip Select Mode = 1 når der køres uden DMA
+  	spi->QSPI_SCR = CSRxF_Q;
+
+  	Configure_flash_delay_timer();
 }

@@ -37,6 +37,7 @@ void init_node_mac(void);
 void set_linkaddr(void);
 void Setup_EEPROM(void);
 void Set_time(void);
+void hwio_load_userpage(void);
 
 char cdc_serial_number[sizeof("99999998PD") - 1];
 
@@ -80,6 +81,7 @@ int main()
 	}
 
 	flash_init_df();
+
 /*	USB not implemented yet
 	// Don't start USB on endnodes
 #if !LOW_CLOCK //120Mhz
@@ -87,7 +89,7 @@ int main()
 	udc_start();
 #endif*/
 	printf("Initialising\n");
-
+	hwio_load_userpage();
 	clock_init();
 	rtimer_init();
 	ctimer_init();
@@ -227,6 +229,13 @@ void board_init(void)
 
 	initSWO();
 
+	// SPI FLASH
+	// Configure SPI pins
+	gpio_configure_pin(SPI_MISO_GPIO, SPI_MISO_FLAGS);
+	gpio_configure_pin(SPI_MOSI_GPIO, SPI_MOSI_FLAGS);
+	gpio_configure_pin(SPI_SPCK_GPIO, SPI_SPCK_FLAGS);
+	gpio_configure_pin(SPI_NPCS0_GPIO, SPI_NPCS0_FLAGS);
+
 	/*------------------------------------------------------------------------------*/
 }
 
@@ -234,4 +243,17 @@ void enable_cache(void)
 {
 	SCB_EnableICache();
 	//SCB_EnableDCache();
+}
+
+#define SERIAL_FLASH_USERPAGE_ADDR 0x400
+volatile internal_cpu_userpage_9520_1_t hwio_cal_userpage_internal;
+
+void hwio_load_userpage(void)
+{
+	flash_leave_deep_sleep();
+	flash_read_df((uint8_t *) &hwio_cal_userpage_internal, sizeof(internal_cpu_userpage_9520_1_t),SERIAL_FLASH_USERPAGE_ADDR);
+	flash_enter_deep_sleep();
+
+	printf("version 0x%X\n",hwio_cal_userpage_internal.i_version);
+
 }

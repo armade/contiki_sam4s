@@ -16,6 +16,7 @@
 #define CHIP_N25Q64     	4
 #define CHIP_MX25L25645G	5
 #define CHIP_MT25QL256ABA   6
+#define CHIP_MT25QL128ABA   7
 
 unsigned sf_abit(int chipno);
 unsigned sf_chipsize(int chipno);
