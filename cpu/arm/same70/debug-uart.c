@@ -1,9 +1,7 @@
 #include "compiler.h"
-#include "udi_cdc.h"
 
-#define USB_PORT	1
 
-char volatile enumeration_complete;
+
 
 void
 dbg_putchar(const char ch)

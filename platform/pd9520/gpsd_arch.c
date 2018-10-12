@@ -7,7 +7,7 @@
 #include "slip.h"
 
 #include "compiler.h"
-#include "udi_cdc.h"
+#include "uhi_cdc.h"
 #include "drivers/uart.h"
 #include "drivers/sysclk.h"
 #include "same70.h"

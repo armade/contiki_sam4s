@@ -64,7 +64,7 @@ CONTIKI_CPU_DIRS += 	$(CONTIKI_CPU) \
 						$(CONTIKI_CPU)/include/instance \
 						$(CONTIKI_CPU)/include/pio \
 						$(CONTIKI_CPU)/drivers \
-						$(CONTIKI_CPU)/USB \
+						$(CONTIKI_CPU)/USB_cdc_host \
 						../common/dbg-io
 
 ### CPU-dependent source files
@@ -92,12 +92,13 @@ PLATFORM_DRIVER = 	rtc.c \
 					afec.c \
 					trng.c \
 					uart.c \
-					wdt.c
+					wdt.c \
+					usbhs_host.c
 					
 					
-USB_DRIVERS =		udc.c \
-					udi_cdc_desc.c \
-					udi_cdc.c 
+USB_DRIVERS =		uhc.c \
+					uhi_cdc.c \
+					ui.c 
 					
 TARGETLIBS = dbg-printf.c dbg-puts.c dbg-putchar.c dbg-sprintf.c dbg-snprintf.c strformat.c
 

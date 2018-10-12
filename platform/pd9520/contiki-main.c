@@ -13,7 +13,7 @@
 #include "gpio.h"
 #include "node-id.h"
 #include "dev/slip.h"
-#include "udc.h"
+#include "uhc.h"
 #include "sleepmgr.h"
 #include "lib/sensors.h"
 #include "board-peripherals.h"
@@ -82,6 +82,11 @@ int main()
 
 	flash_init_df();
 
+	// TODO: Atmels framework has an error that must be fixed.
+	// When enumeratin a device that is not supported, the code hangs in an interrupt.
+	// Test with supported device.
+	/* Start USB host stack */
+	uhc_start();
 /*	USB not implemented yet
 	// Don't start USB on endnodes
 #if !LOW_CLOCK //120Mhz

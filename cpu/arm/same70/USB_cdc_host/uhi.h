@@ -1,9 +1,9 @@
 /**
  * \file
  *
- * \brief Common API for USB Device Interface
+ * \brief Common API for USB Host Interface
  *
- * Copyright (c) 2009-2015 Atmel Corporation. All rights reserved.
+ * Copyright (C) 2014-2015 Atmel Corporation. All rights reserved.
  *
  * \asf_license_start
  *
@@ -44,90 +44,67 @@
  * Support and FAQ: visit <a href="http://www.atmel.com/design-support/">Atmel Support</a>
  */
 
-#ifndef _UDI_H_
-#define _UDI_H_
+#ifndef _UHI_H_
+#define _UHI_H_
 
-#include "conf_usb.h"
+#include "conf_usb_host.h"
 #include "usb_protocol.h"
+#include "uhc.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 /**
- * \ingroup usb_device_group
- * \defgroup udi_group USB Device Interface (UDI)
- * The UDI provides a common API for all classes,
- * and this is used by UDC for the main control of USB Device interface.
+ * \ingroup usb_host_group
+ * \defgroup uhi_group USB Host Interface (UHI)
+ * The UHI provides a common API for all classes,
+ * and this is used by UHC for the main control of USB host interface.
  * @{
  */
 
 /**
- * \brief UDI API.
+ * \brief UHI API.
  *
  * The callbacks within this structure are called only by
- * USB Device Controller (UDC)
- *
- * The udc_get_interface_desc() can be use by UDI to know the interface descriptor
- * selected by UDC.
+ * USB Host Controller (UHC)
  */
 typedef struct {
 	/**
+	 * \brief Install interface
+	 * Allocate interface endpoints if supported.
+	 *
+	 * \param uhc_device_t    Device to request
+	 *
+	 * \return status of the install
+	 */
+	uhc_enum_status_t (*install)(uhc_device_t*);
+
+	/**
 	 * \brief Enable the interface.
 	 *
-	 * This function is called when the host selects a configuration
-	 * to which this interface belongs through a Set Configuration
-	 * request, and when the host selects an alternate setting of
-	 * this interface through a Set Interface request.
+	 * Enable a USB interface corresponding to UHI.
 	 *
-	 * \return \c 1 if function was successfully done, otherwise \c 0.
+	 * \param uhc_device_t    Device to request
 	 */
-	bool(*enable) (void);
+	void (*enable)(uhc_device_t*);
 
 	/**
-	 * \brief Disable the interface.
+	 * \brief Uninstall the interface (if installed)
 	 *
-	 * This function is called when this interface is currently
-	 * active, and
-	 * - the host selects any configuration through a Set
-	 *   Configuration request, or
-	 * - the host issues a USB reset, or
-	 * - the device is detached from the host (i.e. Vbus is no
-	 *   longer present)
+	 * \param uhc_device_t    Device to request
 	 */
-	void (*disable) (void);
+	void (*uninstall)(uhc_device_t*);
 
 	/**
-	 * \brief Handle a control request directed at an interface.
-	 *
-	 * This function is called when this interface is currently
-	 * active and the host sends a SETUP request
-	 * with this interface as the recipient.
-	 *
-	 * Use udd_g_ctrlreq to decode and response to SETUP request.
-	 *
-	 * \return \c 1 if this interface supports the SETUP request, otherwise \c 0.
+	 * \brief Signal that a SOF has occurred
 	 */
-	bool(*setup) (void);
-
-	/**
-	 * \brief Returns the current setting of the selected interface.
-	 *
-	 * This function is called when UDC when know alternate setting of selected interface.
-	 *
-	 * \return alternate setting of selected interface
-	 */
-	uint8_t(*getsetting) (void);
-
-	/**
-	 * \brief To signal that a SOF is occurred
-	 */
-	void(*sof_notify) (void);
-} udi_api_t;
+	void (*sof_notify)(bool b_micro);
+} uhi_api_t;
 
 //@}
 
 #ifdef __cplusplus
 }
 #endif
-#endif // _UDI_H_
+#endif // _UHI_H_

@@ -6,9 +6,9 @@
  */
 #include "slip.h"
 #include "compiler.h"
-#include "udi_cdc.h"
+#include "uhi_cdc.h"
 
-extern volatile char enumeration_complete;
+volatile char enumeration_complete;
 PROCESS(slip_arch_process, "SLIP USB ACM");
 
 
@@ -22,7 +22,7 @@ void slip_arch_writeb(unsigned char c)
 {
 	// Potential deadlock if tx buffers become full
 	if(enumeration_complete)
-		udi_cdc_multi_putc(0, c);
+		uhi_cdc_putc(0, c);
 }
 
 
@@ -34,10 +34,10 @@ PROCESS_THREAD(slip_arch_process, ev, data)
  	while(1) {
 
  		PROCESS_YIELD_UNTIL(ev == PROCESS_EVENT_POLL);
- 		number_og_bytes = udi_cdc_multi_get_nb_received_data(0);
+ 		number_og_bytes = uhi_cdc_get_nb_received(0);
 
  		while(number_og_bytes--){
- 			slip_input_byte(udi_cdc_multi_getc(0));
+ 			slip_input_byte(uhi_cdc_getc(0));
  		}
 
  	}

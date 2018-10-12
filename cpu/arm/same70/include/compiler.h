@@ -131,7 +131,84 @@
 #define ATPASTE3( a, b, c)                        TPASTE3( a, b, c)
 //! @}
 
+/*! \name Bit-Field Handling
+ */
+//! @{
 
+/*! \brief Reads the bits of a value specified by a given bit-mask.
+ *
+ * \param value Value to read bits from.
+ * \param mask  Bit-mask indicating bits to read.
+ *
+ * \return Read bits.
+ */
+#define Rd_bits( value, mask)        ((value) & (mask))
+
+/*! \brief Writes the bits of a C lvalue specified by a given bit-mask.
+ *
+ * \param lvalue  C lvalue to write bits to.
+ * \param mask    Bit-mask indicating bits to write.
+ * \param bits    Bits to write.
+ *
+ * \return Resulting value with written bits.
+ */
+#define Wr_bits(lvalue, mask, bits)  ((lvalue) = ((lvalue) & ~(mask)) |\
+                                                 ((bits  ) &  (mask)))
+
+/*! \brief Tests the bits of a value specified by a given bit-mask.
+ *
+ * \param value Value of which to test bits.
+ * \param mask  Bit-mask indicating bits to test.
+ *
+ * \return \c 1 if at least one of the tested bits is set, else \c 0.
+ */
+#define Tst_bits( value, mask)  (Rd_bits(value, mask) != 0)
+
+/*! \brief Clears the bits of a C lvalue specified by a given bit-mask.
+ *
+ * \param lvalue  C lvalue of which to clear bits.
+ * \param mask    Bit-mask indicating bits to clear.
+ *
+ * \return Resulting value with cleared bits.
+ */
+#define Clr_bits(lvalue, mask)  ((lvalue) &= ~(mask))
+
+/*! \brief Sets the bits of a C lvalue specified by a given bit-mask.
+ *
+ * \param lvalue  C lvalue of which to set bits.
+ * \param mask    Bit-mask indicating bits to set.
+ *
+ * \return Resulting value with set bits.
+ */
+#define Set_bits(lvalue, mask)  ((lvalue) |=  (mask))
+
+/*! \brief Toggles the bits of a C lvalue specified by a given bit-mask.
+ *
+ * \param lvalue  C lvalue of which to toggle bits.
+ * \param mask    Bit-mask indicating bits to toggle.
+ *
+ * \return Resulting value with toggled bits.
+ */
+#define Tgl_bits(lvalue, mask)  ((lvalue) ^=  (mask))
+
+/*! \brief Reads the bit-field of a value specified by a given bit-mask.
+ *
+ * \param value Value to read a bit-field from.
+ * \param mask  Bit-mask indicating the bit-field to read.
+ *
+ * \return Read bit-field.
+ */
+#define Rd_bitfield( value, mask)           (Rd_bits( value, mask) >> ctz(mask))
+
+/*! \brief Writes the bit-field of a C lvalue specified by a given bit-mask.
+ *
+ * \param lvalue    C lvalue to write a bit-field to.
+ * \param mask      Bit-mask indicating the bit-field to write.
+ * \param bitfield  Bit-field to write.
+ *
+ * \return Resulting value with written bit-field.
+ */
+#define Wr_bitfield(lvalue, mask, bitfield) (Wr_bits(lvalue, mask, (U32)(bitfield) << ctz(mask)))
 /**
  * \brief Emit the compiler pragma \a arg.
  *
@@ -153,7 +230,11 @@
  * definitions.
  */
 #define COMPILER_PACK_RESET()          COMPILER_PRAGMA(pack())
-
+/**
+ * \def barrier
+ * \brief Memory barrier
+ */
+#define barrier()          __DMB()
 /**
  * \brief Set user-defined section.
  * Place a data object or a function in a user-defined section.
@@ -226,7 +307,45 @@ typedef uint32_t                iram_size_t;
  *     compile time), abs is found in stdlib.h.
  */
 //! @{
-
+#if (defined __GNUC__) || (defined __CC_ARM)
+#   define clz(u)              ((u) ? __builtin_clz(u) : 32)
+#elif (defined __ICCARM__)
+#   define clz(u)              ((u) ? __CLZ(u) : 32)
+#else
+#   define clz(u)              (((u) == 0)          ? 32 : \
+                                ((u) & (1ul << 31)) ?  0 : \
+                                ((u) & (1ul << 30)) ?  1 : \
+                                ((u) & (1ul << 29)) ?  2 : \
+                                ((u) & (1ul << 28)) ?  3 : \
+                                ((u) & (1ul << 27)) ?  4 : \
+                                ((u) & (1ul << 26)) ?  5 : \
+                                ((u) & (1ul << 25)) ?  6 : \
+                                ((u) & (1ul << 24)) ?  7 : \
+                                ((u) & (1ul << 23)) ?  8 : \
+                                ((u) & (1ul << 22)) ?  9 : \
+                                ((u) & (1ul << 21)) ? 10 : \
+                                ((u) & (1ul << 20)) ? 11 : \
+                                ((u) & (1ul << 19)) ? 12 : \
+                                ((u) & (1ul << 18)) ? 13 : \
+                                ((u) & (1ul << 17)) ? 14 : \
+                                ((u) & (1ul << 16)) ? 15 : \
+                                ((u) & (1ul << 15)) ? 16 : \
+                                ((u) & (1ul << 14)) ? 17 : \
+                                ((u) & (1ul << 13)) ? 18 : \
+                                ((u) & (1ul << 12)) ? 19 : \
+                                ((u) & (1ul << 11)) ? 20 : \
+                                ((u) & (1ul << 10)) ? 21 : \
+                                ((u) & (1ul <<  9)) ? 22 : \
+                                ((u) & (1ul <<  8)) ? 23 : \
+                                ((u) & (1ul <<  7)) ? 24 : \
+                                ((u) & (1ul <<  6)) ? 25 : \
+                                ((u) & (1ul <<  5)) ? 26 : \
+                                ((u) & (1ul <<  4)) ? 27 : \
+                                ((u) & (1ul <<  3)) ? 28 : \
+                                ((u) & (1ul <<  2)) ? 29 : \
+                                ((u) & (1ul <<  1)) ? 30 : \
+                                31)
+#endif
 /*! \brief Takes the absolute value of \a a.
  *
  * \param a Input value.
@@ -270,7 +389,7 @@ typedef uint32_t                iram_size_t;
  *
  * \note More optimized if only used with values unknown at compile time.
  */
-//#define min(a, b)   Min(a, b)
+#define min(a, b)   Min(a, b)
 
 /*! \brief Takes the maximal value of \a a and \a b.
  *
