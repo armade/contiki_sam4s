@@ -48,6 +48,8 @@
 #include "sensors.h"
 #include "board-peripherals.h"
 #include "leds.h"
+#include "slip.h"
+#include "uip.h"
 
 #ifdef NODE_GPS
 #include "gpsd.h"
@@ -69,8 +71,45 @@ static void trigger_sensors(void)
 		sensors_ptr->configure(SENSORS_ACTIVE, 1);
 	}
 }
+#define SLIP_END     0300
+#define BUF ((struct uip_eth_hdr *)&uip_buf[0])
+static void
+slip_input_callback(void)
+{
+  /*PRINTF("SIN: %u\n", uip_len);*/
+  if(uip_buf[0] == '?') {
+    if(uip_buf[1] == 'P') {
+      uip_ipaddr_t prefix;
+      /* Here we set a prefix !!! */
+      uip_buf[0] = '!';
+      uip_ip6addr(&prefix, UIP_DS6_DEFAULT_PREFIX, 0, 0, 0, 0, 0, 0, 0);
+      memcpy(&uip_buf[2],&prefix.u8,sizeof(uip_ipaddr_t));
+      uip_buf[10] = SLIP_END;
+	  slip_send();
+    }
+  }
 
 
+}
+
+uint8_t slip_output(void)
+
+{
+  slip_send();
+
+  return 0;
+}
+
+static void
+init_my_slip(void)
+{
+  slip_arch_init(0);
+  process_start(&slip_process, NULL);
+  slip_set_input_callback(slip_input_callback);
+
+  tcpip_set_outputfunc(slip_output);
+  //packet_pos = 0;
+}
 
 PROCESS_THREAD(hello_world_process, ev, data) {
 	PROCESS_BEGIN()
@@ -79,14 +118,14 @@ PROCESS_THREAD(hello_world_process, ev, data) {
 	printf("Hello, world\n");
 
 	/* Set us up as a RPL root node. */
-	rpl_dag_root_init_dag();
+	//rpl_dag_root_init_dag();
 	ip64_init();
 	/* Initialize the IP64 module so we'll start translating packets */
 	uip_ipaddr(&ipv4addr, 10, 42, 0, 7);
 	uip_ipaddr(&netmask, 255, 255, 255, 0);
 	ip64_set_ipv4_address(&ipv4addr, &netmask);
 
-
+	init_my_slip();
 
 	trigger_sensors();
 	process_start(&button_process, NULL);
