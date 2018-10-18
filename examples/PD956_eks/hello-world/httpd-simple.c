@@ -189,61 +189,104 @@ static const char *http_config_css2[] = {
   "<style>",
   ".left{padding-left:30px;float:left;text-align:right}",
   ".right{margin-left:345px;}",
-  "h1{",
-  	  "border-radius:5px;",
+  "h1 {",
+      "border-radius:5px;",
   	  "background: radial-gradient(ellipse at right, #aed6f4  10%%, #065b9d 100%%);",
   	  "color: white;",
   	  "padding-left:30px;",
-  	  "font-size:18px;",
-  	  "padding-bottom:7px;",
-  	  "padding-top:7px;",
-  	  "width: 90%%;",
+      "font-size:18px;",
+      "padding-bottom:7px;",
+      "padding-top:7px;",
+      "width: 90%%;",
+      "text-shadow: 2px 2px black;",
+  "}h0{",
+  	  "margin:20px;",
+  	  "color: white;",
+  	  "padding-left:15px;",
+  	  "font-size:35px;",
+  	  "z-index: 1;",
+  	  "position: absolute;",
+  	  "top: 80px;",
+  	  "left: 62px;",
   	  "text-shadow: 2px 2px black;",
-  "}p{",
-  	  "padding-left:50px;",
-  "}body{",
-      "font-family:Verdana;",
-  	  "background: #595959;",
+   "}h7 {",
+  		"margin:20px;",
+  		"color: white;",
+  		"padding-left:15px;",
+  		"font-size:12px;",
+  		"z-index: 1;",
+  		"position: absolute;",
+  		"top: 125px;",
+  		"left: 75px;",
+  "}a{",
+  	  "color: blue;",
+  "}table{",
+      "margin-left:30px;",
+      "border-collapse:collapse;",
+      "width:80%%;",
+      "font-size:12px;",
+  "}td,th{",
+      "border: 0px solid #dddddd;",
+      "text-align:left;",
+      "padding:2px;",
+      "padding-left:45px;",
+      "font-size:14px;",
+  "}th {",
+      "color:white;",
+      "background: radial-gradient(ellipse at center,  #aed6f4  10%%, #065b9d 100%%); text-shadow: 1px 1px black;",
+  "}tr:nth-child(even){",
+      "background-color:#d5d5dd;",
+  "}tr:nth-child(odd) {",
+	  "background-color: #ffffffff;",
+  "}th {"
+      "background-color: #2196F3;color:white;",
+  "}tr:hover {background-color: #70c0c0;",
+  "}ul {"
+  	  "text-shadow: 2px 2px black;",
+  	  "font-size:14px;",
+  	  "width: 98%%;",
+  	  "list-style-type: none;",
+  	  "margin: 0; padding: 0;",
+  	  "overflow: hidden;background-color: #2196F3;",
+   "}li {",
+  	  "float: left;",
+  	  "border-right: 2px solid #bbb;",
+   "}li a{"
+  	  "display: block;",
+  	  "color: white; text-align: center;",
+  	  "padding: 14px 16px; text-decoration:none;",
+   "}li a:hover { background-color:#70c0c0;",
+   "}legend{",
+	  "background: radial-gradient(ellipse at center,  #aed6f4  10%%, #065b9d 100%%);",
+	  "text-shadow: 1px 1px black;",
+	  "color: white;",
+	  "padding: 2px 5px;",
+	  "font-size: 16px;",
+	  "font-weight:bold;",
+	  "text-shadow: 1px 1px black;",
+   "}fieldset{",
+	  "margin:20px;",
+	  "width: 90%%;",
+	  "background-color:#FAFAFF;",
+	  "background: radial-gradient(ellipse at center,  #FfF7FF  0%%, #ffffffff 70%%);",
+	  "border:3px solid #065b9d;",
+	  "-moz-border-radius:8px;",
+	  "-webkit-border-radius:8px;",
+	  "border-radius:12px;",
+	  "display : inline-block;",
+   "}.legend1:hover{",
+	  "font-size: 26px;",
+   "}#ClockCanvas{",
+      "left: 0;",
+      "right: 0;",
+      "margin:20px;",
+   "}body{",
+   	  "font-family: Verdana;",
+      "background: #595959;",
       "background-size: 1000px;",
       "font-size:12px;",
-  "}ul{",
-      "text-shadow: 2px 2px black;",
-      "font-size:14px;",
-      "width: 98%%;",
-      "list-style-type: none;",
-      "margin: 0; padding: 0;",
-      "overflow: hidden;background-color: #2196F3;",
-  "}li{",
-  	  "float:left;",
-  	  "border-right:1px solid #bbb;",
-  "}li a{",
-  	  "display:block;",
-  	  "color:white;",
-  	  "text-align:center;",
-  	  "padding:14px 16px;",
-  	  "text-decoration:none;",
-  "}legend{",
-  	  "background: radial-gradient(ellipse at center,  #aed6f4  10%%, #065b9d 100%%);",
-  	  "text-shadow: 1px 1px black;",
-  	  "color: white;",
-  	  "padding: 2px 5px;",
-  	  "font-size: 16px;",
-  	  "font-weight:bold;",
-  	  "text-shadow: 1px 1px black;",
-  "}fieldset{",
-      "margin:20px;",
-  	  "width: 90%%;",
-  	  "background-color:#FAFAFF;",
-  	  "background: radial-gradient(ellipse at center,  #FfF7FF  0%%, #ffffffff 70%%);",
-  	  "border:3px solid #065b9d;",
-  	  "-moz-border-radius:8px;",
-  	  "-webkit-border-radius:8px;",
-  	  "border-radius:12px;",
-  	  "display : inline-block;",
-  "}.legend1:hover{",
-  	  "font-size: 26px;",
-  "}li a:hover{background-color:#111;}",
-  "</style>",
+   "}#settimebtn{margin-left: 20px;",
+   "}</style>",
   NULL
 };
 
@@ -566,7 +609,7 @@ static
 PT_THREAD(generate_index(struct httpd_state *s))
 {
   char ipaddr_buf[IPADDR_BUF_LEN]; /* Intentionally on stack */
-
+  static uint8_t i;
   PT_BEGIN(&s->generate_pt);
 
   /* Generate top matter (doctype, title, nav links etc) */
@@ -596,10 +639,62 @@ PT_THREAD(generate_index(struct httpd_state *s))
     get_neighbour_state_text(ipaddr_buf, s->nbr->state);
     PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, " %s<br>", ipaddr_buf));
   }
-
+  //======================================================================================
   PT_WAIT_THREAD(&s->generate_pt,
                        enqueue_chunk(s, 0, "</p>"));
   PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "</fieldset>"));
+  /* ND Cache */
+    PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<fieldset><h1>Neighbors</h1>"));
+    PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<table><tr><th>IP addr</th><th>Status</th><th>SESSION KEY</th><th>UUID</th></tr>"));
+
+    for(s->nbr = nbr_table_head(ds6_neighbors); s->nbr != NULL;
+        s->nbr = nbr_table_next(ds6_neighbors, s->nbr)) {
+
+  	  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<tr>"));
+
+      PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<td><a> %s </a></td>", ipaddr_buf));
+
+      memset(ipaddr_buf, 0, IPADDR_BUF_LEN);
+      get_neighbour_state_text(ipaddr_buf, s->nbr->state);
+      PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<td>%s</td>", ipaddr_buf));
+
+      // Just to test
+      memset(ipaddr_buf, 0, IPADDR_BUF_LEN);
+      for(i=0;i<sizeof(s->nbr->nbr_session_key);i++)
+      	sprintf(&ipaddr_buf[i],"%x",s->nbr->nbr_session_key[i]);
+      PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<td>%s</td>", ipaddr_buf));
+
+      PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<td>%s</td>", s->nbr->nbr_UUID));
+
+      PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "</tr>"));
+    }
+
+    PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "</table>"));
+
+    /* Routes */
+
+    PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<h1>Routes</h1>"));
+
+    PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<table><tr><th>IP addr</th><th>Via</th><th>Lifetime</th></tr>"));
+
+    for(s->r = uip_ds6_route_head(); s->r != NULL;
+        s->r = uip_ds6_route_next(s->r)) {
+  	  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<tr>"));
+  	  memset(ipaddr_buf, 0, IPADDR_BUF_LEN);
+  	  ipaddr_sprintf(ipaddr_buf, IPADDR_BUF_LEN, &s->r->ipaddr);
+  	  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<td><a href=http://[%s]/index.html> %s </a></td>",ipaddr_buf, ipaddr_buf));
+
+  	  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<td> %u via ", s->r->length));
+
+  	  memset(ipaddr_buf, 0, IPADDR_BUF_LEN);
+  	  ipaddr_sprintf(ipaddr_buf, IPADDR_BUF_LEN,uip_ds6_route_nexthop(s->r));
+  	  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "%s</td>", ipaddr_buf));
+  	  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<td>%lus</td>", s->r->state.lifetime));
+
+  	  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "</tr>"));
+    }
+
+    PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "</table></fieldset><br>"));
 
 //======================================================================================
 

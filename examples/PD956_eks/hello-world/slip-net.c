@@ -32,6 +32,9 @@
 #include "net/ip/uip.h"
 #include "net/packetbuf.h"
 #include "dev/slip.h"
+#include "uip.h"
+#include "net/netstack.h"
+#include "uip-ds6.h"
 #include <stdio.h>
 
 #define SLIP_END     0300
@@ -39,62 +42,58 @@
 #define SLIP_ESC_END 0334
 #define SLIP_ESC_ESC 0335
 
-#define DEBUG 0
+#define DEBUG 1
+
+#define BUF ((struct uip_eth_hdr *)&uip_buf[0])
+#define UIP_IP_BUF        ((struct uip_ip_hdr *)&uip_buf[UIP_LLH_LEN])
+static void
+slip_input_callback(void)
+{printf("Slipnet: input\n");
+	//uip_neighbor_add(&BUF->srcipaddr, (struct uip_neighbor_addr *)&BUF->src);
+  /*PRINTF("SIN: %u\n", uip_len);*/
+  if(uip_buf[0] == '?') {
+    if(uip_buf[1] == 'P') {
+      uip_ipaddr_t prefix;
+      /* Here we set a prefix !!! */
+      uip_buf[0] = '!';
+      uip_ip6addr(&prefix, UIP_DS6_DEFAULT_PREFIX, 0, 0, 0, 0, 0, 0, 0);
+      memcpy(&uip_buf[2],&prefix.u8,sizeof(uip_ipaddr_t));
+      uip_buf[10] = SLIP_END;
+	  slip_send();
+	  printf("Slipnet: sending prefix\n");
+    }
+  }
+
+
+}
+
+uint8_t my_slip_output(const uip_lladdr_t *addr)
+
+{
+	printf("Slipnet: output\n");
+	slipnet_driver.input();
+	//slip_send();
+	return 1;
+}
 
 /*---------------------------------------------------------------------------*/
 void
 slipnet_init(void)
 {
-	slip_arch_init(0);
-  process_start(&slip_process, NULL);
-}
-/*---------------------------------------------------------------------------*/
-void
-slip_send_packet(const uint8_t *ptr, int len)
-{
-  uint16_t i;
-  uint8_t c;
+	printf("Slipnet init\n");
 
-  slip_arch_writeb(SLIP_END);
-  for(i = 0; i < len; ++i) {
-    c = *ptr++;
-    if(c == SLIP_END) {
-      slip_arch_writeb(SLIP_ESC);
-      c = SLIP_ESC_END;
-    } else if(c == SLIP_ESC) {
-      slip_arch_writeb(SLIP_ESC);
-      c = SLIP_ESC_ESC;
-    }
-    slip_arch_writeb(c);
-  }
-  slip_arch_writeb(SLIP_END);
+	slip_arch_init(0);
+	  process_start(&slip_process, NULL);
+	  slip_set_input_callback(slip_input_callback);
+
+	  tcpip_set_outputfunc(my_slip_output);
 }
+
 /*---------------------------------------------------------------------------*/
 void
 slipnet_input(void)
 {
-  int i;
-  /* radio should be configured for filtering so this should be simple */
-  /* this should be sent over SLIP! */
-  /* so just copy into uip-but and send!!! */
-  /* Format: !R<data> ? */
-  uip_len = packetbuf_datalen();
-  i = packetbuf_copyto(uip_buf);
-
-  if(DEBUG) {
-    printf("Slipnet got input of len: %d, copied: %d\n",
-	   packetbuf_datalen(), i);
-
-    for(i = 0; i < uip_len; i++) {
-      printf("%02x", (unsigned char) uip_buf[i]);
-      if((i & 15) == 15) printf("\n");
-      else if((i & 7) == 7) printf(" ");
-    }
-    printf("\n");
-  }
-
-  /* printf("SUT: %u\n", uip_len); */
-  slip_send_packet(uip_buf, uip_len);
+	slip_send();
 }
 /*---------------------------------------------------------------------------*/
 const struct network_driver slipnet_driver = {

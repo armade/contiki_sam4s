@@ -53,7 +53,7 @@ LIST(entrylist);
 #define LAST_MAPPED_PORT  20000
 static uint16_t mapped_port = FIRST_MAPPED_PORT;
 
-#define printf(...)
+//#define printf(...)
 
 /*---------------------------------------------------------------------------*/
 struct ip64_addrmap_entry *

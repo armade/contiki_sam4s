@@ -69,7 +69,7 @@
 #include <string.h> /* for memcpy() */
 #include <stdio.h> /* for printf() */
 
-#define DEBUG 0
+#define DEBUG 1
 
 #if DEBUG
 #undef PRINTF
@@ -459,6 +459,36 @@ ip64_6to4(const uint8_t *ipv6packet, const uint16_t ipv6packet_len,
   case IP_PROTO_ICMPV6:
     PRINTF("ip64_6to4: ICMPv6 header\n");
     v4hdr->proto = IP_PROTO_ICMPV4;
+
+    //////////////////
+    if(ip64_addr_6to4(&v6hdr->destipaddr, &v4hdr->destipaddr) == 0) {
+
+        return 0;
+      }
+
+      if(uip_ntohs(udphdr->srcport) >= EPHEMERAL_PORTRANGE) {
+    		m = ip64_addrmap_lookup(	&v6hdr->srcipaddr,
+    								uip_ntohs(udphdr->srcport),
+    								&v4hdr->destipaddr,
+    								uip_ntohs(udphdr->destport),
+    								v4hdr->proto);
+    		if(m == NULL) {
+    			PRINTF("Lookup failed\n");
+    			m = ip64_addrmap_create(&v6hdr->srcipaddr,
+    								uip_ntohs(udphdr->srcport),
+    								&v4hdr->destipaddr,
+    								uip_ntohs(udphdr->destport),
+    								v4hdr->proto);
+    			if(m == NULL) {
+    				PRINTF("Could not create new map\n");
+    				return 0;
+    			} else {
+    				PRINTF("Could create new local port %d\n", m->mapped_port);
+    			}
+    		}
+    }
+    //////////////////
+
     /* Translate only ECHO_REPLY messages. */
     if(icmpv6hdr->type == ICMP6_ECHO_REPLY) {
       icmpv4hdr->type = ICMP_ECHO_REPLY;

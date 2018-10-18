@@ -124,7 +124,7 @@ typedef unsigned short uip_stats_t;
 #endif /* NETSTACK_CONF_FRAMER */
 
 #ifndef NETSTACK_CONF_NETWORK
-#define NETSTACK_CONF_NETWORK       sicslowpan_driver
+#define NETSTACK_CONF_NETWORK       slipnet_driver
 #endif
 
 //#define NETSTACK_CONF_LLSEC XTEAsec_driver

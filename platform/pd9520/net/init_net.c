@@ -30,7 +30,14 @@ void GMAC_Handler(void)
 }
 
 uint8_t gs_uc_mac_address[8];
+static struct ctimer rx_poll_timer; // if buffer is full we don't get interrupt
 
+static void
+rx_soft_poll(void *not_used)
+{
+	process_poll(&ksz8863_process);
+	ctimer_restart(&rx_poll_timer);
+}
 
 static void
 init(void)
@@ -91,6 +98,7 @@ init(void)
 		NVIC_EnableIRQ((IRQn_Type)ID_PIOA);
 		pio_enable_interrupt(PIOA, PIO_PA18);
 
+		ctimer_set(&rx_poll_timer, 100, rx_soft_poll, NULL);
 }
 
 void rx_input(uint32_t ul_status)
@@ -129,6 +137,7 @@ PROCESS_THREAD(ksz8863_process, ev, data)
 
 	if (ul_frm_size > 0) {
 		/* Handle input frame */
+		printf("ETH: input\n");
 		IP64_INPUT(ip64_packet_buffer, ul_frm_size);
 		process_poll(&ksz8863_process);
 	}

@@ -10,7 +10,6 @@ PLATFORM_NET_DRIVER = rf231.c trx_access_USART.c clock.c
 PLATFORM_FLASH_DRIVER = hw_spiflash.c hl_spiflash.c FLASH_driver.c
 PLATFORM_SENSOR_DRIVER = 	ADC_temp.c \
 							Soft_rgb.c  \
-							lm73.c \
 							button-sensor.c \
 							leds-arch.c \
 							PD956_sensors.c \

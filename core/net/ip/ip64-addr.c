@@ -34,7 +34,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#define printf(...)
+//#define printf(...)
 
 static uip_ip6addr_t ip64_prefix = {{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0xff, 0xff, 0, 0, 0, 0}};
 static uint8_t ip64_prefix_len = 96;

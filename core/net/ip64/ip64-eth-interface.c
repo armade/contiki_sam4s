@@ -43,7 +43,7 @@
 
 #define DEBUG DEBUG_NONE
 #include "net/ip/uip-debug.h"
-#define printf(...)
+//#define printf(...)
 /*---------------------------------------------------------------------------*/
 void
 ip64_eth_interface_input(uint8_t *packet, uint16_t len)
