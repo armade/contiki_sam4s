@@ -60,7 +60,7 @@
 #include <string.h>
 
 #include "platform-conf.h"
-//#define DEBUG DEBUG_PRINT
+#define DEBUG DEBUG_PRINT
 
 #include "net/ip/uip-debug.h"
 

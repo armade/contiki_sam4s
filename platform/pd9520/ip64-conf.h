@@ -5,7 +5,7 @@
 #include "ip64-eth-interface.h"
 /*---------------------------------------------------------------------------*/
 #undef UIP_FALLBACK_INTERFACE
-#define UIP_FALLBACK_INTERFACE 				ip64_uip_fallback_interface
+#define UIP_FALLBACK_INTERFACE 				slipnet_fallback_interface
 
 #define IP64_CONF_UIP_FALLBACK_INTERFACE 	ip64_eth_interface
 #define IP64_CONF_INPUT                  	ip64_eth_interface_input

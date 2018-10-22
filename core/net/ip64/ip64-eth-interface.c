@@ -51,6 +51,8 @@ ip64_eth_interface_input(uint8_t *packet, uint16_t len)
   struct ip64_eth_hdr *ethhdr;
   ethhdr = (struct ip64_eth_hdr *)packet;
 
+  printf("%s: eth_type = %x\n",__func__,ethhdr->type);
+
   if(ethhdr->type == UIP_HTONS(IP64_ETH_TYPE_ARP)) {
     len = ip64_arp_arp_input(packet, len);
 
@@ -75,7 +77,9 @@ ip64_eth_interface_input(uint8_t *packet, uint16_t len)
       tcpip_input();
       printf("Done\n");
     }
-  }
+  } else if(ethhdr->type == UIP_HTONS(IP64_ETH_TYPE_IPV6)){
+	  tcpip_input();
+	}
 }
 /*---------------------------------------------------------------------------*/
 static void
@@ -115,6 +119,20 @@ output(void)
 					&ip64_packet_buffer[sizeof(struct ip64_eth_hdr)]);
       return IP64_ETH_DRIVER.output(ip64_packet_buffer, len);
     }
+  }
+  else{ // if failed to convert to ipv4, just send it as ipv6
+	  struct ip64_eth_hdr *ethhdr;
+	    ethhdr = (struct ip64_eth_hdr *)&ip64_packet_buffer[UIP_LLH_LEN];
+	    len=uip_len;
+
+	    memcpy(&ip64_packet_buffer[sizeof(struct ip64_eth_hdr)],&uip_buf[UIP_LLH_LEN],uip_len);
+
+	    ret = ip64_arp_create_ethhdr(ip64_packet_buffer,
+	    				   &ip64_packet_buffer[sizeof(struct ip64_eth_hdr)]);
+	        if(ret > 0)
+	        	len += ret;
+	    ethhdr->type = UIP_HTONS(IP64_ETH_TYPE_IPV6);
+	  return IP64_ETH_DRIVER.output(ip64_packet_buffer, len);
   }
 
   return 0;

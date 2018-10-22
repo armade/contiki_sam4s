@@ -390,6 +390,7 @@ int
 slip_input_byte(unsigned char c)
 {
   uint16_t cur_end;
+
   switch(state) {
   case STATE_RUBBISH:
     if(c == SLIP_END) {
@@ -447,6 +448,7 @@ slip_input_byte(unsigned char c)
         SLIP_STATISTICS(slip_twopackets++);
       }
       process_poll(&slip_process);
+
       return 1;
     } else {
       /* Empty packet, reset the pointer */
