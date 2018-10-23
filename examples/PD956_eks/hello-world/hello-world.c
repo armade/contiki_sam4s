@@ -83,8 +83,8 @@ PROCESS_THREAD(hello_world_process, ev, data) {
 
 	/* Set us up as a RPL root node. */
 	rpl_dag_root_init_dag();
-	 uip_ip6addr(&ipaddr, UIP_DS6_DEFAULT_PREFIX, 0, 0, 0, 0, 0, 0, 1);
-	  uip_ds6_addr_add(&ipaddr, 0, ADDR_AUTOCONF);
+	// uip_ip6addr(&ipaddr, UIP_DS6_DEFAULT_PREFIX, 0, 0, 0, 0, 0, 0, 1);
+	//  uip_ds6_addr_add(&ipaddr, 0, ADDR_AUTOCONF);
 	ip64_init();
 	/* Initialize the IP64 module so we'll start translating packets */
 	uip_ipaddr(&ipv4addr, 10, 42, 0, 7);
@@ -95,9 +95,9 @@ PROCESS_THREAD(hello_world_process, ev, data) {
 	trigger_sensors();
 	process_start(&button_process, NULL);
 
-#ifdef NODE_GPS
+	process_start(&ntpd_process, NULL);
 	process_start(&gpsd_process, NULL);
-#endif
+
 	process_start(&httpd_simple_process, NULL);
 	register_http_post_handlers();
 

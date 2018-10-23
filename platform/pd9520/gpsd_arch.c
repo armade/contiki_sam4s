@@ -96,7 +96,7 @@ void gpsd_arch_init(void)
 	NVIC_SetPriority((IRQn_Type) ID_UART1, 12);//level 0 is the highest interrupt priority (0-15)
 
 	// Enable UART IRQ
-	//uart_enable_interrupt(UART1, US_IER_RXRDY);
+	uart_enable_interrupt(UART1, US_IER_RXRDY);
 
 	ctimer_set(&gps_config_timer,2* CLOCK_SECOND, gps_config_init, NULL);
 }

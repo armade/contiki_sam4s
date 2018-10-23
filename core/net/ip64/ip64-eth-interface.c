@@ -78,7 +78,9 @@ ip64_eth_interface_input(uint8_t *packet, uint16_t len)
       printf("Done\n");
     }
   } else if(ethhdr->type == UIP_HTONS(IP64_ETH_TYPE_IPV6)){
-	  tcpip_input();
+	  memcpy(&uip_buf[UIP_LLH_LEN],&packet[sizeof(struct ip64_eth_hdr)],len - sizeof(struct ip64_eth_hdr));
+	  tcpip_output(NULL);
+	  uip_len = 0;
 	}
 }
 /*---------------------------------------------------------------------------*/

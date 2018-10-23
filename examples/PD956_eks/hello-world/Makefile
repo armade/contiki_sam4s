@@ -6,7 +6,7 @@ ifeq ($(UUID),)
  UUID = 12345678PD
 endif
 
-CFLAGS += -D NODE_GPS=1
+CFLAGS += -D NODE_GPS=1 -D NODE_ROUTER=1
 APPS += mqtt servreg-hack ntpd gpsd ftp
 
 PROJECT_SOURCEFILES += httpd-simple.c slip-net.c
