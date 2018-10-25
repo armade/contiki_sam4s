@@ -431,7 +431,7 @@ uip_connect(const uip_ipaddr_t *ripaddr, uint16_t rport)
   }
 
   conn->tcpstateflags = UIP_SYN_SENT;
-
+  RNG_Function(iss,4);
   conn->snd_nxt[0] = iss[0];
   conn->snd_nxt[1] = iss[1];
   conn->snd_nxt[2] = iss[2];
@@ -1366,6 +1366,7 @@ uip_process(uint8_t flag)
   uip_ipaddr_copy(&uip_connr->ripaddr, &BUF->srcipaddr);
   uip_connr->tcpstateflags = UIP_SYN_RCVD;
 
+  RNG_Function(iss,4);
   uip_connr->snd_nxt[0] = iss[0];
   uip_connr->snd_nxt[1] = iss[1];
   uip_connr->snd_nxt[2] = iss[2];

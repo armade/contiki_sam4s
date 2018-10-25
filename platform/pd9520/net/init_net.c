@@ -68,8 +68,8 @@ init(void)
 	pmc_enable_periph_clk(ID_GMAC);
 
 	/* Fill in GMAC options */
-	gmac_option.uc_copy_all_frame = 0;
-	gmac_option.uc_no_boardcast = 0;
+	gmac_option.uc_copy_all_frame = 1;
+	gmac_option.uc_no_boardcast = 1;
 
 	memcpy(gmac_option.uc_mac_addr, gs_uc_mac_address, sizeof(gs_uc_mac_address));
 	memcpy(ip64_eth_addr.addr, gs_uc_mac_address, sizeof(gs_uc_mac_address));
@@ -104,6 +104,7 @@ init(void)
 void rx_input(uint32_t ul_status)
 {
 	process_poll(&ksz8863_process);
+	ctimer_restart(&rx_poll_timer);
 	//printf("r\n");
 }
 
@@ -137,7 +138,7 @@ PROCESS_THREAD(ksz8863_process, ev, data)
 
 	if (ul_frm_size > 0) {
 		/* Handle input frame */
-		printf("ETH: input\n");
+		//printf("ETH: input\n");
 		IP64_INPUT(ip64_packet_buffer, ul_frm_size);
 		process_poll(&ksz8863_process);
 	}
@@ -188,6 +189,8 @@ PROCESS_THREAD(ksz8863_link_process, ev, data)
 	  ul_value = ethernet_phy_Basic_Status_Register(GMAC, 1);
 	  if(ul_value & MII_LINK_STATUS) // link up
 	  {
+		  // TODO: don't know why but if i setup MAC after auto negotiate
+		  // nothing happens. So for now this is performed during startup.
 		  gmac_dev_reset(&gs_gmac_dev, GMAC_QUE_0);
 		  // Auto Negotiate, work in RMII mode
 		  	/*if (ethernet_phy_auto_negotiate1(GMAC, 1) != GMAC_OK) {

@@ -368,6 +368,7 @@ void Reset_Handler(void)
  */
 void Dummy_Handler(void)
 {
+	leds_set(2 | 4);
         while (1) {
         }
 }

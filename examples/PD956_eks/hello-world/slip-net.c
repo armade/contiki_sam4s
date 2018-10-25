@@ -36,8 +36,7 @@
 #include "net/netstack.h"
 #include "uip-ds6.h"
 #include <stdio.h>
-#include "ip64.h"
-#include "ip64-eth.h"
+#include "platform-conf.h"
 
 
 #define SLIP_END     0300
@@ -50,23 +49,9 @@
 #define BUF ((struct uip_eth_hdr *)&uip_buf[0])
 #define UIP_IP_BUF        ((struct uip_ip_hdr *)&uip_buf[UIP_LLH_LEN])
 
-void ETH_out(void)
-{
-	int len, ret;
-	struct ip64_eth_hdr *ethhdr;
-	ethhdr = (struct ip64_eth_hdr *) &ip64_packet_buffer[UIP_LLH_LEN];
-	len = uip_len;
 
-	memcpy(&ip64_packet_buffer[sizeof(struct ip64_eth_hdr)],
-			&uip_buf[UIP_LLH_LEN], uip_len);
 
-	ret = ip64_arp_create_ethhdr(ip64_packet_buffer,
-			&ip64_packet_buffer[sizeof(struct ip64_eth_hdr)]);
-	if(ret > 0)
-		len += ret;
-	ethhdr->type = UIP_HTONS(IP64_ETH_TYPE_IPV6);
-	return IP64_ETH_DRIVER.output(ip64_packet_buffer, len);
-}
+
 
 static void slip_input_callback(void)
 {
@@ -88,10 +73,24 @@ static void slip_input_callback(void)
 
 			//uip_ip6addr(&prefix, UIP_DS6_DEFAULT_PREFIX, 0, 0, 0, 0x3030, 0x3531, 0x3130, 0x3036);
 			//uip_ds6_defrt_add(&prefix,0);
+		}else
+		if(uip_buf[1] == 'L'){
+			uip_buf[0] = '!';
+			memcpy(uip_buf[2],&uip_lladdr.addr, sizeof(linkaddr_t));
+			uip_len = sizeof(linkaddr_t)+2;
+			slip_send();
+			uip_len = 0;
 		}
-	}else if(uip_buf[0] == 0x60){
-		ETH_out();
-		uip_len = 0;
+		else
+		if(uip_buf[1] == 'C'){
+			uint8_t EEPROM_channel;
+			get_eeprom(channel,EEPROM_channel);
+			uip_buf[0] = '!';
+			uip_buf[2] = EEPROM_channel;
+			uip_len = 1+2;
+			slip_send();
+			uip_len = 0;
+		}
 	}
 }
 
@@ -106,7 +105,7 @@ uint8_t my_slip_output(const uip_lladdr_t *addr)
 void
 slipnet_init(void)
 {
-	printf("Slipnet: init\n");
+	//printf("Slipnet: init\n");
 
 	slip_arch_init(0);
 	  process_start(&slip_process, NULL);

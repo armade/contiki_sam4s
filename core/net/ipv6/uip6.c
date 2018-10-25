@@ -95,7 +95,7 @@
 /* For Debug, logging, statistics                                            */
 /*---------------------------------------------------------------------------*/
 
-#define DEBUG DEBUG_PRINT
+#define DEBUG DEBUG_NONE
 #include "net/ip/uip-debug.h"
 
 #if UIP_LOGGING == 1
@@ -505,8 +505,7 @@ uip_connect(const uip_ipaddr_t *ripaddr, uint16_t rport)
     return 0;
   }
 
-  conn->tcpstateflags = UIP_SYN_SENT;
-
+  RNG_Function(iss,4);
   conn->snd_nxt[0] = iss[0];
   conn->snd_nxt[1] = iss[1];
   conn->snd_nxt[2] = iss[2];
@@ -1744,6 +1743,7 @@ uip_process(uint8_t flag)
   uip_ipaddr_copy(&uip_connr->ripaddr, &UIP_IP_BUF->srcipaddr);
   uip_connr->tcpstateflags = UIP_SYN_RCVD;
 
+  RNG_Function(iss,4);
   uip_connr->snd_nxt[0] = iss[0];
   uip_connr->snd_nxt[1] = iss[1];
   uip_connr->snd_nxt[2] = iss[2];

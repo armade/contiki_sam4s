@@ -39,7 +39,7 @@
 #include <string.h>
 #include <stdio.h>
 
-//#define printf(...)
+#define printf(...)
 
 struct arp_hdr {
   struct ip64_eth_hdr ethhdr;
@@ -101,7 +101,7 @@ static struct arp_entry arp_table[UIP_ARPTAB_SIZE];
 static uint8_t arptime;
 static uint8_t tmpage;
 
-#define DEBUG 0
+#define DEBUG 1
 #if DEBUG
 #include <stdio.h>
 #define PRINTF(...) printf(__VA_ARGS__)

@@ -2,8 +2,8 @@
 #include "hl_spiflash.h"
 #include "stdio.h"
 
-#define FLASHTRACE(s)		printf("%s\n",s)
-#define FLASHTRACE1(s,v)	printf("%s : %d\n",s,v)
+#define FLASHTRACE(s)		//printf("%s\n",s)
+#define FLASHTRACE1(s,v)	//printf("%s : %d\n",s,v)
 
 
 #ifndef sf_flashchip_info

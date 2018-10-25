@@ -56,13 +56,13 @@ uint32_t flash_size_df(void)
 void flash_enter_deep_sleep(void)
 {
 	sf_deepsleep_enter();
-	printf("W - Serial FLASH is sleeping\n\r");
+	//printf("W - Serial FLASH is sleeping\n\r");
 }
 
 void flash_leave_deep_sleep(void)
 {
 	sf_deepsleep_leave();
-	printf("W - Serial FLASH is awake\n\r");
+	//printf("W - Serial FLASH is awake\n\r");
 }
 
 void flash_init_df(void)
@@ -73,7 +73,7 @@ void flash_init_df(void)
 	}
 	else{
 		flash_size = sf_totalsize();
-		printf("Serial FLASH found (%dMiB)\n\r",((int)flash_size)>>20);
+		//printf("Serial FLASH found (%dMiB)\n\r",((int)flash_size)>>20);
 	}
 
 	flash_enter_deep_sleep();

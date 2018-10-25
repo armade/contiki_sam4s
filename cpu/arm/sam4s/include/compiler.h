@@ -63,7 +63,7 @@
 
 #include <sam4s.h>
 #include "preprocessor.h"
-
+#include "interrupt_sam_nvic.h"
 #include <ioport.h>
 
 //_____ D E C L A R A T I O N S ____________________________________________

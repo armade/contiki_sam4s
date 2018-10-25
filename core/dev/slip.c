@@ -103,7 +103,6 @@ slip_send(void)
   uint8_t *ptr;
   uint8_t c;
 
-  printf("SLIP: sending packet\n");
   slip_arch_writeb(SLIP_END);
 
   ptr = &uip_buf[UIP_LLH_LEN];

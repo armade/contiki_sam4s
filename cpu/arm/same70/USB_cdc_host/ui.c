@@ -54,7 +54,7 @@
  */
 void ui_init(void)
 {
-	printf("%s\n",__func__);
+	//printf("%s\n",__func__);
 	/* Initialize LEDs */
 	//LED_Off(LED0);
 	//LED_Off(LED1);
@@ -62,7 +62,7 @@ void ui_init(void)
 
 void ui_usb_mode_change(bool b_host_mode)
 {
-	printf("%s\n",__func__);
+	//printf("%s\n",__func__);
 	(void)b_host_mode;
 	ui_init();
 }
@@ -80,7 +80,7 @@ static uint16_t ui_device_speed_blink;
 
 void ui_usb_vbus_change(bool b_vbus_present)
 {
-	printf("%s\n",__func__);
+	//printf("%s\n",__func__);
 	/*if (b_vbus_present) {
 		LED_On(LED1);
 	} else {
@@ -95,7 +95,7 @@ void ui_usb_vbus_error(void)
 extern volatile char enumeration_complete;
 void ui_usb_connection_event(uhc_device_t *dev, bool b_present)
 {
-	printf("%s\n",__func__);
+	//printf("%s\n",__func__);
 	(void)dev;
 	if (b_present) {
 		//LED_On(LED1);
@@ -110,7 +110,7 @@ void ui_usb_connection_event(uhc_device_t *dev, bool b_present)
 
 void ui_usb_enum_event(uhc_device_t *dev, uhc_enum_status_t status)
 {
-	printf("%s\n",__func__);
+	//printf("%s\n",__func__);
 	ui_enum_status = status;
 	switch (dev->speed) {
 	case UHD_SPEED_HIGH:

@@ -75,16 +75,17 @@ static void trigger_sensors(void)
 
 
 PROCESS_THREAD(hello_world_process, ev, data) {
-	PROCESS_BEGIN()
-	;
+	PROCESS_BEGIN();
 	uip_ip4addr_t ipv4addr, netmask;
 	uip_ip6addr_t ipaddr;
 	printf("Hello, world\n");
 
 	/* Set us up as a RPL root node. */
 	rpl_dag_root_init_dag();
-	// uip_ip6addr(&ipaddr, UIP_DS6_DEFAULT_PREFIX, 0, 0, 0, 0, 0, 0, 1);
-	//  uip_ds6_addr_add(&ipaddr, 0, ADDR_AUTOCONF);
+	 uip_ip6addr(&ipaddr, UIP_DS6_DEFAULT_PREFIX, 0, 0, 0, 0, 0, 0, 1);
+	  uip_ds6_addr_add(&ipaddr, 0, ADDR_AUTOCONF);
+
+	  ip64_addr_set_prefix(&ipaddr, 64);
 	ip64_init();
 	/* Initialize the IP64 module so we'll start translating packets */
 	uip_ipaddr(&ipv4addr, 10, 42, 0, 7);

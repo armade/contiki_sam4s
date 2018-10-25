@@ -125,7 +125,7 @@ static uint8_t ethernet_phy_find_valid(Gmac *p_gmac, uint8_t uc_phy_addr,
 			gmac_phy_read(p_gmac, uc_phy_address, MII_PHYID1, &ul_value);
 			if (ul_value == MII_OUI_MSB) {
 				uc_rc = uc_phy_address;
-				printf("PHY ADDR: 0x%x\n",uc_phy_address);
+				//printf("PHY ADDR: 0x%x\n",uc_phy_address);
 				break;
 			}
 		}

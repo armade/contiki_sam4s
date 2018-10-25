@@ -50,6 +50,8 @@ ip64_eth_interface_input(uint8_t *packet, uint16_t len)
 {
   struct ip64_eth_hdr *ethhdr;
   ethhdr = (struct ip64_eth_hdr *)packet;
+  uip_ipaddr_t prefix;
+  uip_ip6addr(&prefix, UIP_DS6_DEFAULT_PREFIX, 0, 0, 0, 0, 0, 0, 0);
 
   //PRINTF("%s: eth_type = %x\n",__func__,ethhdr->type);
 
@@ -68,7 +70,7 @@ ip64_eth_interface_input(uint8_t *packet, uint16_t len)
     if(uip_len > 0) {
     	PRINTF("ip64_interface_process: converted %d bytes\n", uip_len);
 
-    	PRINTF("ip64-interface: input source ");
+    	PRINTF("ip64-interface: (IPv4)input source ");
       PRINT6ADDR(&UIP_IP_BUF->srcipaddr);
       PRINTF(" destination ");
       PRINT6ADDR(&UIP_IP_BUF->destipaddr);
@@ -77,23 +79,59 @@ ip64_eth_interface_input(uint8_t *packet, uint16_t len)
       tcpip_input();
       PRINTF("Done\n");
     }
-  } else if(ethhdr->type == UIP_HTONS(IP64_ETH_TYPE_IPV6)){
-	  //memcpy(&uip_buf[UIP_LLH_LEN],&packet[sizeof(struct ip64_eth_hdr)],len - sizeof(struct ip64_eth_hdr));
-	 // tcpip_output(NULL);
-	  //uip_len = 0;
+  } else if(ethhdr->type == UIP_HTONS(IP64_ETH_TYPE_IPV6)){ // TODO: If the packet is for us...
+	  memcpy(&uip_buf[UIP_LLH_LEN],&packet[sizeof(struct ip64_eth_hdr)],len - sizeof(struct ip64_eth_hdr));
+	  PRINTF("ip64-interface: (IPv6)input source ");
+		PRINT6ADDR(&UIP_IP_BUF->srcipaddr);
+		PRINTF(" destination ");
+		PRINT6ADDR(&UIP_IP_BUF->destipaddr);
+		PRINTF("\n");
+		uip_len = len - sizeof(struct ip64_eth_hdr);
+
+
+		  int i;
+		  uint8_t state;
+
+
+		  // internal
+		  for(i = 0; i < UIP_DS6_ADDR_NB; i++) {
+		    state = uip_ds6_if.addr_list[i].state;
+		    if(uip_ds6_if.addr_list[i].isused &&
+		       (state == ADDR_TENTATIVE || state == ADDR_PREFERRED)) {
+		    		if(uip_ipaddr_cmp(&uip_ds6_if.addr_list[i].ipaddr,&UIP_IP_BUF->destipaddr)){
+		    			printf("handled local\n");
+		    			tcpip_input();
+		    			uip_len = 0;
+		    			return;
+		    		}
+		    }
+		  }
+		  slip_send();
+		  uip_ip6addr(&prefix, 0xff02, 0, 0, 0, 0, 0, 0, 0);
+		  if(uip_ipaddr_prefixcmp(&UIP_IP_BUF->destipaddr, &prefix, 16)) //mcast
+			{
+					tcpip_input();
+			}
+
+
+
+
+
+	  //if(uip_ipaddr_prefixcmp(&UIP_IP_BUF->destipaddr, &prefix, 16)) // Only if prefix is aaaa
+		  //slip_send();
+	  //else
+		//  tcpip_input();
+	  uip_len = 0;
 	}
 }
 /*---------------------------------------------------------------------------*/
-static void
-init(void)
-{
-  PRINTF("ip64-eth-interface: init\n");
-}
-/*---------------------------------------------------------------------------*/
-static int
-output(void)
+uint8_t
+ip64_eth_interface_output(const uip_lladdr_t *addr)
 {
   int len, ret;
+
+  uip_ipaddr_t prefix;
+   uip_ip6addr(&prefix, UIP_DS6_DEFAULT_PREFIX, 0, 0, 0, 0, 0, 0, 0);
 
   PRINTF("ip64-interface: output source ");
   PRINT6ADDR(&UIP_IP_BUF->srcipaddr);
@@ -123,6 +161,13 @@ output(void)
     }
   }
   else{ // if failed to convert to ipv4, just send it as ipv6
+
+	  if(uip_ipaddr_prefixcmp(&UIP_IP_BUF->destipaddr, &prefix, 16)) //mcast
+	  {
+		  slip_send();
+		  return 0;
+	  }
+	  else{
 	  struct ip64_eth_hdr *ethhdr;
 	    ethhdr = (struct ip64_eth_hdr *)&ip64_packet_buffer[UIP_LLH_LEN];
 	    len=uip_len;
@@ -135,13 +180,23 @@ output(void)
 	        	len += ret;
 	    ethhdr->type = UIP_HTONS(IP64_ETH_TYPE_IPV6);
 	  return IP64_ETH_DRIVER.output(ip64_packet_buffer, len);
+	  }
   }
 
   return 0;
 }
+
 /*---------------------------------------------------------------------------*/
-const struct uip_fallback_interface ip64_eth_interface = {
-  init,
-  output
+static void
+ip64_eth_interface_init(void)
+{
+  PRINTF("ip64-eth-interface: init\n");
+  tcpip_set_outputfunc(ip64_eth_interface_output);
+}
+/*---------------------------------------------------------------------------*/
+const struct network_driver ip64_eth_driver = {
+  "ip64_eth",
+  ip64_eth_interface_init,
+  ip64_eth_interface_input,
 };
 /*---------------------------------------------------------------------------*/

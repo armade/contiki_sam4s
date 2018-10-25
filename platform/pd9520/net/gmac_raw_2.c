@@ -436,7 +436,7 @@ uint32_t gmac_dev_read(gmac_device_t* p_gmac_dev, gmac_quelist_t queue_idx, uint
 
 	/* Set the default return value */
 	*p_rcv_size = 0;
-
+	//SCB_CleanDCache_by_Addr((void *)p_rx_td,sizeof(gmac_rx_descriptor_t));
 	/* Process received RX descriptor */
 	while ((p_rx_td->addr.val & GMAC_RXD_OWNERSHIP) == GMAC_RXD_OWNERSHIP) {
 
@@ -478,7 +478,7 @@ uint32_t gmac_dev_read(gmac_device_t* p_gmac_dev, gmac_quelist_t queue_idx, uint
 			if ((tmp_ul_frame_size + us_buffer_length) > ul_frame_size) {
 				us_buffer_length = ul_frame_size - tmp_ul_frame_size;
 			}
-			__DSB();
+			//__DSB();
 			memcpy(p_tmp_frame,
 					(void *)(p_rx_td->addr.val & GMAC_RXD_ADDR_MASK),
 					us_buffer_length);
@@ -581,6 +581,8 @@ uint32_t gmac_dev_write(gmac_device_t* p_gmac_dev, gmac_quelist_t queue_idx, voi
 	if (p_buffer && ul_size) {
 		/* Driver manages the ring buffer */
 		memcpy((void *)p_tx_td->addr, p_buffer, ul_size);
+		//__ISB();
+		//SCB_CleanDCache_by_Addr((void *)p_tx_td->addr,ul_size);
 	}
 
 	/* Tx callback */
@@ -600,8 +602,7 @@ uint32_t gmac_dev_write(gmac_device_t* p_gmac_dev, gmac_quelist_t queue_idx, voi
 	}
 
 	circ_inc(&p_gmac_queue->us_tx_head, p_gmac_queue->us_tx_list_size);
-	__ISB();
-	__DSB();
+
 	/* Now start to transmit if it is still not done */
 	gmac_start_transmission(p_hw);
 
@@ -823,7 +824,8 @@ void gmac_handler(gmac_device_t* p_gmac_dev, gmac_quelist_t queue_idx)
 		/* Clear status */
 		gmac_clear_rx_status(p_hw, ul_rx_status_flag);
 
-		__DSB();
+		//__DSB();
+
 		/* Invoke callbacks */
 		if (p_gmac_queue->func_rx_cb) {
 			p_gmac_queue->func_rx_cb(ul_rx_status_flag);

@@ -123,7 +123,7 @@ uint16_t Detect_lm73_addr(void)
 		ret =  I2C_r(LM73_addr, 0x07, (uint8_t *)&id, sizeof(id));
 		if(!ret){
 			Swap16(id);
-			printf("LM73 found (0x%x)\n",id);
+			//printf("LM73 found (0x%x)\n",id);
 			return id;
 		}
 	}
