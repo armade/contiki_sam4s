@@ -52,6 +52,8 @@
 void set_prefix_64(uip_ipaddr_t *);
 
 static uip_ipaddr_t last_sender;
+
+extern void set_all(uint8_t *buf_ptr);
 /*---------------------------------------------------------------------------*/
 static void
 slip_input_callback(void)
@@ -76,6 +78,11 @@ slip_input_callback(void)
 	if(uip_buf[1] == 'C') {
 		set_Ch(uip_buf[2]);
 	}
+	else
+	if(uip_buf[1] == 'G') {
+		set_all(&uip_buf[2]);
+  	  }
+
   } else if (uip_buf[0] == '?') {
     PRINTF("Got request message of type %c\n", uip_buf[1]);
     if(uip_buf[1] == 'M') {
@@ -101,13 +108,18 @@ slip_input_callback(void)
   uip_clear_buf();
 }
 /*---------------------------------------------------------------------------*/
-void my_hack_output(void)
+void my_hack_input_callback(void)
 {
 	slip_send();
 	uip_clear_buf();
 }
+
+void my_hack_output_callback(void)
+{
+
+}
 #include "rime.h"
-struct rime_sniffer snif = {NULL, my_hack_output,NULL};
+struct rime_sniffer snif = {NULL, my_hack_input_callback,my_hack_output_callback};
 static void
 init(void)
 {

@@ -114,14 +114,14 @@ set_prefix_64(uip_ipaddr_t *prefix_64)
   memcpy(&prefix, prefix_64, 16);
   memcpy(&ipaddr, prefix_64, 16);
   prefix_set = 1;
-  uip_ds6_set_addr_iid(&ipaddr, &uip_lladdr);
-  uip_ds6_addr_add(&ipaddr, 0, ADDR_AUTOCONF);
+  //uip_ds6_set_addr_iid(&ipaddr, &uip_lladdr);
+  //uip_ds6_addr_add(&ipaddr, 0, ADDR_AUTOCONF);
 
-  dag = rpl_set_root(RPL_DEFAULT_INSTANCE, &ipaddr);
-  if(dag != NULL) {
-    rpl_set_prefix(dag, &prefix, 64);
-    PRINTF("created a new RPL dag\n");
-  }
+ // dag = rpl_set_root(RPL_DEFAULT_INSTANCE, &ipaddr);
+  //if(dag != NULL) {
+  //  rpl_set_prefix(dag, &prefix, 64);
+  //  PRINTF("created a new RPL dag\n");
+ // }
 }
 /*---------------------------------------------------------------------------*/
 void
@@ -158,7 +158,25 @@ void
 set_Ch(uint8_t ch)
 {
 	rf_set_channel(ch);
-	LL_addr_set = 1;
+	ch_addr_set = 1;
+}
+
+void
+request_all(void)
+{
+  /* mess up uip_buf with a dirty request... */
+  uip_buf[0] = '?';
+  uip_buf[1] = 'G';
+  uip_len = 2;
+  slip_send();
+  uip_clear_buf();
+}
+void set_all(uint8_t *buf_ptr)
+{
+	set_Ch(*buf_ptr);
+	set_prefix_64((buf_ptr+1));
+	set_LL_64((buf_ptr+1+10));
+
 }
 /*---------------------------------------------------------------------------*/
 PROCESS_THREAD(border_router_process, ev, data)
@@ -181,24 +199,18 @@ PROCESS_THREAD(border_router_process, ev, data)
   PROCESS_PAUSE();
 
   PRINTF("RPL-Border router started\n");
-  /* Request prefix until it has been received */
-  while(!prefix_set) {
-    etimer_set(&et, CLOCK_SECOND);
-    request_prefix();
-    PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
-  }
 
-  while(!LL_addr_set) {
-      etimer_set(&et, CLOCK_SECOND);
-      request_LL_addr();
-      PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
-    }
+  while(!LL_addr_set && !ch_addr_set && !prefix_set) {
+        etimer_set(&et, CLOCK_SECOND);
+        request_all();
+        PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
 
-  while(!ch_addr_set) {
-       etimer_set(&et, CLOCK_SECOND);
-       request_ch_addr();
-       PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
-     }
+
+      }
+
+
+
+
 
   /* Now turn the radio on, but disable radio duty cycling.
    * Since we are the DAG root, reception delays would constrain mesh throughput.
