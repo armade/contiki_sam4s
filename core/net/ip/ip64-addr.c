@@ -38,7 +38,7 @@
 
 static uip_ip6addr_t ip64_prefix = {{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0xff, 0xff, 0, 0, 0, 0}};
 static uint8_t ip64_prefix_len = 96;
-
+#define STATIC_IP64
 /*---------------------------------------------------------------------------*/
 void
 ip64_addr_copy4(uip_ip4addr_t *dest, const uip_ip4addr_t *src)

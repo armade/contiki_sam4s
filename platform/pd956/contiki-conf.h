@@ -38,6 +38,8 @@
 #define BOARD_STRING 					"PD956-01"
 #define SENSOR_ERROR        			0x80000000
 
+//#define CONTIKI_CONF_DEFAULT_HOSTNAME	"PD956"
+
 #define CC_CONF_REGISTER_ARGS          1
 #define CC_CONF_FUNCTION_POINTER_ARGS  1
 #define CC_CONF_VA_ARGS                1
@@ -50,7 +52,7 @@
 #define CLOCK_CONF_SECOND 				1000UL
 
 #define IEEE802154_CONF_PANID           0xABCD
-#define RF_CHANNEL              		13
+//#define RF_CHANNEL              		13
 
 #define RDC_CONF_MCU_SLEEP				1
 //#define NETSTACK_RDC_CHANNEL_CHECK_RATE 16
@@ -105,27 +107,15 @@ typedef unsigned short uip_stats_t;
 
 #define LINKADDR_CONF_SIZE              8
 
-#ifndef NETSTACK_CONF_MAC
 #define NETSTACK_CONF_MAC     nullmac_driver//csma_driver//nullmac_driver
-#endif /* NETSTACK_CONF_MAC */
-
-#ifndef NETSTACK_CONF_RDC
 #define NETSTACK_CONF_RDC     nullrdc_driver//nullrdc_driver//contikimac_driver
-#endif /* NETSTACK_CONF_RDC */
 
 #define NULLRDC_CONF_802154_AUTOACK       1
 
-#ifndef NETSTACK_CONF_RADIO
-#define NETSTACK_CONF_RADIO   RF231_radio_driver
-#endif /* NETSTACK_CONF_RADIO */
+#define NETSTACK_CONF_RADIO   		RF231_radio_driver
+#define NETSTACK_CONF_FRAMER  		framer_802154
 
-#ifndef NETSTACK_CONF_FRAMER
-#define NETSTACK_CONF_FRAMER  framer_802154
-#endif /* NETSTACK_CONF_FRAMER */
-
-#ifndef NETSTACK_CONF_NETWORK
 #define NETSTACK_CONF_NETWORK       sicslowpan_driver
-#endif
 
 //#define NETSTACK_CONF_LLSEC XTEAsec_driver
 

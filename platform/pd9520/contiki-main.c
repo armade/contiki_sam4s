@@ -84,15 +84,9 @@ int main()
 
 	// TODO: Atmels framework has an error that must be fixed.
 	// When enumeratin a device that is not supported, the code hangs in an interrupt.
-	// Test with supported device.
 	/* Start USB host stack */
 	uhc_start();
-/*	USB not implemented yet
-	// Don't start USB on endnodes
-#if !LOW_CLOCK //120Mhz
-	memcpy(cdc_serial_number,(void *)&device_certificate.crt.snr,device_certificate.crt.snlen);
-	udc_start();
-#endif*/
+
 	printf("Initialising\n");
 	hwio_load_userpage();
 	clock_init();

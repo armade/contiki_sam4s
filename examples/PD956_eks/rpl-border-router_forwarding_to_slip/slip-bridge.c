@@ -49,11 +49,19 @@
 #define DEBUG DEBUG_PRINT
 #include "net/ip/uip-debug.h"
 
-void set_prefix_64(uip_ipaddr_t *);
-
-static uip_ipaddr_t last_sender;
-
+extern void set_prefix_64(uip_ipaddr_t *);
 extern void set_all(uint8_t *buf_ptr);
+//static uip_ipaddr_t last_sender;
+
+extern uint8_t sixlowpan_out(const uip_lladdr_t *localdest);
+extern void set_all(uint8_t *buf_ptr);
+
+static uint8_t
+output_dummy(const uip_lladdr_t *localdest)
+{
+	return 0;
+}
+
 /*---------------------------------------------------------------------------*/
 static void
 slip_input_callback(void)
@@ -72,13 +80,12 @@ slip_input_callback(void)
       PRINTF("\n");
       set_prefix_64(&prefix);
     }else
-	if(uip_buf[1] == 'L') {
+	/*if(uip_buf[1] == 'L') {
 		set_LL_64(&uip_buf[2]);
 	}else
 	if(uip_buf[1] == 'C') {
 		set_Ch(uip_buf[2]);
-	}
-	else
+	}else*/
 	if(uip_buf[1] == 'G') {
 		set_all(&uip_buf[2]);
   	  }
@@ -99,13 +106,18 @@ slip_input_callback(void)
       
     }
     uip_clear_buf();
-  }
-  /* Save the last sender received over SLIP to avoid bouncing the
-     packet back if no route is found */
-  uip_ipaddr_copy(&last_sender, &UIP_IP_BUF->srcipaddr);
+  }else{
 
-  NETSTACK_NETWORK.input();
-  uip_clear_buf();
+	  uip_lladdr_t dest;
+	  if(uip_len <= sizeof(dest))
+		  return;
+	  memcpy(&dest,&uip_buf[0],sizeof(dest));
+	  uip_len -= sizeof(dest);
+	  memmove(&uip_buf[0],&uip_buf[0+sizeof(dest)],uip_len);
+	  sixlowpan_out(&dest);
+
+	  uip_clear_buf();
+  }
 }
 /*---------------------------------------------------------------------------*/
 void my_hack_input_callback(void)
@@ -114,7 +126,7 @@ void my_hack_input_callback(void)
 	uip_clear_buf();
 }
 
-void my_hack_output_callback(void)
+void my_hack_output_callback(int status)
 {
 
 }
@@ -128,24 +140,15 @@ init(void)
   slip_set_input_callback(slip_input_callback);
 
   rime_sniffer_add(&snif);
+  tcpip_set_outputfunc(output_dummy);// silence tcp stack
 }
 /*---------------------------------------------------------------------------*/
 static int
 output(void)
 {
-  if(uip_ipaddr_cmp(&last_sender, &UIP_IP_BUF->srcipaddr)) {
-    /* Do not bounce packets back over SLIP if the packet was received
-       over SLIP */
-    PRINTF("slip-bridge: Destination off-link but no route src=");
-    PRINT6ADDR(&UIP_IP_BUF->srcipaddr);
-    PRINTF(" dst=");
-    PRINT6ADDR(&UIP_IP_BUF->destipaddr);
-    PRINTF("\n");
-  } else {
- //   PRINTF("SUT: %u\n", uip_len);
     slip_send();
-  }
-  return 0;
+
+	return 0;
 }
 
 /*---------------------------------------------------------------------------*/

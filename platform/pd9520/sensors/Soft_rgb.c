@@ -181,7 +181,7 @@ soft_RGB_configure(int type, int enable)
 			 }else if(enable == 7){
 				 effect_state = 255;
 				 counter = 0;
-				 value_soft_RGB(255,255,255,255);
+				 //value_soft_RGB(255,255,255,255);
 				 RGB_TIMER.TC_CCR=1;
 				 RGB_TIMER.TC_CCR=4;
 				 Sensor_status = SENSOR_STATUS_READY;

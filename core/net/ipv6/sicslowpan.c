@@ -1804,3 +1804,8 @@ const struct network_driver sicslowpan_driver = {
 /*--------------------------------------------------------------------*/
 /** @} */
 
+uint8_t
+sixlowpan_out(const uip_lladdr_t *localdest)
+{
+	output(localdest);
+}

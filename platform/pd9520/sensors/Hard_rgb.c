@@ -24,6 +24,7 @@ unsigned effect_state;
 static RGB_hard_t RGB_tmp; // Used doing effect
 static void RGB_COLORLOOP_RUN(void *data);
 static void RGB_RANDOM_RUN(void *data);
+static void RGB_RAPID_RED_RUN(void *data);
 
 static RGB_hard_t hard_user_set; // User set value (not modified by brightness or gamma)
 static int Sensor_status = SENSOR_STATUS_DISABLED;
@@ -178,6 +179,14 @@ hard_RGB_configure(int type, int enable)
 					Sensor_status |= (2<<12);
 					sensors_changed(&hard_RGB_ctrl_sensor);
 				}
+			}else if(enable == 12){
+				 if((Sensor_status&0xfff) == SENSOR_STATUS_READY){
+					 effect_state = 0;
+					 RGB_tmp.led = (leds_hard_t){4096,4096,4096,256};
+					 RGB_RAPID_RED_RUN(NULL);
+					 Sensor_status |= (3<<12);
+					 sensors_changed(&soft_RGB_ctrl_sensor);
+				 }
 			}
 			break;
 	}
@@ -248,9 +257,23 @@ RGB_RANDOM_RUN(void *data)
 		next = 5;
 
 	// NB: user can't see the value update on the PWM signal. It would just confuse them.
-	value_hard_RGB(RGB_tmp.led.r,RGB_tmp.led.g,RGB_tmp.led.b,RGB_tmp.led.brightness);
+	value_hard_RGB(4096,2720,0,RGB_tmp.led.brightness);
 	ctimer_set(&RGB_effect_timer, next, RGB_RANDOM_RUN, NULL);
 }
 
+static void
+RGB_RAPID_RED_RUN(void *data)
+{
+	clock_time_t next = 50;
+
+	if(effect_state == 255)// exit
+		return;
+
+	RGB_tmp.led.brightness ^= 256;
+
+	// NB: user can't see the value update on the PWM signal. It would just confuse them.
+	value_hard_RGB(256,0,0,RGB_tmp.led.brightness);
+	ctimer_set(&RGB_effect_timer, next, RGB_RAPID_RED_RUN, NULL);
+}
 /*---------------------------------------------------------------------------*/
 #endif

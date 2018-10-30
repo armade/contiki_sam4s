@@ -22,10 +22,11 @@
 Pio *RGB_base = (Pio *)PIOA;
 
 struct ctimer RGB_effect_timer;
-unsigned effect_state;
+static unsigned effect_state;
 static RGB_soft_t RGB_tmp;
 static void RGB_COLORLOOP_RUN(void *data);
 static void RGB_RANDOM_RUN(void *data);
+static void RGB_RAPID_RED_RUN(void *data);										  
 
 volatile RGB_soft_t RGB; // True output
 volatile RGB_soft_t RGB_reload; // True reload output
@@ -90,7 +91,7 @@ uint16_t gamma_corr(int input)
 static int
 value_soft_RGB(uint16_t R,uint16_t G,uint16_t B, uint16_t brightness)
 {
-	RGB_soft_t tmp;
+	static RGB_soft_t tmp;
 
 	if((brightness>256))		brightness = 256;
 	if((R > 256))				R=256;
@@ -211,6 +212,14 @@ soft_RGB_configure(int type, int enable)
 					 Sensor_status |= (2<<12);
 					 sensors_changed(&soft_RGB_ctrl_sensor);
 				 }
+				}else if(enable == 12){
+				 if((Sensor_status&0xfff) == SENSOR_STATUS_READY){
+					 effect_state = 0;
+					 RGB_tmp.led = (leds_t){256,256,256,256};
+					 RGB_RAPID_RED_RUN(NULL);
+					 Sensor_status |= (3<<12);
+					 sensors_changed(&soft_RGB_ctrl_sensor);
+				 }		   
 			 }
 			 break;
 	}
@@ -284,5 +293,19 @@ RGB_RANDOM_RUN(void *data)
 	ctimer_set(&RGB_effect_timer, next, RGB_RANDOM_RUN, NULL);
 }
 
+static void
+RGB_RAPID_RED_RUN(void *data)
+{
+	clock_time_t next = 50;
+
+	if(effect_state == 255)// exit
+		return;
+
+	RGB_tmp.led.brightness ^= 256;
+
+	// NB: user can't see the value update on the PWM signal. It would just confuse them.
+	value_soft_RGB(256,0,0,RGB_tmp.led.brightness);
+	ctimer_set(&RGB_effect_timer, next, RGB_RAPID_RED_RUN, NULL);
+}
 /*---------------------------------------------------------------------------*/
 #endif

@@ -60,7 +60,7 @@
 #include <string.h>
 
 #include "platform-conf.h"
-#define DEBUG DEBUG_NONE
+#define DEBUG DEBUG_PRINT
 
 #include "net/ip/uip-debug.h"
 
@@ -214,11 +214,11 @@ dis_input(void)
   unsigned char *buffer;
   static crt_t *certificate_ptr;
   static uint8_t hash[32] = {0};
-
   buffer = UIP_ICMP_PAYLOAD;
   certificate_ptr = (crt_t *)&buffer[3];
   sha2_sha256( (uint8_t *)&certificate_ptr->payloadfield_size_control, sizeof(certificate_ptr->payloadfield_size_control),hash);
   if (!uECC_verify((void *)&device_certificate.masterpublic_key, hash, sizeof(hash), certificate_ptr->signature, uECC_secp256r1())) {
+	  PRINTF("\n\nRPL: Received a DIS but discarded. Signature not valid \n\n");
 	  uip_clear_buf();
 	  return;
   }

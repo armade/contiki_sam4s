@@ -113,6 +113,14 @@ static void slip_input_callback(void)
 
 uint8_t my_slip_output(const uip_lladdr_t *addr)
 {
+
+	memmove(&uip_buf[UIP_LLH_LEN+sizeof(uip_lladdr_t)],&uip_buf[UIP_LLH_LEN],uip_len);
+	if(addr == NULL) {
+	    linkaddr_copy((linkaddr_t *)&uip_buf[UIP_LLH_LEN], (const linkaddr_t *)&linkaddr_null);
+	  } else {
+	    linkaddr_copy((linkaddr_t *)&uip_buf[UIP_LLH_LEN], (const linkaddr_t *)addr);
+	  }
+	uip_len += sizeof(uip_lladdr_t);
 	slipnet_driver.input();
 	return 1;
 }

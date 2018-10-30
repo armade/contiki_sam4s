@@ -47,6 +47,7 @@
 #include "board-peripherals.h"
 #include "clock.h"
 #include "platform-conf.h"
+#include "debug-uart.h"
 
 #include <stdint.h>
 #include <string.h>
@@ -340,6 +341,15 @@ static page_t http_mqtt_cfg_page = {
   "mqtt.html",
   "MQTT Config",
   generate_mqtt_config,
+};
+
+static char generate_device_log(struct httpd_state *s);
+
+static page_t http_device_log_page = {
+  NULL,
+  "log.html",
+  "Debug log",
+  generate_device_log,
 };
 
 /*---------------------------------------------------------------------------*/
@@ -816,6 +826,37 @@ PT_THREAD(generate_config(struct httpd_state *s))
                  enqueue_chunk(s, 0, "</form>"));
 
   PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "</fieldset>"));
+
+  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 1, http_bottom));
+
+  PT_END(&s->generate_pt);
+}
+
+static
+PT_THREAD(generate_device_log(struct httpd_state *s))
+{
+  PT_BEGIN(&s->generate_pt);
+
+  /* Generate top matter (doctype, title, nav links etc) */
+  PT_WAIT_THREAD(&s->generate_pt,
+                 generate_top_matter(s, http_dev_cfg_page.title,
+                                     http_config_css2));
+
+  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<fieldset>"));
+
+  static unsigned char log[4096];
+  static uint16_t i,size;
+
+  size = Get_debug_log(log);
+
+  for(i=0;i<size;i++){
+	  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "%c",log[i]));
+  }
+  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "</fieldset>"));
+
+  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<script>"));
+  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "setTimeout(\"location.reload(true);\", 5000)")); //Auto Refreshing Every 5 Seconds
+  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "</script>"));
 
   PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 1, http_bottom));
 
@@ -1764,6 +1805,7 @@ init(void)
 
   list_add(pages_list, &http_index_page);
   list_add(pages_list, &http_dev_cfg_page);
+  list_add(pages_list, &http_device_log_page);
 
 #ifdef NODE_STEP_MOTOR
   list_add(pages_list, &http_motor_cfg_page);

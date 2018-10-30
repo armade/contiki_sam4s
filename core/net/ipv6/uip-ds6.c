@@ -51,7 +51,7 @@
 #include "net/ipv6/multicast/uip-mcast6.h"
 #include "net/ip/uip-packetqueue.h"
 
-#define DEBUG DEBUG_NONE
+#define DEBUG DEBUG_PRINT
 #include "net/ip/uip-debug.h"
 
 struct etimer uip_ds6_timer_periodic;                           /**< Timer for maintenance of data structures */

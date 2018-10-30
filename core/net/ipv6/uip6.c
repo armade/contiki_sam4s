@@ -95,7 +95,7 @@
 /* For Debug, logging, statistics                                            */
 /*---------------------------------------------------------------------------*/
 
-#define DEBUG DEBUG_NONE
+#define DEBUG DEBUG_PRINT
 #include "net/ip/uip-debug.h"
 
 #if UIP_LOGGING == 1
@@ -1461,6 +1461,7 @@ uip_process(uint8_t flag)
    * Search generic input handlers.
    * The handler is in charge of setting uip_len to 0
    */
+  volatile uint32_t test =uip_l2_l3_hdr_len;
   if(uip_icmp6_input(UIP_ICMP_BUF->type,
                      UIP_ICMP_BUF->icode) == UIP_ICMP6_INPUT_ERROR) {
     PRINTF("Unknown ICMPv6 message type/code %d\n", UIP_ICMP_BUF->type);
