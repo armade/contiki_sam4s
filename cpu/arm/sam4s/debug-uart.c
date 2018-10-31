@@ -17,6 +17,10 @@ dbg_putchar(const char ch)
 
 #ifdef log_print
 	put_char_into_log(ch);
+	put_char_into_log('<');
+		put_char_into_log('b');
+		put_char_into_log('r');
+		put_char_into_log('>');
 #endif
 }
 
@@ -29,7 +33,15 @@ dbg_send_bytes(const unsigned char *seq, unsigned int len)
 #ifdef log_print
 	unsigned int size = len;
 	while(size--)
-		put_char_into_log(*seq++);
+		if(*seq != '\n')
+			put_char_into_log(*seq++);
+		else{
+
+			put_char_into_log('<');
+			put_char_into_log('b');
+			put_char_into_log('r');
+			put_char_into_log('>');
+		}
 #endif
   return len;
 }

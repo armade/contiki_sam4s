@@ -505,6 +505,7 @@ uip_connect(const uip_ipaddr_t *ripaddr, uint16_t rport)
     return 0;
   }
 
+  conn->tcpstateflags = UIP_SYN_SENT;
   RNG_Function(iss,4);
   conn->snd_nxt[0] = iss[0];
   conn->snd_nxt[1] = iss[1];
@@ -1218,7 +1219,7 @@ uip_process(uint8_t flag)
   /* TBD Some Parameter problem messages */
   if(!uip_ds6_is_my_addr(&UIP_IP_BUF->destipaddr) &&
      !uip_ds6_is_my_maddr(&UIP_IP_BUF->destipaddr)) {
-    if(/*!uip_is_addr_mcast(&UIP_IP_BUF->destipaddr) &&*/
+    if(!uip_is_addr_mcast(&UIP_IP_BUF->destipaddr) &&
        !uip_is_addr_linklocal(&UIP_IP_BUF->destipaddr) &&
        !uip_is_addr_linklocal(&UIP_IP_BUF->srcipaddr) &&
        !uip_is_addr_unspecified(&UIP_IP_BUF->srcipaddr) &&

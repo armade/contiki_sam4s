@@ -185,7 +185,7 @@ hard_RGB_configure(int type, int enable)
 				 RGB_tmp.led = (leds_hard_t){4096,4096,4096,256};
 				 RGB_RAPID_RED_RUN(NULL);
 				 Sensor_status |= (3<<12);
-				 sensors_changed(&soft_RGB_ctrl_sensor);
+				 sensors_changed(&hard_RGB_ctrl_sensor);
 			 }
 			}
 			break;
