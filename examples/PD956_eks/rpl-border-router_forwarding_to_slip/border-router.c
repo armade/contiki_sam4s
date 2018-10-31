@@ -138,8 +138,9 @@ request_LL_addr(void)
 void
 set_LL_64(linkaddr_t *LL)
 {
-	memcpy(&uip_lladdr.addr, LL, sizeof(linkaddr_t));
-	SetIEEEAddr(uip_lladdr.addr);
+	memcpy(&uip_lladdr.addr[0], LL,sizeof(linkaddr_t));
+	SetIEEEAddr((void *)&uip_lladdr.addr[0]);
+	linkaddr_set_node_addr(LL);
 	LL_addr_set = 1;
 }
 
@@ -174,8 +175,8 @@ request_all(void)
 void set_all(uint8_t *buf_ptr)
 {
 	set_Ch(*buf_ptr);
-	set_prefix_64((buf_ptr+1));
-	set_LL_64((buf_ptr+1+10));
+	set_prefix_64((uip_ipaddr_t *)&buf_ptr[1]);
+	set_LL_64((linkaddr_t *)&buf_ptr[1+10]);
 
 }
 /*---------------------------------------------------------------------------*/

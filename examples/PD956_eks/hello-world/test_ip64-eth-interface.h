@@ -34,8 +34,8 @@
 
 #include "net/ip/uip.h"
 
-void ip64_eth_interface_input(uint8_t *packet, uint16_t len);
+void test_ip64_eth_interface_input(uint8_t *packet, uint16_t len);
 
-extern const struct uip_fallback_interface ip64_eth_interface;
+extern const struct uip_fallback_interface test_ip64_eth_interface;
 
 #endif /* IP64_ETH_INTERFACE_H */

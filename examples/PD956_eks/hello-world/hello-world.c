@@ -82,8 +82,8 @@ PROCESS_THREAD(hello_world_process, ev, data) {
 
 	/* Set us up as a RPL root node. */
 	rpl_dag_root_init_dag();
-	 uip_ip6addr(&ipaddr, UIP_DS6_DEFAULT_PREFIX, 0, 0, 0, 0, 0, 0, 1);
-	  uip_ds6_addr_add(&ipaddr, 0, ADDR_AUTOCONF);
+	// uip_ip6addr(&ipaddr, UIP_DS6_DEFAULT_PREFIX, 0, 0, 0, 0, 0, 0, 1);
+	//  uip_ds6_addr_add(&ipaddr, 0, ADDR_AUTOCONF);
 
 	  //ip64_addr_set_prefix(&ipaddr, 64);
 	ip64_init();
@@ -97,7 +97,7 @@ PROCESS_THREAD(hello_world_process, ev, data) {
 	process_start(&button_process, NULL);
 
 	process_start(&ntpd_process, NULL);
-	process_start(&gpsd_process, NULL);
+	//process_start(&gpsd_process, NULL);
 
 	process_start(&httpd_simple_process, NULL);
 	register_http_post_handlers();

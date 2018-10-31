@@ -43,15 +43,13 @@
 
 #define DEBUG DEBUG_NONE
 #include "net/ip/uip-debug.h"
-
+#define printf(...)
 /*---------------------------------------------------------------------------*/
 void
 ip64_eth_interface_input(uint8_t *packet, uint16_t len)
 {
   struct ip64_eth_hdr *ethhdr;
   ethhdr = (struct ip64_eth_hdr *)packet;
-
-  //PRINTF("%s: eth_type = %x\n",__func__,ethhdr->type);
 
   if(ethhdr->type == UIP_HTONS(IP64_ETH_TYPE_ARP)) {
     len = ip64_arp_arp_input(packet, len);
@@ -61,33 +59,29 @@ ip64_eth_interface_input(uint8_t *packet, uint16_t len)
     }
   } else if(ethhdr->type == UIP_HTONS(IP64_ETH_TYPE_IP) &&
 	    len > sizeof(struct ip64_eth_hdr)) {
-	  PRINTF("-------------->\n");
+    printf("-------------->\n");
     uip_len = ip64_4to6(&packet[sizeof(struct ip64_eth_hdr)],
 			len - sizeof(struct ip64_eth_hdr),
 			&uip_buf[UIP_LLH_LEN]);
     if(uip_len > 0) {
-    	PRINTF("ip64_interface_process: converted %d bytes\n", uip_len);
+      printf("ip64_interface_process: converted %d bytes\n", uip_len);
 
-    	PRINTF("ip64-interface: input source ");
+      printf("ip64-interface: input source ");
       PRINT6ADDR(&UIP_IP_BUF->srcipaddr);
       PRINTF(" destination ");
       PRINT6ADDR(&UIP_IP_BUF->destipaddr);
       PRINTF("\n");
 
       tcpip_input();
-      PRINTF("Done\n");
+      printf("Done\n");
     }
-  } else if(ethhdr->type == UIP_HTONS(IP64_ETH_TYPE_IPV6)){
-	  //memcpy(&uip_buf[UIP_LLH_LEN],&packet[sizeof(struct ip64_eth_hdr)],len - sizeof(struct ip64_eth_hdr));
-	 // tcpip_output(NULL);
-	  //uip_len = 0;
-	}
+  }
 }
 /*---------------------------------------------------------------------------*/
 static void
 init(void)
 {
-  PRINTF("ip64-eth-interface: init\n");
+  printf("ip64-eth-interface: init\n");
 }
 /*---------------------------------------------------------------------------*/
 static int
@@ -95,20 +89,20 @@ output(void)
 {
   int len, ret;
 
-  PRINTF("ip64-interface: output source ");
+  printf("ip64-interface: output source ");
   PRINT6ADDR(&UIP_IP_BUF->srcipaddr);
   PRINTF(" destination ");
   PRINT6ADDR(&UIP_IP_BUF->destipaddr);
   PRINTF("\n");
 
-  PRINTF("<--------------\n");
+  printf("<--------------\n");
   len = ip64_6to4(&uip_buf[UIP_LLH_LEN], uip_len,
 		  &ip64_packet_buffer[sizeof(struct ip64_eth_hdr)]);
 
-  PRINTF("ip64-interface: output len %d\n", len);
+  printf("ip64-interface: output len %d\n", len);
   if(len > 0) {
     if(ip64_arp_check_cache(&ip64_packet_buffer[sizeof(struct ip64_eth_hdr)])) {
-      PRINTF("Create header\n");
+      printf("Create header\n");
       ret = ip64_arp_create_ethhdr(ip64_packet_buffer,
 				   &ip64_packet_buffer[sizeof(struct ip64_eth_hdr)]);
       if(ret > 0) {
@@ -116,25 +110,11 @@ output(void)
 	IP64_ETH_DRIVER.output(ip64_packet_buffer, len);
       }
     } else {
-      PRINTF("Create request\n");
+      printf("Create request\n");
       len = ip64_arp_create_arp_request(ip64_packet_buffer,
 					&ip64_packet_buffer[sizeof(struct ip64_eth_hdr)]);
       return IP64_ETH_DRIVER.output(ip64_packet_buffer, len);
     }
-  }
-  else{ // if failed to convert to ipv4, just send it as ipv6
-	  struct ip64_eth_hdr *ethhdr;
-	    ethhdr = (struct ip64_eth_hdr *)&ip64_packet_buffer[UIP_LLH_LEN];
-	    len=uip_len;
-
-	    memcpy(&ip64_packet_buffer[sizeof(struct ip64_eth_hdr)],&uip_buf[UIP_LLH_LEN],uip_len);
-
-	    ret = ip64_arp_create_ethhdr(ip64_packet_buffer,
-	    				   &ip64_packet_buffer[sizeof(struct ip64_eth_hdr)]);
-	        if(ret > 0)
-	        	len += ret;
-	    ethhdr->type = UIP_HTONS(IP64_ETH_TYPE_IPV6);
-	  return IP64_ETH_DRIVER.output(ip64_packet_buffer, len);
   }
 
   return 0;

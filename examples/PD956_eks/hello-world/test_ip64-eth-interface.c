@@ -44,146 +44,161 @@
 #define DEBUG DEBUG_NONE
 #include "net/ip/uip-debug.h"
 
+typedef struct{
+		struct ip64_eth_addr mac;
+		uip_ipaddr_t IP_addr;
+}ipv6_arp_cache_t;
+
+ipv6_arp_cache_t ipv6_arp_cache[1];
+
+void local_ipv6_arp_cache_save(struct ip64_eth_addr *src, uip_ipaddr_t *addr)
+{
+	ipv6_arp_cache[0].IP_addr =*addr;
+	ipv6_arp_cache[0].mac = *src;
+}
+
+struct ip64_eth_addr local_ipv6_arp_cache_lookup( uip_ipaddr_t *addr)
+{
+	return ipv6_arp_cache[0].mac;
+}
+
 /*---------------------------------------------------------------------------*/
 void
-ip64_eth_interface_input(uint8_t *packet, uint16_t len)
+test_ip64_eth_interface_input(uint8_t *packet, uint16_t len)
 {
-  struct ip64_eth_hdr *ethhdr;
-  ethhdr = (struct ip64_eth_hdr *)packet;
-  uip_ipaddr_t prefix;
-  uip_ip6addr(&prefix, UIP_DS6_DEFAULT_PREFIX, 0, 0, 0, 0, 0, 0, 0);
+	struct ip64_eth_hdr *ethhdr;
+	ethhdr = (struct ip64_eth_hdr *) packet;
+	uip_ipaddr_t prefix;
+	uip_ip6addr(&prefix, UIP_DS6_DEFAULT_PREFIX, 0, 0, 0, 0, 0, 0, 0);
 
-  //PRINTF("%s: eth_type = %x\n",__func__,ethhdr->type);
+	//PRINTF("%s: eth_type = %x\n",__func__,ethhdr->type);
 
-  if(ethhdr->type == UIP_HTONS(IP64_ETH_TYPE_ARP)) {
-    len = ip64_arp_arp_input(packet, len);
+	if(ethhdr->type == UIP_HTONS(IP64_ETH_TYPE_ARP)){
+		len = ip64_arp_arp_input(packet, len);
 
-    if(len > 0) {
-      IP64_ETH_DRIVER.output(packet, len);
-    }
-  } else if(ethhdr->type == UIP_HTONS(IP64_ETH_TYPE_IP) &&
-	    len > sizeof(struct ip64_eth_hdr)) {
-	  PRINTF("-------------->\n");
-    uip_len = ip64_4to6(&packet[sizeof(struct ip64_eth_hdr)],
-			len - sizeof(struct ip64_eth_hdr),
-			&uip_buf[UIP_LLH_LEN]);
-    if(uip_len > 0) {
-    	PRINTF("ip64_interface_process: converted %d bytes\n", uip_len);
+		if(len > 0){
+			IP64_ETH_DRIVER.output(packet, len);
+		}
+	} else if(ethhdr->type == UIP_HTONS(IP64_ETH_TYPE_IP)
+			&& len > sizeof(struct ip64_eth_hdr)){
+		PRINTF("-------------->\n");
+		uip_len = ip64_4to6(&packet[sizeof(struct ip64_eth_hdr)],
+				len - sizeof(struct ip64_eth_hdr), &uip_buf[UIP_LLH_LEN]);
+		if(uip_len > 0){
+			PRINTF("ip64_interface_process: converted %d bytes\n", uip_len);
 
-    	PRINTF("ip64-interface: (IPv4)input source ");
-      PRINT6ADDR(&UIP_IP_BUF->srcipaddr);
-      PRINTF(" destination ");
-      PRINT6ADDR(&UIP_IP_BUF->destipaddr);
-      PRINTF("\n");
+			PRINTF("ip64-interface: (IPv4)input source ");
+			PRINT6ADDR(&UIP_IP_BUF->srcipaddr);
+			PRINTF(" destination ");
+			PRINT6ADDR(&UIP_IP_BUF->destipaddr);
+			PRINTF("\n");
 
-      tcpip_input();
-      PRINTF("Done\n");
-    }
-  } else if(ethhdr->type == UIP_HTONS(IP64_ETH_TYPE_IPV6)){ // TODO: If the packet is for us...
-	  memcpy(&uip_buf[UIP_LLH_LEN],&packet[sizeof(struct ip64_eth_hdr)],len - sizeof(struct ip64_eth_hdr));
-	  PRINTF("ip64-interface: (IPv6)input source ");
+			tcpip_input();
+			PRINTF("Done\n");
+		}
+	}else if(ethhdr->type == UIP_HTONS(IP64_ETH_TYPE_IPV6)){ // TODO: If the packet is for us...
+
+
+		memcpy(&uip_buf[UIP_LLH_LEN], &packet[sizeof(struct ip64_eth_hdr)],
+				len - sizeof(struct ip64_eth_hdr));
+		PRINTF("ip64-interface: (IPv6)input source ");
 		PRINT6ADDR(&UIP_IP_BUF->srcipaddr);
 		PRINTF(" destination ");
 		PRINT6ADDR(&UIP_IP_BUF->destipaddr);
 		PRINTF("\n");
 		uip_len = len - sizeof(struct ip64_eth_hdr);
 
+		local_ipv6_arp_cache_save(&ethhdr->src,&UIP_IP_BUF->srcipaddr);
+		tcpip_input();
 
-		  int i;
-		  uint8_t state;
+		/*int i;
+		uint8_t state;
 
-
-		  // internal
-		  for(i = 0; i < UIP_DS6_ADDR_NB; i++) {
-		    state = uip_ds6_if.addr_list[i].state;
-		    if(uip_ds6_if.addr_list[i].isused &&
-		       (state == ADDR_TENTATIVE || state == ADDR_PREFERRED)) {
-		    		if(uip_ipaddr_cmp(&uip_ds6_if.addr_list[i].ipaddr,&UIP_IP_BUF->destipaddr)){
-		    			printf("handled local\n");
-		    			tcpip_input();
-		    			uip_len = 0;
-		    			return;
-		    		}
-		    }
-		  }
-		  slip_send();
-		  uip_ip6addr(&prefix, 0xff02, 0, 0, 0, 0, 0, 0, 0);
-		  if(uip_ipaddr_prefixcmp(&UIP_IP_BUF->destipaddr, &prefix, 16)) //mcast
-			{
+		// internal
+		for (i = 0; i < UIP_DS6_ADDR_NB ; i++){
+			state = uip_ds6_if.addr_list[i].state;
+			if(uip_ds6_if.addr_list[i].isused
+					&& (state == ADDR_TENTATIVE || state == ADDR_PREFERRED)){
+				if(uip_ipaddr_cmp(&uip_ds6_if.addr_list[i].ipaddr,
+						&UIP_IP_BUF->destipaddr)){
+					printf("handled local\n");
 					tcpip_input();
+					return;
+				}
 			}
+		}
 
-
-
-
-
-	  //if(uip_ipaddr_prefixcmp(&UIP_IP_BUF->destipaddr, &prefix, 16)) // Only if prefix is aaaa
-		  //slip_send();
-	  //else
-		//  tcpip_input();
-	  uip_len = 0;
+		//uip_ip6addr(&prefix, 0xff02, 0, 0, 0, 0, 0, 0, 0);
+		//if(uip_ipaddr_prefixcmp(&UIP_IP_BUF->destipaddr, &prefix, 16)) //mcast
+		if(uip_is_addr_solicited_node(&UIP_IP_BUF->destipaddr))
+		{
+			//tcpip_input();
+			my_slip_output(NULL); //NB: slip now changes uipbuf and tcpip_input clears len
+			uip_clear_buf();
+		} else{
+			my_slip_output(&UIP_IP_BUF->destipaddr);
+			uip_clear_buf();
+		}*/
 	}
 }
 /*---------------------------------------------------------------------------*/
-uint8_t
-ip64_eth_interface_output(const uip_lladdr_t *addr)
+int
+ip64_eth_interface_output(void)
 {
-  int len, ret;
+	int len, ret;
 
-  uip_ipaddr_t prefix;
-   uip_ip6addr(&prefix, UIP_DS6_DEFAULT_PREFIX, 0, 0, 0, 0, 0, 0, 0);
+	uip_ipaddr_t prefix;
+	uip_ip6addr(&prefix, UIP_DS6_DEFAULT_PREFIX, 0, 0, 0, 0, 0, 0, 0);
 
-  PRINTF("ip64-interface: output source ");
-  PRINT6ADDR(&UIP_IP_BUF->srcipaddr);
-  PRINTF(" destination ");
-  PRINT6ADDR(&UIP_IP_BUF->destipaddr);
-  PRINTF("\n");
+	PRINTF("ip64-interface: output source ");
+	PRINT6ADDR(&UIP_IP_BUF->srcipaddr);
+	PRINTF(" destination ");
+	PRINT6ADDR(&UIP_IP_BUF->destipaddr);
+	PRINTF("\n");
 
-  PRINTF("<--------------\n");
-  len = ip64_6to4(&uip_buf[UIP_LLH_LEN], uip_len,
-		  &ip64_packet_buffer[sizeof(struct ip64_eth_hdr)]);
+	PRINTF("<--------------\n");
+	len = ip64_6to4(&uip_buf[UIP_LLH_LEN], uip_len,
+			&ip64_packet_buffer[sizeof(struct ip64_eth_hdr)]);
 
-  PRINTF("ip64-interface: output len %d\n", len);
-  if(len > 0) {
-    if(ip64_arp_check_cache(&ip64_packet_buffer[sizeof(struct ip64_eth_hdr)])) {
-      PRINTF("Create header\n");
-      ret = ip64_arp_create_ethhdr(ip64_packet_buffer,
-				   &ip64_packet_buffer[sizeof(struct ip64_eth_hdr)]);
-      if(ret > 0) {
-	len += ret;
-	IP64_ETH_DRIVER.output(ip64_packet_buffer, len);
-      }
-    } else {
-      PRINTF("Create request\n");
-      len = ip64_arp_create_arp_request(ip64_packet_buffer,
+	PRINTF("ip64-interface: output len %d\n", len);
+	if(len > 0){
+		if(ip64_arp_check_cache(
+				&ip64_packet_buffer[sizeof(struct ip64_eth_hdr)])){
+			PRINTF("Create header\n");
+			ret = ip64_arp_create_ethhdr(ip64_packet_buffer,
 					&ip64_packet_buffer[sizeof(struct ip64_eth_hdr)]);
-      return IP64_ETH_DRIVER.output(ip64_packet_buffer, len);
-    }
-  }
-  else{ // if failed to convert to ipv4, just send it as ipv6
+			if(ret > 0){
+				len += ret;
+				IP64_ETH_DRIVER.output(ip64_packet_buffer, len);
+			}
+		} else{
+			PRINTF("Create request\n");
+			len = ip64_arp_create_arp_request(ip64_packet_buffer,
+					&ip64_packet_buffer[sizeof(struct ip64_eth_hdr)]);
+			return IP64_ETH_DRIVER.output(ip64_packet_buffer, len);
+		}
+	} else{ // if failed to convert to ipv4, just send it as ipv6
 
-	  if(uip_ipaddr_prefixcmp(&UIP_IP_BUF->destipaddr, &prefix, 16)) //mcast
-	  {
-		  slip_send();
-		  return 0;
-	  }
-	  else{
-	  struct ip64_eth_hdr *ethhdr;
-	    ethhdr = (struct ip64_eth_hdr *)&ip64_packet_buffer[UIP_LLH_LEN];
-	    len=uip_len;
+		struct ip64_eth_hdr *ethhdr;
+		ethhdr = (struct ip64_eth_hdr *) &ip64_packet_buffer[UIP_LLH_LEN];
+		len = uip_len;
 
-	    memcpy(&ip64_packet_buffer[sizeof(struct ip64_eth_hdr)],&uip_buf[UIP_LLH_LEN],uip_len);
+		memcpy(&ip64_packet_buffer[sizeof(struct ip64_eth_hdr)],
+				&uip_buf[UIP_LLH_LEN], uip_len);
 
-	    ret = ip64_arp_create_ethhdr(ip64_packet_buffer,
-	    				   &ip64_packet_buffer[sizeof(struct ip64_eth_hdr)]);
-	        if(ret > 0)
-	        	len += ret;
-	    ethhdr->type = UIP_HTONS(IP64_ETH_TYPE_IPV6);
-	  return IP64_ETH_DRIVER.output(ip64_packet_buffer, len);
-	  }
-  }
+		ret = ip64_arp_create_ethhdr(ip64_packet_buffer,
+				&ip64_packet_buffer[sizeof(struct ip64_eth_hdr)]);
+		if(ret > 0)
+			len += ret;
+		ethhdr->type = UIP_HTONS(IP64_ETH_TYPE_IPV6);
+		ethhdr->dest = local_ipv6_arp_cache_lookup(&UIP_IP_BUF->destipaddr);
+		//memcpy(ethhdr->src.addr, &UIP_IP_BUF->srcipaddr.u8[10], 6);
 
-  return 0;
+		return IP64_ETH_DRIVER.output(ip64_packet_buffer, len);
+
+	}
+
+	return 0;
 }
 
 /*---------------------------------------------------------------------------*/
@@ -191,12 +206,16 @@ static void
 ip64_eth_interface_init(void)
 {
   PRINTF("ip64-eth-interface: init\n");
-  tcpip_set_outputfunc(ip64_eth_interface_output);
+  //tcpip_set_outputfunc(ip64_eth_interface_output);
 }
 /*---------------------------------------------------------------------------*/
-const struct network_driver ip64_eth_driver = {
+/*const struct network_driver ip64_eth_driver = {
   "ip64_eth",
   ip64_eth_interface_init,
   ip64_eth_interface_input,
-};
+};*/
 /*---------------------------------------------------------------------------*/
+const struct uip_fallback_interface test_ip64_eth_interface = {
+		ip64_eth_interface_init,
+		ip64_eth_interface_output
+};

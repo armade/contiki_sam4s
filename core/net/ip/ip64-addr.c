@@ -122,6 +122,22 @@ ip64_addr_4to6(const uip_ip4addr_t *ipv4addr,
 	       uip_ip6addr_t *ipv6addr)
 {
 	uint8_t i;
+	const uip_ip4addr_t *host;
+
+	if(ipv4addr->u8[3] < 10){
+		uip_ipaddr_copy(ipv6addr, &ip64_prefix);
+		  ipv6addr->u8[12] = ipv4addr->u8[0];
+		  ipv6addr->u8[13] = ipv4addr->u8[1];
+		  ipv6addr->u8[14] = ipv4addr->u8[2];
+		  ipv6addr->u8[15] = ipv4addr->u8[3];
+		  printf("ip64_addr_4to6: IPv6-encoded IPv4 address %d.%d.%d.%d\n",
+			 ipv4addr->u8[0], ipv4addr->u8[1],
+			 ipv4addr->u8[2], ipv4addr->u8[3]);
+
+		  /* Conversion succeeded, we return non-zero. */
+		  return 1;
+	}
+
   /* This function converts an IPv4 addresses into an IPv6
      addresses. It returns 0 if it failed to convert the address and
      non-zero if it could successfully convert the address. */
@@ -146,7 +162,27 @@ ip64_addr_6to4(const uip_ip6addr_t *ipv6addr,
      returns 0 if it failed to convert the address and non-zero if it
      could successfully convert the address. */
 
-  if(ip64_addr_is_ip64(ipv6addr)) {
+	host = ip64_get_hostaddr();
+
+	if(uip_ip6addr_cmp(&uip_hostaddr, ipv6addr)){
+		uip_ip4addr_copy(ipv4addr,host);
+		return 1;
+	}
+
+
+	  if(ip64_addr_is_ip64(ipv6addr)) {
+	    ipv4addr->u8[0] = ipv6addr->u8[12];
+	    ipv4addr->u8[1] = ipv6addr->u8[13];
+	    ipv4addr->u8[2] = ipv6addr->u8[14];
+	    ipv4addr->u8[3] = ipv6addr->u8[15];
+
+	    printf("ip64_addr_6to4: IPv6-encoded IPv4 address %d.%d.%d.%d\n",
+		   ipv4addr->u8[0], ipv4addr->u8[1],
+		   ipv4addr->u8[2], ipv4addr->u8[3]);
+
+	    /* Conversion succeeded, we return non-zero. */
+	    return 1;
+	  }else{
 
 	  for(i=0;i<200;i++){ // Check list
 		  if(uip_ipaddr_cmp(ipv6addr,&ip6_addr_lookup[i]))
@@ -164,7 +200,7 @@ ip64_addr_6to4(const uip_ip6addr_t *ipv6addr,
 	  if(i==200) // No free space
 		  return 0;
 
-	  host = ip64_get_hostaddr();
+
 	  //net = ip64_get_netmask();
 
 	  ipv4addr->u8[0] = host->u8[0];

@@ -13,6 +13,7 @@ CFLAGS += -DUIP_FALLBACK_INTERFACE=ip64_uip_fallback_interface
 
 PROJECT_SOURCEFILES += httpd-simple.c slip-net.c 
 PROJECT_SOURCEFILES += httpd_post_handlers.c
+PROJECT_SOURCEFILES += test_ip64-eth-interface.c
 CONTIKI_WITH_IPV6 = 1
 CONTIKI = ../../..
 include $(CONTIKI)/Makefile.include
