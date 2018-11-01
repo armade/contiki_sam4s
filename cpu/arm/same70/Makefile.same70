@@ -70,7 +70,7 @@ CONTIKI_CPU_DIRS += 	$(CONTIKI_CPU) \
 ### CPU-dependent source files
 CONTIKI_CPU_SOURCEFILES += rtimer-arch.c  
 
-CPU_STARTFILES_SOURCE = startup_same70.c system_same70.c syscalls.c
+CPU_STARTFILES_SOURCE = startup_same70.c system_same70.c syscalls.c board_lowlevel.c
 CPU_STARTFILES = ${addprefix $(OBJECTDIR)/,${call oname, $(CPU_STARTFILES_SOURCE)}}
 CONTIKI_SOURCEFILES += $(CONTIKI_CPU_SOURCEFILES) $(CPU_STARTFILES_SOURCE)
 
@@ -110,7 +110,7 @@ CONTIKI_SOURCEFILES += $(PLATFORM_DRIVER) $(USB_DRIVERS) $(TARGETLIBS)
 
 .SECONDEXPANSION:
 ### Don't treat the .elf as intermediate
-.PRECIOUS: %.elf %.hex %.bin
+.PRECIOUS: %.elf %.hex %.bin %.sym
 
 
 ### Compilation rules
@@ -125,13 +125,19 @@ CUSTOM_RULE_LINK=1
 
 %.bin: %.elf
 	$(OBJCOPY) $(OBJCOPY_FLAGS) $< $@
-	../../../tools/certificate_creator/create_cert/make_certificate.exe $(UUID) $@ > /dev/null
+	#../../../tools/certificate_creator/create_cert/make_certificate.exe $(UUID) $@ > /dev/null
 
 %.lst: %.elf
 	$(OBJDUMP) $(OBJDUMP_FLAGS) $< > $@
+	
+# Create symbol table from target output file.
+%.sym: %.elf
+	@echo $(MSG_SYMBOL_TABLE)
+	$(Q)$(NM) -n $< > $@
+	
 
 # Build .elf and .bin files
-%.$(TARGET): %.elf %.bin
+%.$(TARGET): %.elf %.bin %.sym
 	cp $< $@
 	@echo "$@"
 	@$(CC) --version

@@ -47,19 +47,41 @@
 typedef struct{
 		struct ip64_eth_addr mac;
 		uip_ipaddr_t IP_addr;
+		uint8_t used;
 }ipv6_arp_cache_t;
-
-ipv6_arp_cache_t ipv6_arp_cache[1];
+#define arp_cache_size 4
+ipv6_arp_cache_t ipv6_arp_cache[arp_cache_size] = {0};
 
 void local_ipv6_arp_cache_save(struct ip64_eth_addr *src, uip_ipaddr_t *addr)
 {
-	ipv6_arp_cache[0].IP_addr =*addr;
-	ipv6_arp_cache[0].mac = *src;
+	uint8_t i;
+
+	for(i=0;i<arp_cache_size;i++){
+		if(memcmp(&ipv6_arp_cache[i].IP_addr,addr,sizeof(uip_ipaddr_t)) == 0)
+			return; // already in list
+	}
+
+	for(i=0;i<arp_cache_size;i++){
+		if(ipv6_arp_cache[i].used == 0){
+			ipv6_arp_cache[i].IP_addr =*addr;
+			ipv6_arp_cache[i].mac = *src;
+			ipv6_arp_cache[i].used = 1;
+			return;
+		}
+	}
+
 }
 
 struct ip64_eth_addr local_ipv6_arp_cache_lookup( uip_ipaddr_t *addr)
 {
-	return ipv6_arp_cache[0].mac;
+	uint8_t i;
+	struct ip64_eth_addr bad = {0};
+
+	for(i=0;i<arp_cache_size;i++){
+		if(memcmp(&ipv6_arp_cache[i].IP_addr,addr,sizeof(uip_ipaddr_t)) == 0)
+			return ipv6_arp_cache[i].mac;
+	}
+	return bad;
 }
 
 /*---------------------------------------------------------------------------*/
@@ -68,8 +90,8 @@ test_ip64_eth_interface_input(uint8_t *packet, uint16_t len)
 {
 	struct ip64_eth_hdr *ethhdr;
 	ethhdr = (struct ip64_eth_hdr *) packet;
-	uip_ipaddr_t prefix;
-	uip_ip6addr(&prefix, UIP_DS6_DEFAULT_PREFIX, 0, 0, 0, 0, 0, 0, 0);
+	//uip_ipaddr_t prefix;
+	//uip_ip6addr(&prefix, UIP_DS6_DEFAULT_PREFIX, 0, 0, 0, 0, 0, 0, 0);
 
 	//PRINTF("%s: eth_type = %x\n",__func__,ethhdr->type);
 

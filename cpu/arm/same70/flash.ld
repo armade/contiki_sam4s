@@ -50,6 +50,8 @@ SEARCH_DIR(.)
 /* Memory Spaces Definitions */
 MEMORY
 {
+  itcm (rwx) : ORIGIN = 0x00000000, LENGTH = 0x00008000
+  dtcm (rw) : ORIGIN = 0x20000000, LENGTH = 0x00008000
   rom (rx)  : ORIGIN = 0x00400000, LENGTH = 0x00100000
   ram (rwx) : ORIGIN = 0x20400000, LENGTH = 0x00060000
 }
@@ -64,6 +66,26 @@ HEAP_SIZE = DEFINED(HEAP_SIZE) ? HEAP_SIZE : 0x200;
 /* Section Definitions */
 SECTIONS
 {
+	_itcm_lma = _end;
+    .code_TCM :
+    AT ( _itcm_lma )
+    {
+        _sitcm = .; *(.code_TCM); _eitcm = .;
+    } > itcm
+
+    .data_TCM :
+    {
+        _sdtcm = .; *(.data_TCM); _edtcm = .;
+    } > dtcm
+
+    .DTCM_stack :
+    {
+        . = ALIGN(8);
+        _sdtcm_stack = .;
+        . += STACK_SIZE;
+        _edtcm_stack = .;
+    } > dtcm
+    
     .text :
     {
         . = ALIGN(4);

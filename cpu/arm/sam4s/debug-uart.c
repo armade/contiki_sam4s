@@ -47,7 +47,7 @@ dbg_send_bytes(const unsigned char *seq, unsigned int len)
 }
 
 #ifdef log_print
-uint8_t debug_log[4096];
+uint8_t debug_log[4096] = {0};
 uint16_t debug_log_head=0, debug_log_full=0;
 
 void put_char_into_log(unsigned char c)

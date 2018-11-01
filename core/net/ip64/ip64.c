@@ -146,7 +146,9 @@ struct icmpv6_hdr {
 };
 
 #define BUFSIZE UIP_BUFSIZE
-
+#ifdef ENABLE_TCM
+__attribute__((__section__(".data_TCM")))
+#endif
 uip_buf_t ip64_packet_buffer_aligned;
 uint8_t *ip64_packet_buffer = ip64_packet_buffer_aligned.u8;
 

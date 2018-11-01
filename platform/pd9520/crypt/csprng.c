@@ -76,6 +76,7 @@ void csprng_start(void)
 	//trng_enable_interrupt(TRNG);
 
 	uECC_set_rng(RNG_Function);
+	random_set_func(RNG_Function);
 }
 
 int csprng_get(unsigned char *dst, int bytes)

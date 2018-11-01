@@ -79,6 +79,7 @@
 #include "net/ipv6/uip-nd6.h"
 #include "net/ipv6/uip-ds6.h"
 #include "net/ipv6/multicast/uip-mcast6.h"
+#include "lib/random.h"
 
 #if UIP_CONF_IPV6_RPL
 #include "rpl/rpl.h"
@@ -181,6 +182,9 @@ uint8_t uip_ext_opt_offset = 0;
  */
 /** Packet buffer for incoming and outgoing packets */
 #ifndef UIP_CONF_EXTERNAL_BUFFER
+#ifdef ENABLE_TCM
+__attribute__((__section__(".data_TCM")))
+#endif
 uip_buf_t uip_aligned_buf;
 #endif /* UIP_CONF_EXTERNAL_BUFFER */
 
@@ -506,7 +510,9 @@ uip_connect(const uip_ipaddr_t *ripaddr, uint16_t rport)
   }
 
   conn->tcpstateflags = UIP_SYN_SENT;
-  RNG_Function(iss,4);
+  //RNG_Function(iss,4);
+  *(unsigned short *)(iss+0)=random_rand();
+  *(unsigned short *)(iss+2)=random_rand();
   conn->snd_nxt[0] = iss[0];
   conn->snd_nxt[1] = iss[1];
   conn->snd_nxt[2] = iss[2];
@@ -1745,7 +1751,9 @@ uip_process(uint8_t flag)
   uip_ipaddr_copy(&uip_connr->ripaddr, &UIP_IP_BUF->srcipaddr);
   uip_connr->tcpstateflags = UIP_SYN_RCVD;
 
-  RNG_Function(iss,4);
+  //RNG_Function(iss,4);
+  *(unsigned short *)(iss+0)=random_rand();
+  *(unsigned short *)(iss+2)=random_rand();
   uip_connr->snd_nxt[0] = iss[0];
   uip_connr->snd_nxt[1] = iss[1];
   uip_connr->snd_nxt[2] = iss[2];

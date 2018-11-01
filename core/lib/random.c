@@ -30,25 +30,33 @@
  *
  */
 
-
 #include "lib/random.h"
 #include "sys/clock.h"
 
 #include <stdlib.h>
 
+static int (*randfunc)(uint8_t *dest, unsigned size);
 /*---------------------------------------------------------------------------*/
-void
-random_init(unsigned short seed)
+void random_init(unsigned short seed)
 {
-  srand(seed);
+	srand(seed);
 }
 /*---------------------------------------------------------------------------*/
-unsigned short
-random_rand(void)
+unsigned short random_rand(void)
 {
-/* In gcc int rand() uses RAND_MAX and long random() uses RANDOM_MAX=0x7FFFFFFF */
-/* RAND_MAX varies depending on the architecture */
+	/* In gcc int rand() uses RAND_MAX and long random() uses RANDOM_MAX=0x7FFFFFFF */
+	/* RAND_MAX varies depending on the architecture */
 
-  return (unsigned short)rand();
+	if(randfunc != NULL){
+		unsigned short val;
+		randfunc((void *)&val, 2);
+		return val;
+	} else
+		return (unsigned short) rand();
 }
 /*---------------------------------------------------------------------------*/
+
+void random_set_func(int (*f)(unsigned char *dest, unsigned size))
+{
+	randfunc = f;
+}

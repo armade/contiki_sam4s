@@ -322,6 +322,39 @@ const DeviceVectors exception_table = {
 #endif /* _SAME70_I2SC1_INSTANCE_ */
 };
 
+#ifdef ENABLE_TCM
+/** \brief  TCM memory enable
+
+	The function enables TCM memories
+ */
+__STATIC_INLINE void TCM_Enable(void)
+{
+
+	__DSB();
+	__ISB();
+	SCB->ITCMCR = (SCB_ITCMCR_EN_Msk  | SCB_ITCMCR_RMW_Msk
+					| SCB_ITCMCR_RETEN_Msk);
+	SCB->DTCMCR = ( SCB_DTCMCR_EN_Msk | SCB_DTCMCR_RMW_Msk
+					| SCB_DTCMCR_RETEN_Msk);
+	__DSB();
+	__ISB();
+}
+#endif
+
+/** \brief  TCM memory Disable
+
+	The function enables TCM memories
+ */
+__STATIC_INLINE void TCM_Disable(void)
+{
+
+	__DSB();
+	__ISB();
+	SCB->ITCMCR &= ~(uint32_t)SCB_ITCMCR_EN_Msk;
+	SCB->DTCMCR &= ~(uint32_t)SCB_ITCMCR_EN_Msk;
+	__DSB();
+	__ISB();
+}
 /**
  * \brief This is the code that gets called on processor reset.
  * To initialize the device, and call the main() routine.
@@ -353,6 +386,23 @@ void Reset_Handler(void)
 	fpu_enable();
 #endif
 
+#ifdef ENABLE_TCM
+	// 64 Kb
+		EFC->EEFC_FCR = (EEFC_FCR_FKEY_PASSWD | EEFC_FCR_FCMD_SGPB
+						| EEFC_FCR_FARG(8));
+		EFC->EEFC_FCR = (EEFC_FCR_FKEY_PASSWD | EEFC_FCR_FCMD_CGPB
+						| EEFC_FCR_FARG(7));
+
+		TCM_Enable();
+	#else
+		EFC->EEFC_FCR = (EEFC_FCR_FKEY_PASSWD | EEFC_FCR_FCMD_CGPB
+						| EEFC_FCR_FARG(8));
+		EFC->EEFC_FCR = (EEFC_FCR_FKEY_PASSWD | EEFC_FCR_FCMD_CGPB
+						| EEFC_FCR_FARG(7));
+
+		TCM_Disable();
+	#endif
+		LowLevelInit();
         /* Initialize the C library */
         __libc_init_array();
 

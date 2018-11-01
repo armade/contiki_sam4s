@@ -97,7 +97,7 @@ PROCESS_THREAD(hello_world_process, ev, data) {
 	process_start(&button_process, NULL);
 
 	process_start(&ntpd_process, NULL);
-	//process_start(&gpsd_process, NULL);
+	process_start(&gpsd_process, NULL);
 
 	process_start(&httpd_simple_process, NULL);
 	register_http_post_handlers();

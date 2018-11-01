@@ -336,7 +336,7 @@ static inline void gmac_enable_back_pressure(Gmac* p_gmac, uint8_t uc_enable)
  */
 static inline void gmac_start_transmission(Gmac* p_gmac)
 {
-	__DSB();
+	//__DSB();
 	p_gmac->GMAC_NCR |= GMAC_NCR_TSTART;
 }
 

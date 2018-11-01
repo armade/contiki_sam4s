@@ -49,4 +49,7 @@ unsigned short random_rand(void);
 /* Since random_rand casts to unsigned short, we'll use this maxmimum */
 #define RANDOM_RAND_MAX 65535U
 
+// if you need something better
+void random_set_func(int (*f)(unsigned char *dest, unsigned size));
+
 #endif /* RANDOM_H_ */

@@ -120,6 +120,9 @@ uip_lladdr_t uip_lladdr = {{0,0,0,0,0,0}};
 #endif
 
 /* The packet buffer that contains incoming packets. */
+#ifdef ENABLE_TCM
+__attribute__((__section__(".data_TCM")))
+#endif
 uip_buf_t uip_aligned_buf;
 
 void *uip_appdata;               /* The uip_appdata pointer points to
@@ -431,7 +434,9 @@ uip_connect(const uip_ipaddr_t *ripaddr, uint16_t rport)
   }
 
   conn->tcpstateflags = UIP_SYN_SENT;
-  RNG_Function(iss,4);
+  //RNG_Function(iss,4);
+  *(unsigned short *)(iss+0)=random_rand();
+  *(unsigned short *)(iss+2)=random_rand();
   conn->snd_nxt[0] = iss[0];
   conn->snd_nxt[1] = iss[1];
   conn->snd_nxt[2] = iss[2];
@@ -1366,7 +1371,9 @@ uip_process(uint8_t flag)
   uip_ipaddr_copy(&uip_connr->ripaddr, &BUF->srcipaddr);
   uip_connr->tcpstateflags = UIP_SYN_RCVD;
 
-  RNG_Function(iss,4);
+ // RNG_Function(iss,4);
+  *(unsigned short *)(iss+0)=random_rand();
+  *(unsigned short *)(iss+2)=random_rand();
   uip_connr->snd_nxt[0] = iss[0];
   uip_connr->snd_nxt[1] = iss[1];
   uip_connr->snd_nxt[2] = iss[2];

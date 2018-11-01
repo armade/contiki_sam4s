@@ -766,7 +766,7 @@ static void uhi_cdc_tx_send(
 	buf->nb = 0;
 	line->b_trans_ongoing  = false;
 	cpu_irq_restore(flags);
-
+	__DSB();
 	// Manage new transfer
 	uhi_cdc_tx_update(line);
 }

@@ -848,10 +848,11 @@ PT_THREAD(generate_device_log(struct httpd_state *s))
   static uint16_t i,size;
 
   size = Get_debug_log(log);
-
+  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0,"<p>"));
   for(i=0;i<size;i++){
 	  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "%c",log[i]));
   }
+  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0,"</p>"));
   PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "</fieldset>"));
 
   PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<script>"));

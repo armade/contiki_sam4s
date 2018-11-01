@@ -36,8 +36,9 @@
 /*----------------------------------------------------------------------------
  *        Headers
  *----------------------------------------------------------------------------*/
+#include "chip.h"
+#include "same70.h"
 
-#include "board.h"
 
 
 #if defined(ENABLE_TCM) && defined(__GNUC__)
@@ -339,17 +340,12 @@ void TCM_StackInit(void)
 extern WEAK void LowLevelInit( void )
 {
   
-	SystemInit(); 
-#ifndef MPU_EXAMPLE_FEATURE
+
+#ifdef MPU_EXAMPLE_FEATURE
 	_SetupMemoryRegion();
 #endif
 
-//#if defined(FFT_DEMO) && ( defined(__GNUC__) || defined(__CC_ARM) )
-	/* Enabling the FPU */
-	SCB->CPACR |= 0x00F00000;
-	__DSB();
-	__ISB();
-//#endif
+
 
 #if defined(ENABLE_TCM) && defined(__GNUC__)
 	volatile char *dst = &_sitcm;

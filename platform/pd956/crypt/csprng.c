@@ -98,6 +98,7 @@ void csprng_start(void)
 	ctimer_set(&rng_timer, 20, RNG_handler, NULL);
 
 	uECC_set_rng(RNG_Function);
+	random_set_func(RNG_Function);
 }
 
 int csprng_get(unsigned char *dst, int bytes)

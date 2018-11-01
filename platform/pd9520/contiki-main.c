@@ -240,8 +240,13 @@ void board_init(void)
 
 void enable_cache(void)
 {
+#ifdef ENABLE_TCM
+	TCM_StackInit();
+#endif
+#ifdef CONF_BOARD_ENABLE_CACHE_AT_INIT
 	SCB_EnableICache();
-	//SCB_EnableDCache();
+	SCB_EnableDCache();
+#endif
 }
 
 #define SERIAL_FLASH_USERPAGE_ADDR 0x400
