@@ -1195,6 +1195,51 @@ PT_THREAD(generate_light_config(struct httpd_state *s))
   PT_WAIT_THREAD(&s->generate_pt,
                     enqueue_chunk(s, 0, CONTENT_CLOSE SECTION_CLOSE));
   PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "</fieldset>"));
+  //=====================================================================================
+
+   PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<fieldset>"));
+
+     PT_WAIT_THREAD(&s->generate_pt,
+                    enqueue_chunk(s, 0, "<h1>Effect</h1>"));
+     PT_WAIT_THREAD(&s->generate_pt,
+                    enqueue_chunk(s, 0, "<form name=\"input\"\" "));
+     PT_WAIT_THREAD(&s->generate_pt,
+                    enqueue_chunk(s, 0, "method=\"post\" enctype=\""));
+     PT_WAIT_THREAD(&s->generate_pt,
+                    enqueue_chunk(s, 0, "application/x-www-form-urlencoded\" "));
+     PT_WAIT_THREAD(&s->generate_pt,
+                    enqueue_chunk(s, 0, "accept-charset=\"UTF-8\">"));
+
+
+     PT_WAIT_THREAD(&s->generate_pt,
+   		  	  enqueue_chunk(s, 0, "%sselect:%s", config_div_left, config_div_close));
+
+     static int status;
+    status = soft_RGB_ctrl_sensor.status(0);
+    static char selected[] = "selected='selected'";
+
+    PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "%s<select name=\"effectOption\">",config_div_right));
+    PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<option value=7 %s>On</option>",status==3?selected:""));
+    PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<option value=8 %s>Off</option>",status==1?selected:""));
+    PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<option value=10 %s>Colorloop</option>",status==4099?selected:""));
+    PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<option value=11 %s>Fire</option>",status==8195?selected:""));
+    PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<option value=12 %s>Rapid red</option>",status==12291?selected:""));
+    PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "</select>%s",config_div_close));
+
+     PT_WAIT_THREAD(&s->generate_pt,
+                          enqueue_chunk(s, 0,"<p>"));
+      PT_WAIT_THREAD(&s->generate_pt,
+                     enqueue_chunk(s, 0,
+                                   "<input type=\"submit\" value=\"Submit\">"));
+      PT_WAIT_THREAD(&s->generate_pt,
+                          enqueue_chunk(s, 0,"</p>"));
+
+     PT_WAIT_THREAD(&s->generate_pt,
+                          enqueue_chunk(s, 0, "</form>"));
+
+     PT_WAIT_THREAD(&s->generate_pt,
+                       enqueue_chunk(s, 0, CONTENT_CLOSE SECTION_CLOSE));
+     PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "</fieldset>"));
     //=====================================================================================
   PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 1, http_bottom));
 

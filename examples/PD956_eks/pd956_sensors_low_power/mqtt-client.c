@@ -265,9 +265,11 @@ void pub_light_hard_rgb_handler(uint8_t *payload, uint16_t len)
 void pub_light_hard_effect_handler(uint8_t *payload, uint16_t len)
 {
 	if(!memcmp(payload,"colorloop",9))
-		hard_RGB_ctrl_sensor.configure(SENSORS_ACTIVE,7);
-	else if(!memcmp(payload,"random",6))
-		hard_RGB_ctrl_sensor.configure(SENSORS_ACTIVE,8);
+		hard_RGB_ctrl_sensor.configure(SENSORS_ACTIVE,10);
+	else if(!memcmp(payload,"fire",4))
+		hard_RGB_ctrl_sensor.configure(SENSORS_ACTIVE,11);
+	else if(!memcmp(payload,"rapid_red",9))
+		hard_RGB_ctrl_sensor.configure(SENSORS_ACTIVE,12);
 
 	process_post(PROCESS_BROADCAST, Trig_sensors, NULL);
 }
@@ -330,9 +332,11 @@ void pub_light_soft_rgb_handler(uint8_t *payload, uint16_t len)
 void pub_light_soft_effect_handler(uint8_t *payload, uint16_t len)
 {
 	if(!memcmp(payload,"colorloop",9))
-		soft_RGB_ctrl_sensor.configure(SENSORS_ACTIVE,7);
-	else if(!memcmp(payload,"random",6))
-		soft_RGB_ctrl_sensor.configure(SENSORS_ACTIVE,8);
+		soft_RGB_ctrl_sensor.configure(SENSORS_ACTIVE,10);
+	else if(!memcmp(payload,"fire",4))
+		soft_RGB_ctrl_sensor.configure(SENSORS_ACTIVE,11);
+	else if(!memcmp(payload,"rapid_red",9))
+		soft_RGB_ctrl_sensor.configure(SENSORS_ACTIVE,12);
 
 	process_post(PROCESS_BROADCAST, Trig_sensors, NULL);
 }
@@ -510,7 +514,7 @@ static int construct_configs(void)
 									"\"state_value_template\":\"{{value_json.switch}}\","
 									"\"brightness_value_template\":\"{{value_json.brightness}}\","
 									"\"effect_value_template\":\"{{value_json.effect}}\","
-									"\"effect_list\":['colorloop','random'],"
+									"\"effect_list\":[\"colorloop\",\"fire\",\"rapid_red\"],"
 									"\"rgb_value_template\":\"{{value_json.color|join(',')}}\"}",
 									conf->Username,reading->descr, 		//name
 									pub_topic, //state_topic

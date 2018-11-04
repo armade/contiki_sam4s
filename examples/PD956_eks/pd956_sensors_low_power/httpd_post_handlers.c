@@ -34,6 +34,27 @@ extern void
 new_net_config(void);
 
 #ifdef NODE_LIGHT
+static int effectOption_post_handler(char *key, int key_len, char *val, int val_len)
+{
+	int ret = HTTPD_SIMPLE_POST_HANDLER_UNKNOWN;
+
+	if(key_len != strlen("effectOption")
+			|| strncasecmp(key, "effectOption", strlen("effectOption")) != 0){
+		/* Not ours */
+		return HTTPD_SIMPLE_POST_HANDLER_UNKNOWN;
+	}
+	ret = strtoul(val, NULL, 10);
+
+	if(ret < 7 || ret > 12){
+		return HTTPD_SIMPLE_POST_HANDLER_ERROR;
+	}
+
+	  soft_RGB_ctrl_sensor.configure(SENSORS_ACTIVE,ret);
+
+
+	return HTTPD_SIMPLE_POST_HANDLER_OK;
+}
+
 static int RGB_blue_post_handler(char *key, int key_len, char *val, int val_len)
 {
 	int ret = HTTPD_SIMPLE_POST_HANDLER_UNKNOWN;
@@ -135,6 +156,26 @@ static int RGB_brightness_post_handler(char *key, int key_len, char *val,
 #endif
 
 #ifdef NODE_HARD_LIGHT
+static int effectOption_post_handler(char *key, int key_len, char *val, int val_len)
+{
+	int ret = HTTPD_SIMPLE_POST_HANDLER_UNKNOWN;
+
+	if(key_len != strlen("effectOption")
+			|| strncasecmp(key, "effectOption", strlen("effectOption")) != 0){
+		/* Not ours */
+		return HTTPD_SIMPLE_POST_HANDLER_UNKNOWN;
+	}
+	ret = strtoul(val, NULL, 10);
+
+	if(ret < 7 || ret > 12){
+		return HTTPD_SIMPLE_POST_HANDLER_ERROR;
+	}
+
+	  soft_RGB_ctrl_sensor.configure(SENSORS_ACTIVE,ret);
+
+
+	return HTTPD_SIMPLE_POST_HANDLER_OK;
+}
 static int
 RGB_blue_post_handler(char *key, int key_len, char *val, int val_len)
 {
@@ -608,6 +649,7 @@ sensor_readings_handler(char *key, int key_len, char *val, int val_len)
 
 /*---------------------------------------------------------------------------*/
 #if defined(NODE_LIGHT) || defined(NODE_HARD_LIGHT)
+HTTPD_SIMPLE_POST_HANDLER(effectOption,effectOption_post_handler);
 HTTPD_SIMPLE_POST_HANDLER(RGB_blue,RGB_blue_post_handler);
 HTTPD_SIMPLE_POST_HANDLER(RGB_green,RGB_green_post_handler);
 HTTPD_SIMPLE_POST_HANDLER(RGB_red,RGB_red_post_handler);
@@ -640,6 +682,7 @@ void
 register_http_post_handlers(void)
 {
 #if defined(NODE_LIGHT) || defined(NODE_HARD_LIGHT)
+	httpd_simple_register_post_handler(&effectOption_handler);
 	httpd_simple_register_post_handler(&RGB_blue_handler);
 	httpd_simple_register_post_handler(&RGB_green_handler);
 	httpd_simple_register_post_handler(&RGB_red_handler);

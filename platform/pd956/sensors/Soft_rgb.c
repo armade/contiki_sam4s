@@ -17,8 +17,8 @@
 #endif
 
 #define RGB_R_GPIO            (PIO_PA8)
-#define RGB_G_GPIO            (PIO_PA9)
-#define RGB_B_GPIO            (PIO_PA10)
+#define RGB_G_GPIO            (PIO_PA6)
+#define RGB_B_GPIO            (PIO_PA9)
 Pio *RGB_base = (Pio *)PIOA;
 
 struct ctimer RGB_effect_timer;
@@ -185,7 +185,7 @@ soft_RGB_configure(int type, int enable)
 			 if(enable == 1) {
 				 sensors_changed(&soft_RGB_ctrl_sensor);
 			 }else if(enable == 7){
-				 effect_state = 255;
+				 //effect_state = 255;
 				 counter = 0;
 				 RGB_TIMER.TC_CCR=1;
 				 RGB_TIMER.TC_CCR=4;
@@ -197,7 +197,7 @@ soft_RGB_configure(int type, int enable)
 				 RGB_base->PIO_CODR = RGB_R_GPIO | RGB_G_GPIO | RGB_B_GPIO;
 				 Sensor_status = SENSOR_STATUS_INITIALISED;
 			 } else if(enable == 10){
-				 if(Sensor_status == SENSOR_STATUS_READY){
+				 if((Sensor_status&0xfff) == SENSOR_STATUS_READY){
 					 effect_state = 0;
 					 RGB_tmp.led = (leds_t){0,0,256,256};
 					 RGB_COLORLOOP_RUN(NULL);
@@ -205,7 +205,7 @@ soft_RGB_configure(int type, int enable)
 					 sensors_changed(&soft_RGB_ctrl_sensor);
 				 }
 			 } else if(enable == 11){
-				 if(Sensor_status == SENSOR_STATUS_READY){
+				 if((Sensor_status&0xfff) == SENSOR_STATUS_READY){
 					 effect_state = 0;
 					 RGB_tmp.led = (leds_t){256,256,256,256};
 					 RGB_RANDOM_RUN(NULL);

@@ -11,7 +11,6 @@
 #ifdef NODE_LIGHT
 	SENSORS(
 		&SAM4S_ADC_TS_sensor,
-		&button_sensor_PD956,
 		&soft_RGB_ctrl_sensor
 	);
 #endif

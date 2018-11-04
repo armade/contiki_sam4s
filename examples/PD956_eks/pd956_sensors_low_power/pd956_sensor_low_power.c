@@ -812,8 +812,17 @@ static void init_sensors(void)
 #endif
 
 #ifdef NODE_LIGHT
-	list_add(MQTT_sensor_list, &RGB_sensor_reading);
-	INSERT_NA(RGB_sensor_reading.converted);
+	list_add(MQTT_sensor_list, &soft_RGB_switch_sensor_reading);
+	INSERT_NA(soft_RGB_switch_sensor_reading.converted);
+
+	list_add(MQTT_sensor_list, &soft_RGB_bright_sensor_reading);
+	INSERT_NA(soft_RGB_switch_sensor_reading.converted);
+
+	list_add(MQTT_sensor_list, &soft_RGB_rgb_sensor_reading);
+	INSERT_NA(soft_RGB_switch_sensor_reading.converted);
+
+	list_add(MQTT_sensor_list, &soft_RGB_effect_sensor_reading);
+	INSERT_NA(soft_RGB_effect_sensor_reading.converted);
 #endif
 
 #ifdef NODE_HARD_LIGHT
@@ -825,6 +834,9 @@ static void init_sensors(void)
 
 	list_add(MQTT_sensor_list, &hard_RGB_rgb_sensor_reading);
 	INSERT_NA(hard_RGB_rgb_sensor_reading.converted);
+
+	list_add(MQTT_sensor_list, &hard_RGB_effect_sensor_reading);
+	INSERT_NA(hard_RGB_effect_sensor_reading.converted);
 #endif
 
 #ifdef NODE_DHT11
