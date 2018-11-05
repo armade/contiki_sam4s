@@ -227,7 +227,7 @@ void pub_light_hard_brightness_handler(uint8_t *payload, uint16_t len)
 
 	tmp.all = ((RGB_hard_t *) hard_RGB_ctrl_sensor.value(SENSOR_ERROR))->all;
 	tmp.led.brightness = brightness;
-	hard_RGB_ctrl_sensor.value((unsigned)&tmp);
+	hard_RGB_ctrl_sensor.value((int)&tmp.all);
 }
 
 void pub_light_hard_rgb_handler(uint8_t *payload, uint16_t len)
@@ -259,7 +259,7 @@ void pub_light_hard_rgb_handler(uint8_t *payload, uint16_t len)
 	tmp.led.r = color[0];	tmp.led.r *=16;
 	tmp.led.g = color[1];	tmp.led.g *=16;
 	tmp.led.b = color[2];	tmp.led.b *=16;
-	hard_RGB_ctrl_sensor.value((unsigned)&tmp);
+	hard_RGB_ctrl_sensor.value((int)&tmp.all);
 }
 
 void pub_light_hard_effect_handler(uint8_t *payload, uint16_t len)
@@ -294,7 +294,7 @@ void pub_light_soft_brightness_handler(uint8_t *payload, uint16_t len)
 
 	tmp.all = ((RGB_soft_t *) soft_RGB_ctrl_sensor.value(SENSOR_ERROR))->all;
 	tmp.led.brightness = brightness;
-	soft_RGB_ctrl_sensor.value((unsigned)&tmp);
+	soft_RGB_ctrl_sensor.value((int) &tmp.all);
 }
 
 void pub_light_soft_rgb_handler(uint8_t *payload, uint16_t len)
@@ -326,7 +326,7 @@ void pub_light_soft_rgb_handler(uint8_t *payload, uint16_t len)
 	tmp.led.r = color[0];
 	tmp.led.g = color[1];
 	tmp.led.b = color[2];
-	soft_RGB_ctrl_sensor.value((unsigned)&tmp);
+	soft_RGB_ctrl_sensor.value((int) &tmp.all);
 }
 
 void pub_light_soft_effect_handler(uint8_t *payload, uint16_t len)

@@ -40,7 +40,7 @@ void Set_time(void);
 void hwio_load_userpage(void);
 
 char cdc_serial_number[sizeof("99999998PD") - 1];
-
+COMPILER_ALIGNED(32)
 volatile devicecert_t device_certificate = (devicecert_t) {
 	.private_key = "Replace point"
 };

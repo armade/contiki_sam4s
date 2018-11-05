@@ -44,7 +44,8 @@ CFLAGS += 	-mcpu=cortex-m7\
 			-g3\
 			-D __SAME70Q20__\
 			-D __VFP_FP__\
-			-D SAME70 
+			-D SAME70 \
+			-D MPU_HAS_NOCACHE_REGION
 
 LDFLAGS += -mcpu=cortex-m7 -march=armv7e-m -mthumb -nostartfiles -specs=nosys.specs
 LDFLAGS += -T $(LDSCRIPT) -g3 -mfloat-abi=hard -mfpu=fpv5-d16 -mtune=cortex-m7 -mlittle-endian
@@ -93,7 +94,8 @@ PLATFORM_DRIVER = 	rtc.c \
 					trng.c \
 					uart.c \
 					wdt.c \
-					usbhs_host.c
+					usbhs_host.c \
+					mpu.c
 					
 					
 USB_DRIVERS =		uhc.c \

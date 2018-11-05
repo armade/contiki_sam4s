@@ -30,7 +30,7 @@ static void RGB_RAPID_RED_RUN(void *data);
 
 volatile RGB_soft_t RGB; // True output
 volatile RGB_soft_t RGB_reload; // True reload output
-RGB_soft_t user_set; // User set value (not modified by brightness)
+static RGB_soft_t user_set; // User set value (not modified by brightness)
 
 uint16_t counter=256;
 

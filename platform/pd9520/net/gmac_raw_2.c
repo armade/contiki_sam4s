@@ -88,36 +88,38 @@ extern "C" {
  * @{
  */
 #define GMAC_TX_BUFFERS 8
-#define GMAC_RX_BUFFERS 18
+#define GMAC_RX_BUFFERS 16
 /** TX descriptor lists */
-#ifdef ENABLE_TCM
+/*#ifdef ENABLE_TCM
 __attribute__((__section__(".data_TCM")))
 #endif
-COMPILER_ALIGNED(16)
+COMPILER_ALIGNED(16)*/
+COMPILER_SECTION(".ram_nocache") COMPILER_ALIGNED(32)
 static gmac_tx_descriptor_t gs_tx_desc_null, gs_tx_desc[GMAC_TX_BUFFERS];
 /** TX callback lists */
 static gmac_dev_tx_cb_t gs_tx_callback[GMAC_TX_BUFFERS];
 /** RX descriptors lists */
-#ifdef ENABLE_TCM
+/*#ifdef ENABLE_TCM
 __attribute__((__section__(".data_TCM")))
-#endif
-COMPILER_ALIGNED(16)
+#endif*/
+COMPILER_SECTION(".ram_nocache")
+COMPILER_ALIGNED(32) 
 static gmac_rx_descriptor_t gs_rx_desc_null, gs_rx_desc[GMAC_RX_BUFFERS];
 /** Send Buffer. Section 3.6 of AMBA 2.0 spec states that burst should not cross the
  * 1K Boundaries. Receive buffer manager write operations are burst of 2 words => 3 lsb bits
  * of the address shall be set to 0.
  */
-#ifdef ENABLE_TCM
+/*#ifdef ENABLE_TCM
 __attribute__((__section__(".data_TCM")))
-#endif
-COMPILER_ALIGNED(16)
+#endif*/
+COMPILER_ALIGNED(32)
 static uint8_t gs_uc_tx_buffer[GMAC_TX_BUFFERS * GMAC_TX_UNITSIZE];
 
 /** Receive Buffer */
-#ifdef ENABLE_TCM
+/*#ifdef ENABLE_TCM
 __attribute__((__section__(".data_TCM")))
-#endif
-COMPILER_ALIGNED(16)
+#endif*/
+COMPILER_ALIGNED(32)
 static uint8_t gs_uc_rx_buffer[GMAC_RX_BUFFERS * GMAC_RX_UNITSIZE];
 
 /**

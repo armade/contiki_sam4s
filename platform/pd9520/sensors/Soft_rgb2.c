@@ -179,7 +179,7 @@ soft_RGB2_configure(int type, int enable)
 			 if(enable == 1) {
 				 sensors_changed(&soft_RGB_ctrl_sensor);
 			 }else if(enable == 7){
-				 effect_state = 255;
+				 //effect_state = 255;
 				 counter = 0;
 				 value_soft_RGB2(255,255,255,255);
 				 RGB2_TIMER.TC_CCR=1;

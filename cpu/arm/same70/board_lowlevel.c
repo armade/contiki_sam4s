@@ -102,7 +102,7 @@ void _SetupMemoryRegion( void )
 		MPU_DEFAULT_IFLASH_REGION;      //2
 
 	dwRegionAttr = 
-		MPU_AP_READONLY |
+			MPU_AP_PRIVILEGED_READ_WRITE |
 		INNER_NORMAL_WB_NWA_TYPE( NON_SHAREABLE ) |
 		MPU_CalMPURegionSize(IFLASH_END_ADDRESS - IFLASH_START_ADDRESS) |
 		MPU_REGION_ENABLE;
@@ -121,8 +121,9 @@ void _SetupMemoryRegion( void )
 		MPU_REGION_VALID |
 		MPU_DEFAULT_DTCM_REGION;         //3
 
-	dwRegionAttr = 
+	dwRegionAttr =
 		MPU_AP_PRIVILEGED_READ_WRITE | 
+		INNER_NORMAL_WB_NWA_TYPE( NON_SHAREABLE ) |
 		MPU_CalMPURegionSize(DTCM_END_ADDRESS - DTCM_START_ADDRESS) |
 		MPU_REGION_ENABLE;
 
@@ -341,7 +342,7 @@ extern WEAK void LowLevelInit( void )
 {
   
 
-#ifdef MPU_EXAMPLE_FEATURE
+#ifndef MPU_EXAMPLE_FEATURE
 	_SetupMemoryRegion();
 #endif
 
