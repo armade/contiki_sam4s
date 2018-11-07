@@ -140,7 +140,7 @@ soft_RGB_init(void)
 	NVIC_SetPriority((IRQn_Type) RGB_TIMER_ID, 5); //level 0 is the highest interrupt priority (0-15)
 	NVIC_EnableIRQ(RGB_TIMER_IRQ);
 
-	pio_set_input(PIOA,PIO_PA3 | PIO_PA28,0); // NB: pa3 and pa28 is connected to pa9 and pa10.
+	//pio_set_input(PIOA,PIO_PA3 | PIO_PA28,0); // NB: pa3 and pa28 is connected to pa9 and pa10.
 
 	// Enable PIO to controle the pin
 	RGB_base->PIO_PER  = RGB_R_GPIO | RGB_G_GPIO | RGB_B_GPIO;

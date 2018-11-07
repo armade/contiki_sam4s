@@ -66,7 +66,7 @@ void driver_StepCounter(uint8_t dir)
 int
 configure_step(void)
 {
-	pio_set_input(PIOA,PIO_PA3 | PIO_PA28,0); // NB: pa3 and pa28 is connected to pa9 and pa10.
+	//pio_set_input(PIOA,PIO_PA3 | PIO_PA28,0); // NB: pa3 and pa28 is connected to pa9 and pa10.
 
 	// Enable PIO to controle the pin
 	step_base->PIO_PER  = step1_GPIO | step2_GPIO | step3_GPIO | step4_GPIO;

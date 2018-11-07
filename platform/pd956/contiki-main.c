@@ -209,13 +209,17 @@ void board_init(void)
 	//wdt_init(WDT, WDT_MR_WDRSTEN|WDT_MR_WDDBGHLT|WDT_MR_WDIDLEHLT, 0xfff, 0xfff);
 	ioport_init();
 
+	// NB: pa3 and pa28 is connected to pa9 and pa10.
+	PIOA->PIO_PUDR = PIO_PA3 | PIO_PA28; // disable pullup
+	PIOA->PIO_ODR = PIO_PA3 | PIO_PA28;  // input
+	PIOA->PIO_PER = PIO_PA3 | PIO_PA28;  // gpio ctrl
+
 	/* Configure all unused PIOs as outputs and high to save power */
 	pio_set_output(PIOA,
-			(1 << 0)  | (1 << 2)  | (1 << 3)  | (1 << 4)  |
-			(1 << 5)  | (1 << 6)  | (1 << 8)  | (1 << 9)  |
-			(1 << 10) | (1 << 16) |	(1 << 17) | (1 << 18) |
-			(1 << 19) | (1 << 26) |	(1 << 27) | (1 << 28) |
-			(1 << 29) | (1 << 30) | (1 << 31),
+			(1 << 0)  | (1 << 2)  | (1 << 4)  |	(1 << 5)  |
+			(1 << 6)  | (1 << 8)  | (1 << 9)  |	(1 << 10) |
+			(1 << 16) |	(1 << 17) | (1 << 18) |	(1 << 19) |
+			(1 << 26) |	(1 << 27) |	(1 << 29) | (1 << 30) | (1 << 31),
 			0, 0, 0);
 /********************************************************************************/
 	// Please verify that this does not influence on sleep mode current.
@@ -231,9 +235,9 @@ void board_init(void)
 			0, 0, 0);*/
 /********************************************************************************/
 	pio_set_output(PIOB,
-			(1 << 0) | (1 << 1)  | (1 << 2)  | (1 << 3) | (1 << 4) |
-			(1 << 5) | (1 << 13) | (1 << 14),
-			1, 0, 1);
+			(1 << 0) | (1 << 1) | (1 << 2)  | (1 << 3) |
+			(1 << 4) | (1 << 5) | (1 << 13) | (1 << 14),
+			1, 0, 0);
 
 #ifdef CONF_BOARD_UART_CONSOLE
 	/* Configure UART pins */

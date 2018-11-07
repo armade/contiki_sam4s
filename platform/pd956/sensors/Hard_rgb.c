@@ -151,7 +151,7 @@ hard_RGB_configure(int type, int enable)
 				sensors_changed(&hard_RGB_ctrl_sensor);
 				//RGB_TEST(NULL);
 			} else if(enable == 7){ // ON command
-				effect_state = 255;
+				//effect_state = 255;
 				PWM->PWM_ENA = (1<<1) | (1<<2) | (1<<3);
 				PWM->PWM_OSC = (1<<3) | (1<<2) | (1<<17);// Remove overwrite (0 to pwm)
 				value_hard_RGB(hard_user_set.led.r,hard_user_set.led.g,hard_user_set.led.b,hard_user_set.led.brightness);
