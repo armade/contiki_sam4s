@@ -568,6 +568,23 @@ defaults_post_handler(char *key, int key_len, char *val, int val_len)
 
   return HTTPD_SIMPLE_POST_HANDLER_OK;
 }
+
+/*---------------------------------------------------------------------------*/
+static int
+reset_post_handler(char *key, int key_len, char *val, int val_len)
+{
+  if(key_len != strlen("reset") ||
+     strncasecmp(key, "reset", strlen("reset")) != 0) {
+    /* Not ours */
+    return HTTPD_SIMPLE_POST_HANDLER_UNKNOWN;
+  }
+
+  asm volatile ("dmb 0xF":::"memory");
+  asm volatile ("isb 0xF":::"memory");
+  *((uint32_t *)0x400E1400) = 0xa500000D;
+
+  return HTTPD_SIMPLE_POST_HANDLER_OK;
+}
 /*---------------------------------------------------------------------------*/
 static int
 timestamp_post_handler(char *key, int key_len, char *val, int val_len)
@@ -673,6 +690,7 @@ HTTPD_SIMPLE_POST_HANDLER(reconnect, reconnect_post_handler);
 /*---------------------------------------------------------------------------*/
 HTTPD_SIMPLE_POST_HANDLER(sensor, sensor_readings_handler);
 HTTPD_SIMPLE_POST_HANDLER(defaults, defaults_post_handler);
+HTTPD_SIMPLE_POST_HANDLER(reset, reset_post_handler);
 /*---------------------------------------------------------------------------*/
 HTTPD_SIMPLE_POST_HANDLER(timestamp,timestamp_post_handler);
 HTTPD_SIMPLE_POST_HANDLER(timezone,timezone_post_handler);
@@ -706,6 +724,7 @@ register_http_post_handlers(void)
 
 	httpd_simple_register_post_handler(&sensor_handler);
 	httpd_simple_register_post_handler(&defaults_handler);
+	httpd_simple_register_post_handler(&reset_handler);
 	httpd_simple_register_post_handler(&timestamp_handler);
 	httpd_simple_register_post_handler(&timezone_handler);
 }

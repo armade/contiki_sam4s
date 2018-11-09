@@ -825,6 +825,31 @@ PT_THREAD(generate_config(struct httpd_state *s))
   PT_WAIT_THREAD(&s->generate_pt,
                  enqueue_chunk(s, 0, "</form>"));
 
+  /*-------------------------------------------------------------*/
+  PT_WAIT_THREAD(&s->generate_pt,
+                  enqueue_chunk(s, 0,
+                                "<form name=\"input\" action=\"%s\" ",
+                                http_dev_cfg_page.filename));
+   PT_WAIT_THREAD(&s->generate_pt,
+                  enqueue_chunk(s, 0, "method=\"post\" enctype=\""));
+   PT_WAIT_THREAD(&s->generate_pt,
+                  enqueue_chunk(s, 0, "application/x-www-form-urlencoded\" "));
+   PT_WAIT_THREAD(&s->generate_pt,
+                  enqueue_chunk(s, 0, "accept-charset=\"UTF-8\">"));
+   PT_WAIT_THREAD(&s->generate_pt,
+                     enqueue_chunk(s, 0,"<p>"));
+   PT_WAIT_THREAD(&s->generate_pt,
+                  enqueue_chunk(s, 0, "<input type=\"hidden\" value=\"1\" "
+                                      "name=\"reset\">"));
+
+   PT_WAIT_THREAD(&s->generate_pt,
+                  enqueue_chunk(s, 0, "<button>*Reset device</button>"));
+
+   PT_WAIT_THREAD(&s->generate_pt,
+                       enqueue_chunk(s, 0,"</p>"));
+   PT_WAIT_THREAD(&s->generate_pt,
+                  enqueue_chunk(s, 0, "</form>"));
+
   PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "</fieldset>"));
 
   PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 1, http_bottom));

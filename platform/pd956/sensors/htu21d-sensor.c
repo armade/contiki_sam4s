@@ -10,10 +10,10 @@
 #include <stdio.h>
 
 #include "board-peripherals.h"
-
-#ifdef NODE_HTU21D
+#if 1
+//#ifdef NODE_HTU21D
 /*---------------------------------------------------------------------------*/
-#define DEBUG 0
+#define DEBUG 1
 #if DEBUG
 #define PRINTF(...) printf(__VA_ARGS__)
 #else
@@ -121,8 +121,10 @@ static inline uint16_t SoftI2Cread_register(uint8_t Addr, uint8_t *Data,
 
 	SoftI2CStart();
 	ack = SoftI2CWriteByte((Addr << 1) | 1); //set LSB for read
-	if(!ack)
+	if(!ack){
+		PRINTF("HTU21: NO ACK\n");
 		return 0;
+	}
 
 	for (i = 0; i < (len - 1) ; i++)
 		*Data++ = SoftI2CReadByte(1);
@@ -197,8 +199,10 @@ int htu21_crc_check(uint16_t value, uint8_t crc)
 	}
 	if(result == crc)
 		return 1;
-	else
+	else{
+		PRINTF("HTU21: Bad CRC (HTU21d)\n");
 		return 0;
+	}
 }
 
 /*---------------------------------------------------------------------------*/
@@ -324,15 +328,14 @@ void htu21_convert_temperature_and_relative_humidity(int32_t *temperature,
 
 static void htu21_error(void)
 {
+	PRINTF("HTU21: ERROR encountered\n");
 	HTU21_humid = SENSOR_ERROR;
 	HTU21_temp = SENSOR_ERROR;
 	SoftI2CSync();
 	SoftI2C_cmd(HTU21_ADDR, HTU21_RESET_COMMAND, 1);
 	// Apply default values
-	htu21_temperature_conversion_time =
-			HTU21_TEMPERATURE_CONVERSION_TIME_T_14b_RH_12b;
-	htu21_humidity_conversion_time =
-			HTU21_HUMIDITY_CONVERSION_TIME_T_14b_RH_12b;
+	htu21_temperature_conversion_time =	HTU21_TEMPERATURE_CONVERSION_TIME_T_14b_RH_12b;
+	htu21_humidity_conversion_time =	HTU21_HUMIDITY_CONVERSION_TIME_T_14b_RH_12b;
 	sensor_state = SENSOR_STATUS_READY;
 	sensors_changed(&HTU21D_sensor);
 }
@@ -343,6 +346,7 @@ static void htu21_notify_ready(void *not_used)
 	uint16_t ret;
 
 	if(sensor_state == SENSOR_STATUS_TEMP_MEAS){
+
 		ret = SoftI2Cread_register(HTU21_ADDR, buffer, 3);
 		/* If the internal processing is finished, the HTU21D(F)
 		 * sensor acknowledges the poll of the MCU and data can
@@ -351,6 +355,7 @@ static void htu21_notify_ready(void *not_used)
 		 * and start condition must be issued once more.
 		 */
 		if(!ret){
+			PRINTF("HTU21: Not ready for temperature reading\n");
 			if(retry_count++ > 5)
 				htu21_error();
 
@@ -361,7 +366,8 @@ static void htu21_notify_ready(void *not_used)
 		HTU21_temp = (buffer[0] << 8) | buffer[1];
 		if(!htu21_crc_check(HTU21_temp, buffer[2])){
 			HTU21_temp = SENSOR_ERROR;
-		} PRINTF("HTU21_temp: %02x%02x%02x %02x%02x%02x\n",
+		}
+		PRINTF("HTU21_temp: 0x%.2x 0x%.2x 0x%.2x\n",
 				buffer[0], buffer[1], buffer[2]);
 		SoftI2C_cmd(HTU21_ADDR, HTU21_READ_HUMIDITY_NO_HOLD_COMMAND, 0);
 		sensor_state = SENSOR_STATUS_HUMID_MEAS;
@@ -381,6 +387,7 @@ static void htu21_notify_ready(void *not_used)
 		 * and start condition must be issued once more.
 		 */
 		if(!ret){
+			PRINTF("HTU21: Not ready for humidity reading\n");
 			if(retry_count++ > 5)
 				htu21_error();
 
@@ -392,7 +399,7 @@ static void htu21_notify_ready(void *not_used)
 		if(!htu21_crc_check(HTU21_humid, buffer[2])){
 			HTU21_humid = SENSOR_ERROR;
 			return;
-		} PRINTF("HTU21_humid: %02x%02x%02x %02x%02x%02x\n",
+		} PRINTF("HTU21_humid: 0x%.2x 0x%.2x 0x%.2x\n",
 				buffer[0], buffer[1], buffer[2]);
 		// All done now convert and notify
 		htu21_convert_temperature_and_relative_humidity(&HTU21_temp,
@@ -426,6 +433,7 @@ static void htu21_init(void)
 static void htu21_enable_sensor(bool enable)
 {
 	if(enable){
+		PRINTF("HTU21: Trig measurement\n");
 		retry_count = 0;
 		SoftI2C_cmd(HTU21_ADDR, HTU21_READ_TEMPERATURE_HOLD_COMMAND, 0);
 	}
@@ -442,12 +450,12 @@ static int htu21_value(int type)
 	int rv;
 
 	if(sensor_state != SENSOR_STATUS_READY){
-		PRINTF("Sensor disabled or starting up (%d)\n", enabled);
+		PRINTF("HTU21: Sensor disabled or starting up (%d)\n", sensor_state);
 		return SENSOR_ERROR;
 	}
 
 	if((type != HTU21D_SENSOR_TYPE_TEMP) && type != HTU21D_SENSOR_TYPE_HUMID){
-		PRINTF("Invalid type\n");
+		PRINTF("HTU21: Invalid type\n");
 		return SENSOR_ERROR;
 	} else{
 
@@ -470,6 +478,7 @@ static int htu21_value(int type)
  * When type == SENSORS_ACTIVE and enable==1 we enable the sensor
  * When type == SENSORS_ACTIVE and enable==0 we disable the sensor
  */
+static uint64_t HTU21_serial_number;
 static int htu21_configure(int type, int enable)
 {
 
@@ -480,8 +489,14 @@ static int htu21_configure(int type, int enable)
 			if(!htu21_is_connected())
 				return SENSOR_STATUS_DISABLED;
 
-			sensor_state = SENSOR_STATUS_INITIALISED;
+			htu21_read_serial_number(&HTU21_serial_number);
+			uint8_t *snr_ptr = (uint8_t *) &HTU21_serial_number;
+			PRINTF("HTU21: serial nr. 0x%.2x 0x%.2x 0x%.2x 0x%.2x 0x%.2x 0x%.2x 0x%.2x 0x%.2x\n",
+					snr_ptr[0],	snr_ptr[1],	snr_ptr[2],	snr_ptr[3],
+					snr_ptr[4],	snr_ptr[5],	snr_ptr[6],	snr_ptr[7]);
+
 			htu21_init();
+			sensor_state = SENSOR_STATUS_INITIALISED;
 
 			break;
 		case SENSORS_ACTIVE:
