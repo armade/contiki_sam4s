@@ -83,7 +83,8 @@ int main()
 	flash_init_df();
 
 	// TODO: Atmels framework has an error that must be fixed.
-	// When enumeratin a device that is not supported, the code hangs in an interrupt.
+	// When enumerating a device that is not supported, the code hangs in an interrupt.
+	// also when disconnection a device the stack may hang.
 	/* Start USB host stack */
 	uhc_start();
 
@@ -219,15 +220,17 @@ void initSWO(void)
 
 void board_init(void)
 {
+	/*------------------------------------------------------------------------------*/
 	/* Disable the watchdog */
 	WDT->WDT_MR = WDT_MR_WDDIS;
 	//wdt_init(WDT, WDT_MR_WDRSTEN|WDT_MR_WDDBGHLT|WDT_MR_WDIDLEHLT, 0xfff, 0xfff);
+	/*------------------------------------------------------------------------------*/
 	ioport_init();
 	leds_init();
 	leds_arch_set(LEDS_GREEN);
-
+	/*------------------------------------------------------------------------------*/
 	initSWO();
-
+	/*------------------------------------------------------------------------------*/
 	// SPI FLASH
 	// Configure SPI pins
 	gpio_configure_pin(SPI_MISO_GPIO, SPI_MISO_FLAGS);
@@ -235,6 +238,15 @@ void board_init(void)
 	gpio_configure_pin(SPI_SPCK_GPIO, SPI_SPCK_FLAGS);
 	gpio_configure_pin(SPI_NPCS0_GPIO, SPI_NPCS0_FLAGS);
 
+	/*------------------------------------------------------------------------------*/
+
+	// If 32kHz external clock is not selected, select it.
+	if((SUPC->SUPC_MR & SUPC_MR_OSCBYPASS_BYPASS) != SUPC_MR_OSCBYPASS_BYPASS){
+		SUPC->SUPC_MR = ( SUPC_MR_OSCBYPASS_BYPASS | SUPC_MR_KEY_PASSWD);
+		//Select XTAL 32k instead of internal slow RC 32k for slow clock
+		SUPC->SUPC_CR = SUPC_CR_KEY_PASSWD | SUPC_CR_XTALSEL_CRYSTAL_SEL;
+		while( !(SUPC->SUPC_SR & SUPC_SR_OSCSEL) );
+	}
 	/*------------------------------------------------------------------------------*/
 }
 

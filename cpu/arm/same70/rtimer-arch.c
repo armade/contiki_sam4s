@@ -42,13 +42,6 @@ void RTT_Handler(void)
 void
 rtimer_arch_init(void)
 {
-	// If 32kHz external clock is not selected, select it.
-	if((SUPC->SUPC_MR & SUPC_MR_OSCBYPASS_BYPASS) != SUPC_MR_OSCBYPASS_BYPASS){
-		SUPC->SUPC_MR = ( SUPC_MR_OSCBYPASS_BYPASS | SUPC_MR_KEY_PASSWD);
-		//Select XTAL 32k instead of internal slow RC 32k for slow clock
-		SUPC->SUPC_CR = SUPC_CR_KEY_PASSWD | SUPC_CR_XTALSEL_CRYSTAL_SEL;
-		while( !(SUPC->SUPC_SR & SUPC_SR_OSCSEL) );
-	}
 	//============================================//
 	rtt_sel_source(RTT, 0);
 	rtt_init(RTT, 4);

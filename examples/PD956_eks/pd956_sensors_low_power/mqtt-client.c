@@ -973,10 +973,11 @@ PROCESS_THREAD(mqtt_client_process, ev, data)
 			etimer_stop(&timeout_timer);
 			if(no_sleep_allowed || NTP_status() || !sleep_counter || (ev == PROCESS_EVENT_TIMER && data == &timeout_timer))
 			{
-				PRINTF("MQTT: can't sleep\n");
+
 				if(sleep_counter){
 					sleep_counter = 0;
 					etimer_set(&sleep_retry_timer, conf->pub_interval);
+					PRINTF("MQTT: can't sleep\n");
 				}else{
 					sleep_counter = 1;
 					etimer_set(&timeout_timer, 3*CLOCK_SECOND);
@@ -994,9 +995,9 @@ PROCESS_THREAD(mqtt_client_process, ev, data)
 					// TODO: Need timing to indicate how long the radio is on. the radio is now not active doing
 					// sensor measurements. a ping is about 47ms in avg. so if we assume 50ms on-time we get:
 					// 60/60.1*54uA + 0.05/60.1*22mA + 0.05/60.1*10mA = 70.5uA avg  2700mA/90.5uA = 29829hr ~ 4.3 years
+					PRINTF("MQTT: Just woke up, trig\n");
 
 					etimer_set(&timeout_timer, 3*CLOCK_SECOND); // We have 3 sec to complete sensor measurement and publish result. Otherwise we will treat it as nosleep.
-					PRINTF("MQTT: Just woke up, trig\n");
 					process_post(PROCESS_BROADCAST, Trig_sensors, NULL);
 				}
 				else

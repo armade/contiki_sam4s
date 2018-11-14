@@ -206,7 +206,7 @@ uint8_t ethernet_phy_set_link(Gmac *p_gmac, uint8_t uc_phy_addr,
 {
 	uint32_t ul_stat1;
 	uint32_t ul_stat2;
-	uint8_t uc_phy_address, uc_speed, uc_fd;
+	uint8_t uc_phy_address, uc_speed= false, uc_fd = false;
 	uint8_t uc_rc = GMAC_OK;
 
 

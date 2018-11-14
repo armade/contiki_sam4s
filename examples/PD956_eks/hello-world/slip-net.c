@@ -55,7 +55,7 @@
 
 static void slip_input_callback(void)
 {
-	uint8_t i;
+	//uint8_t i;
 	uip_ipaddr_t prefix;
 	printf("Slipnet: input\n");
 

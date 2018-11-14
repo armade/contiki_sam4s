@@ -26,7 +26,7 @@ endif
 
 
 LDSCRIPT = $(CONTIKI_CPU)/flash.ld
-#-march=armv7-m
+
 CFLAGS += 	-mcpu=cortex-m7\
 			-march=armv7e-m\
 			-mtune=cortex-m7\
@@ -45,7 +45,9 @@ CFLAGS += 	-mcpu=cortex-m7\
 			-D __SAME70Q20__\
 			-D __VFP_FP__\
 			-D SAME70 \
-			-D MPU_HAS_NOCACHE_REGION
+			-D MPU_HAS_NOCACHE_REGION 
+
+CFLAGS +=	-D ENABLE_TCM
 
 LDFLAGS += -mcpu=cortex-m7 -march=armv7e-m -mthumb -nostartfiles -specs=nosys.specs
 LDFLAGS += -T $(LDSCRIPT) -g3 -mfloat-abi=hard -mfpu=fpv5-d16 -mtune=cortex-m7 -mlittle-endian
@@ -154,7 +156,7 @@ CUSTOM_RULE_LINK=1
 # a target that gives a user-friendly memory profile, taking into account the RAM
 # that is statically occupied by the stack as defined in the linker script
 # see $(LDSCRIPT)
-RAM_SIZE = 0x00060000
+RAM_SIZE = 0x00040000
 FLASH_SIZE = 0x00100000
 STACK_SIZE = 0
 

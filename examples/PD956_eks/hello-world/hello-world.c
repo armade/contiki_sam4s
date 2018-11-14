@@ -77,7 +77,7 @@ static void trigger_sensors(void)
 PROCESS_THREAD(hello_world_process, ev, data) {
 	PROCESS_BEGIN();
 	uip_ip4addr_t ipv4addr, netmask;
-	uip_ip6addr_t ipaddr;
+	//uip_ip6addr_t ipaddr;
 	printf("Hello, world\n");
 
 	/* Set us up as a RPL root node. */
