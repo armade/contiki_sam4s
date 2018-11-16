@@ -349,6 +349,7 @@ extern WEAK void LowLevelInit( void )
 
 
 #if defined(ENABLE_TCM) && defined(__GNUC__)
+	TCM_StackInit();
 	volatile char *dst = &_sitcm;
 	volatile char *src = &_itcm_lma;
 	/* copy code_TCM from flash to ITCM */

@@ -20,6 +20,7 @@
 #include "i2csoft.h"
 #include "ioport.h"
 #include "leds.h"
+#include "hl_spiflash_array.h"
 
 
 #include "FLASH_driver.h"
@@ -29,7 +30,7 @@
 #include "csprng.h"
 #include "uECC.h"
 #include "sha256.h"
-//extern rtimer_arch_sleep(rtimer_clock_t howlong);
+
 
 void board_init(void);
 void enable_cache(void);
@@ -39,7 +40,7 @@ void Setup_EEPROM(void);
 void Set_time(void);
 void hwio_load_userpage(void);
 
-char cdc_serial_number[sizeof("99999998PD") - 1];
+
 COMPILER_ALIGNED(32)
 volatile devicecert_t device_certificate = (devicecert_t) {
 	.private_key = "Replace point"
@@ -81,6 +82,7 @@ int main()
 	}
 
 	flash_init_df();
+	// sf_array_flashinit(); // only version 2
 
 	// TODO: Atmels framework has an error that must be fixed.
 	// When enumerating a device that is not supported, the code hangs in an interrupt.
@@ -252,9 +254,6 @@ void board_init(void)
 
 void enable_cache(void)
 {
-#ifdef ENABLE_TCM
-	TCM_StackInit();
-#endif
 #ifdef CONF_BOARD_ENABLE_CACHE_AT_INIT
 	SCB_EnableICache();
 	SCB_EnableDCache();

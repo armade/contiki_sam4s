@@ -31,6 +31,9 @@
 #define SIG1(x) (ROTRIGHT(x,17) ^ ROTRIGHT(x,19) ^ ((x) >> 10))
 
 /**************************** VARIABLES *****************************/
+#ifdef ENABLE_TCM
+__attribute__((__section__(".data_TCM")))
+#endif
 static const uint32_t k[64] = {
 	0x428a2f98,0x71374491,0xb5c0fbcf,0xe9b5dba5,0x3956c25b,0x59f111f1,0x923f82a4,0xab1c5ed5,
 	0xd807aa98,0x12835b01,0x243185be,0x550c7dc3,0x72be5d74,0x80deb1fe,0x9bdc06a7,0xc19bf174,
@@ -43,6 +46,9 @@ static const uint32_t k[64] = {
 };
 
 /*********************** FUNCTION DEFINITIONS ***********************/
+#ifdef ENABLE_TCM
+__attribute__((__section__(".code_TCM")))
+#endif
 static void sha2_sha256_transform(SHA256_CTX *ctx, const uint8_t data[])
 {
 	uint32_t a, b, c, d, e, f, g, h, i, j, t1, t2, m[64];
@@ -83,7 +89,9 @@ static void sha2_sha256_transform(SHA256_CTX *ctx, const uint8_t data[])
 	ctx->state[6] += g;
 	ctx->state[7] += h;
 }
-
+#ifdef ENABLE_TCM
+__attribute__((__section__(".code_TCM")))
+#endif
 void sha2_sha256_init(SHA256_CTX *ctx)
 {
 	ctx->datalen = 0;
@@ -97,7 +105,9 @@ void sha2_sha256_init(SHA256_CTX *ctx)
 	ctx->state[6] = 0x1f83d9ab;
 	ctx->state[7] = 0x5be0cd19;
 }
-
+#ifdef ENABLE_TCM
+__attribute__((__section__(".code_TCM")))
+#endif
 void sha2_sha256_update(SHA256_CTX *ctx, const uint8_t data[], size_t len)
 {
 	uint32_t i;
@@ -112,7 +122,9 @@ void sha2_sha256_update(SHA256_CTX *ctx, const uint8_t data[], size_t len)
 		}
 	}
 }
-
+#ifdef ENABLE_TCM
+__attribute__((__section__(".code_TCM")))
+#endif
 void sha2_sha256_final(SHA256_CTX *ctx, uint8_t hash[])
 {
 	uint32_t i;
@@ -158,7 +170,9 @@ void sha2_sha256_final(SHA256_CTX *ctx, uint8_t hash[])
 		hash[i + 28] = (ctx->state[7] >> (24 - i * 8)) & 0x000000ff;
 	}
 }
-
+#ifdef ENABLE_TCM
+__attribute__((__section__(".code_TCM")))
+#endif
 void sha2_sha256( const unsigned char *input, size_t len,
              unsigned char hash[])
 {
