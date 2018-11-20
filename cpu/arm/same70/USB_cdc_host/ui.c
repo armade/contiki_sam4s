@@ -128,6 +128,9 @@ void ui_usb_enum_event(uhc_device_t *dev, uhc_enum_status_t status)
 		break;
 	}
 	if (ui_enum_status == UHC_ENUM_SUCCESS) {
+		printf("Manuf: %s\n",uhc_dev_get_string_manufacturer(dev));
+		printf("dev: %s\n",uhc_dev_get_string_product(dev));
+		printf("serial nr: %s\n",uhc_dev_get_string_serial(dev));
 		/* USB Device CDC connected
 		   Open and configure UART and USB CDC ports */
 		usb_cdc_line_coding_t cfg = {

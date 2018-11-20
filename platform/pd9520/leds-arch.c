@@ -6,6 +6,40 @@
 #include "drivers/pmc.h"
 
 #define LEDS_GPIO_PIN_MASK   LEDS_ALL
+static struct ctimer heartbeat_timer;
+static uint8_t heartbeat_state = 0;
+
+static void
+heartbeat_handler(void *not_used)
+{
+	clock_time_t next;
+
+	switch(heartbeat_state)
+	{
+		case 0:
+			PWM0->PWM_CH_NUM[2].PWM_CDTY = 200;
+			next = 50;
+			break;
+
+		case 1:
+			PWM0->PWM_CH_NUM[2].PWM_CDTY = 96;
+			next = 100;
+			break;
+
+		case 2:
+			PWM0->PWM_CH_NUM[2].PWM_CDTY = 200;
+			next = 50;
+			break;
+
+		case 3:
+			PWM0->PWM_CH_NUM[2].PWM_CDTY = 96;
+			next = 800;
+			break;
+	}
+	heartbeat_state = (heartbeat_state+1)&0x3;
+	ctimer_set(&heartbeat_timer, next*(1000/CLOCK_SECOND), heartbeat_handler, NULL);
+}
+
 /*---------------------------------------------------------------------------*/
 void leds_arch_init(void)
 {
@@ -37,6 +71,8 @@ void leds_arch_init(void)
 	PWM0->PWM_CH_NUM[2].PWM_CMR = clk_config;
 
 	PWM0->PWM_ENA = (1<<0) | (1<<1) | (1<<2);
+
+	ctimer_set(&heartbeat_timer, 1000*(1000/CLOCK_SECOND), heartbeat_handler, NULL);
 }
 /*---------------------------------------------------------------------------*/
 unsigned char leds_arch_get(void)

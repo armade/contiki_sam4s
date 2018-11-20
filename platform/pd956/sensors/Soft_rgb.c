@@ -137,7 +137,7 @@ soft_RGB_init(void)
 	//RGB_TIMER.TC_CCR=4;
 	RGB_TIMER.TC_IER=1<<4; //CPCS
 	NVIC_ClearPendingIRQ(RGB_TIMER_IRQ);
-	NVIC_SetPriority((IRQn_Type) RGB_TIMER_ID, 5); //level 0 is the highest interrupt priority (0-15)
+	NVIC_SetPriority((IRQn_Type) RGB_TIMER_ID, 0); //level 0 is the highest interrupt priority (0-15)
 	NVIC_EnableIRQ(RGB_TIMER_IRQ);
 
 	//pio_set_input(PIOA,PIO_PA3 | PIO_PA28,0); // NB: pa3 and pa28 is connected to pa9 and pa10.

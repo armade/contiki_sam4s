@@ -133,7 +133,6 @@ extern void rx_poll(void);
 
 #include "uhi_cdc.h"
 #include "ui.h"
-//#include "uart.h"
-//#include "main.h"
+
 
 #endif /* _CONF_USB_HOST_H_ */

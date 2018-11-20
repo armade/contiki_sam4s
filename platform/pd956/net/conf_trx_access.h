@@ -92,7 +92,7 @@
 	pio_set_debounce_filter(PIOA, PIO_PA15, 10); \
 	pio_handler_set(PIOA, ID_PIOA, PIO_PA15, PIO_IT_HIGH_LEVEL, at86rfx_isr); \
 	NVIC_EnableIRQ((IRQn_Type)ID_PIOA); \
-	NVIC_SetPriority((IRQn_Type) ID_PIOA, 1);\
+	NVIC_SetPriority((IRQn_Type) ID_PIOA, 2);\
 	pio_enable_interrupt(PIOA, PIO_PA15);
 	//level 0 is the highest interrupt priority (0-15)
 #define AT86RFX_ISR()               void at86rfx_isr(uint32_t a, uint32_t b)

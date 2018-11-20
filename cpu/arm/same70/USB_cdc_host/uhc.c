@@ -270,6 +270,7 @@ static void uhc_connection_tree(bool b_plug, uhc_device_t* dev)
 		uhc_dev_enum->conf_desc = NULL;
 		uhc_dev_enum->address = 0;
 		UHC_CONNECTION_EVENT(uhc_dev_enum, true);
+		// TODO: Add delay here to ensure that the device power is stable before enumerating
 		uhc_enumeration_step1();
 	} else {
 		if (uhc_dev_enum == dev) {
