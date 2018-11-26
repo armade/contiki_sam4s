@@ -1452,7 +1452,7 @@ static bitcount_t smax(bitcount_t a, bitcount_t b) {
 }
 
 #ifdef ENABLE_TCM
-__attribute__((__section__(".code_TCM")))
+//__attribute__((__section__(".code_TCM")))
 #endif
 int uECC_verify(const uint8_t *public_key,
                 const uint8_t *message_hash,

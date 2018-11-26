@@ -50,6 +50,7 @@
 #include "leds.h"
 #include "slip.h"
 #include "uip.h"
+#include "drivers/pmc.h"
 
 
 #ifdef NODE_GPS
@@ -60,8 +61,8 @@
 /*---------------------------------------------------------------------------*/
 PROCESS(hello_world_process, "Hello world process");
 AUTOSTART_PROCESSES(&hello_world_process);
-
-PROCESS(button_process, "Hello world process");
+PROCESS(heartbeat_process, "Heartbeart proces");
+PROCESS(button_process, "Button process");
 /*---------------------------------------------------------------------------*/
 
 static void trigger_sensors(void)
@@ -95,6 +96,7 @@ PROCESS_THREAD(hello_world_process, ev, data) {
 
 	trigger_sensors();
 	process_start(&button_process, NULL);
+	process_start(&heartbeat_process, NULL);
 
 	process_start(&ntpd_process, NULL);
 	process_start(&gpsd_process, NULL);
@@ -143,4 +145,46 @@ PROCESS_THREAD(button_process, ev, data) {
 	}
 PROCESS_END();
 }
+/*---------------------------------------------------------------------------*/
 
+//TODO: This should not be done here. This code does not know PWM.
+struct etimer heartbeat_etimer;
+static uint8_t heartbeat_state = 0;
+PROCESS_THREAD(heartbeat_process, ev, data) {
+	PROCESS_BEGIN();
+	static clock_time_t next = 50;
+	etimer_set(&heartbeat_etimer, next*(1000/CLOCK_SECOND));
+	while (1) {
+		PROCESS_WAIT_EVENT();
+
+		if(ev == PROCESS_EVENT_TIMER && etimer_expired(&heartbeat_etimer)) {
+
+				switch(heartbeat_state)
+				{
+					case 0:
+						PWM0->PWM_CH_NUM[2].PWM_CDTY = 200;
+						next = 50;
+						break;
+
+					case 1:
+						PWM0->PWM_CH_NUM[2].PWM_CDTY = 96;
+						next = 150;
+						break;
+
+					case 2:
+						PWM0->PWM_CH_NUM[2].PWM_CDTY = 200;
+						next = 50;
+						break;
+
+					case 3:
+						PWM0->PWM_CH_NUM[2].PWM_CDTY = 96;
+						next = 1200;
+						break;
+				}
+				heartbeat_state = (heartbeat_state+1)&0x3;
+				etimer_set(&heartbeat_etimer, next*(1000/CLOCK_SECOND));
+		}
+
+	}
+PROCESS_END();
+}

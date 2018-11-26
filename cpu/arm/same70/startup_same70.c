@@ -402,6 +402,7 @@ void Reset_Handler(void)
 
 		TCM_Disable();
 	#endif
+
 		LowLevelInit();
         /* Initialize the C library */
         __libc_init_array();

@@ -19,6 +19,7 @@ clock_time_t sleepticks = 0; 	// Holds ticks (less then 1 sec)
 
 
 static void Store_time_to_RTC(void *data);
+void calc_daylight_saving(tm_t *tm);
 
 void SysTick_Handler(void)
 {
@@ -200,12 +201,15 @@ void Load_time_from_RTC(void)
 	//Unix_time = 1533018106;
 	//UnixtoRTC(&timer, Unix_time);
 
-	if(clock_gpbr->RTC_valid == 0xA7)
+	clock_set_unix_time(Unix_time,0);
+
+	if(clock_gpbr->RTC_valid == 0xA7){
 		clock_quality(clock_gpbr->stranum+1);
+		calc_daylight_saving(&timer);
+	}
 	else
 		clock_quality(UNSYNC_TIME);
 
-	clock_set_unix_time(Unix_time,0);
 	//ctimer_set(&rtc_timer, 1UL * 60UL * 60UL * CLOCK_SECOND, Store_time_to_RTC,
 	//		NULL); // 1 hr interval
 }
@@ -283,10 +287,12 @@ int clock_quality(int stranum_new)
 	return 1;
 }
 
-uint16_t daylight_saving = 0;
+
 
 void calc_daylight_saving(tm_t *tm)
 {
+	uint16_t daylight_saving = 0;
+
 	if((tm->tm_mon<3) || (tm->tm_mon>10)){
 		daylight_saving = 0; //normal time
 	}else

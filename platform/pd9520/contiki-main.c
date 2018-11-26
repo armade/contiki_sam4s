@@ -39,6 +39,8 @@ void set_linkaddr(void);
 void Setup_EEPROM(void);
 void Set_time(void);
 void hwio_load_userpage(void);
+extern void
+heartbeat_handler(void *not_used);
 
 
 COMPILER_ALIGNED(32)
@@ -64,8 +66,9 @@ int main()
 	get_eeprom(version, version_var);
 	if(version_var != 0x48)
 		Setup_EEPROM();
-
+	//printf("eeprom ver %d\n",version_var);
 	enable_cache();
+
 	get_eeprom(masterpublic_key,masterpublic_key_eeprom);
 	/*
 	 * we only start the firmware if the public signer key can
@@ -232,6 +235,7 @@ void board_init(void)
 	leds_arch_set(LEDS_GREEN);
 	/*------------------------------------------------------------------------------*/
 	initSWO();
+	printf("Board up\n");
 	/*------------------------------------------------------------------------------*/
 	// SPI FLASH
 	// Configure SPI pins
