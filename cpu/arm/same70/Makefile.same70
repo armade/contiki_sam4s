@@ -97,7 +97,8 @@ PLATFORM_DRIVER = 	rtc.c \
 					uart.c \
 					wdt.c \
 					usbhs_host.c \
-					mpu.c
+					mpu.c \
+					exceptions.c
 					
 					
 USB_DRIVERS =		uhc.c \

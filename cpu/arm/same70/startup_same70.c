@@ -329,7 +329,6 @@ const DeviceVectors exception_table = {
  */
 __STATIC_INLINE void TCM_Enable(void)
 {
-
 	__DSB();
 	__ISB();
 	SCB->ITCMCR = (SCB_ITCMCR_EN_Msk  | SCB_ITCMCR_RMW_Msk
@@ -347,7 +346,6 @@ __STATIC_INLINE void TCM_Enable(void)
  */
 __STATIC_INLINE void TCM_Disable(void)
 {
-
 	__DSB();
 	__ISB();
 	SCB->ITCMCR &= ~(uint32_t)SCB_ITCMCR_EN_Msk;
@@ -415,7 +413,7 @@ void Reset_Handler(void)
 }
 
 /**
- * \brief Default interrupt handler for unused IRQs.
+ * \brief Default interrupt handler for unused IRQs and faults.
  */
 void Dummy_Handler(void)
 {

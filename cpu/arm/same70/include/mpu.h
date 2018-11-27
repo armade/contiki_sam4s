@@ -118,7 +118,7 @@
 /******* SRAM memory macros ***************************/
 
 #define SRAM_START_ADDRESS                  0x20400000UL
-#define SRAM_END_ADDRESS                    0x2045FFFFUL
+#define SRAM_END_ADDRESS                    0x2043FFFFUL
 
 #if defined MPU_HAS_NOCACHE_REGION
 #define NOCACHE_SRAM_REGION_SIZE            0x1000
@@ -126,7 +126,7 @@
 
 /* Regions should be a 2^(N+1)  where 4 < N < 31 */
 #define SRAM_FIRST_START_ADDRESS            (SRAM_START_ADDRESS)
-#define SRAM_FIRST_END_ADDRESS              (SRAM_FIRST_START_ADDRESS + 0x3FFFF)        // (2^18) 256 KB 
+#define SRAM_FIRST_END_ADDRESS              (SRAM_FIRST_START_ADDRESS + 0x1FFFF)        // (2^17) 128 KB
 
 #if defined MPU_HAS_NOCACHE_REGION
 #define SRAM_SECOND_START_ADDRESS           (SRAM_FIRST_END_ADDRESS+1)
