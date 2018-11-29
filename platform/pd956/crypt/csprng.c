@@ -21,7 +21,7 @@
 
 
 volatile unsigned csprng_state[8]; //256 bit entropy pool
-volatile unsigned csprng_feedix, csprng_ready, csprng_count;
+volatile unsigned csprng_feedix, /*csprng_ready,*/ csprng_count;
 
 #define RAMS(x) (x)
 const unsigned short ramtable[16] = { RAMS(48), RAMS(192), RAMS(384), RAMS(6),
@@ -50,9 +50,9 @@ static inline void csprng_feed(unsigned d)
 static void
 RNG_handler(void *not_used)
 {
-	csprng_feed(rtimer_arch_now());
+	csprng_feed(rtimer_arch_now()+rand());
 	ctimer_reset(&rng_timer);
-	csprng_ready = 1;
+	//csprng_ready = 1;
 }
 
 int RNG_Function(uint8_t *dest, unsigned size)

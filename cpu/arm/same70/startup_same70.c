@@ -359,26 +359,26 @@ __STATIC_INLINE void TCM_Disable(void)
  */
 void Reset_Handler(void)
 {
-        uint32_t *pSrc, *pDest;
+	uint32_t *pSrc, *pDest;
 
-        /* Initialize the relocate segment */
-        pSrc = &_etext;
-        pDest = &_srelocate;
+	/* Initialize the relocate segment */
+	pSrc = &_etext;
+	pDest = &_srelocate;
 
-        if (pSrc != pDest) {
-                for (; pDest < &_erelocate;) {
-                        *pDest++ = *pSrc++;
-                }
-        }
+	if(pSrc != pDest){
+		for (; pDest < &_erelocate ;){
+			*pDest++ = *pSrc++;
+		}
+	}
 
-        /* Clear the zero segment */
-        for (pDest = &_szero; pDest < &_ezero;) {
-                *pDest++ = 0;
-        }
+	/* Clear the zero segment */
+	for (pDest = &_szero; pDest < &_ezero ;){
+		*pDest++ = 0;
+	}
 
-        /* Set the vector table base address */
-        pSrc = (uint32_t *) & _sfixed;
-        SCB->VTOR = ((uint32_t) pSrc & SCB_VTOR_TBLOFF_Msk);
+	/* Set the vector table base address */
+	pSrc = (uint32_t *) &_sfixed;
+	SCB->VTOR = ((uint32_t) pSrc & SCB_VTOR_TBLOFF_Msk);
 
 #if __FPU_USED
 	fpu_enable();
@@ -386,30 +386,31 @@ void Reset_Handler(void)
 
 #ifdef ENABLE_TCM
 	// 64 Kb
-		EFC->EEFC_FCR = (EEFC_FCR_FKEY_PASSWD | EEFC_FCR_FCMD_SGPB
-						| EEFC_FCR_FARG(8));
-		EFC->EEFC_FCR = (EEFC_FCR_FKEY_PASSWD | EEFC_FCR_FCMD_CGPB
-						| EEFC_FCR_FARG(7));
+	EFC->EEFC_FCR = (EEFC_FCR_FKEY_PASSWD | EEFC_FCR_FCMD_SGPB
+			| EEFC_FCR_FARG(8));
+	EFC->EEFC_FCR = (EEFC_FCR_FKEY_PASSWD | EEFC_FCR_FCMD_CGPB
+			| EEFC_FCR_FARG(7));
 
-		TCM_Enable();
-	#else
-		EFC->EEFC_FCR = (EEFC_FCR_FKEY_PASSWD | EEFC_FCR_FCMD_CGPB
-						| EEFC_FCR_FARG(8));
-		EFC->EEFC_FCR = (EEFC_FCR_FKEY_PASSWD | EEFC_FCR_FCMD_CGPB
-						| EEFC_FCR_FARG(7));
+	TCM_Enable();
+#else
+	EFC->EEFC_FCR = (EEFC_FCR_FKEY_PASSWD | EEFC_FCR_FCMD_CGPB
+			| EEFC_FCR_FARG(8));
+	EFC->EEFC_FCR = (EEFC_FCR_FKEY_PASSWD | EEFC_FCR_FCMD_CGPB
+			| EEFC_FCR_FARG(7));
 
-		TCM_Disable();
-	#endif
+	TCM_Disable();
+#endif
 
-		LowLevelInit();
-        /* Initialize the C library */
-        __libc_init_array();
+	LowLevelInit();
+	/* Initialize the C library */
+	__libc_init_array();
 
-        /* Branch to main function */
-        main();
+	/* Branch to main function */
+	main();
 
-        /* Infinite loop */
-        while (1);
+	/* Infinite loop */
+	while(1)
+		;
 }
 
 /**
@@ -418,6 +419,6 @@ void Reset_Handler(void)
 void Dummy_Handler(void)
 {
 	leds_set(2 | 4);
-        while (1) {
-        }
+	while(1){
+	}
 }
