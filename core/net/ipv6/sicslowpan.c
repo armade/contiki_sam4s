@@ -69,6 +69,8 @@
 #include "net/rime/rime.h"
 #include "net/ipv6/sicslowpan.h"
 #include "net/netstack.h"
+#include "net/rpl/rpl.h"
+
 
 #include <stdio.h>
 
@@ -145,6 +147,7 @@ void uip_log(char *msg);
 #define UIP_ICMP_BUF          ((struct uip_icmp_hdr *)&uip_buf[UIP_LLIPH_LEN])
 /** @} */
 
+#define PAYLOAD_BUF  ((void *)&uip_buf[UIP_IPH_LEN])
 
 /** \brief Maximum available size for frame headers,
            link layer security-related overhead, as well as
@@ -1233,6 +1236,103 @@ packet_sent(void *ptr, int status, int transmissions)
   }
   last_tx_status = status;
 }
+
+
+
+
+
+static
+void encipher(unsigned num_rounds, uint32_t *v, unsigned const key[4])
+{
+    unsigned i;
+    unsigned v0=v[0], v1=v[1], sum=0, delta=0x9E3779B9; //0x9E3779CD
+    for (i=0; i < num_rounds; i++){
+        v0 += (((v1 << 4) ^ (v1 >> 5)) + v1) ^ (sum + key[sum & 3]);
+        sum += delta;
+        v1 += (((v0 << 4) ^ (v0 >> 5)) + v0) ^ (sum + key[(sum>>11) & 3]);
+    }
+    v[0]=v0; v[1]=v1;
+}
+static
+void decipher(unsigned num_rounds, uint32_t *v, unsigned const key[4])
+{
+    unsigned i;
+    unsigned v0=v[0], v1=v[1], delta=0x9E3779B9, sum=delta*num_rounds;
+    for (i=0; i < num_rounds; i++) {
+        v1 -= (((v0 << 4) ^ (v0 >> 5)) + v0) ^ (sum + key[(sum>>11) & 3]);
+        sum -= delta;
+        v0 -= (((v1 << 4) ^ (v1 >> 5)) + v1) ^ (sum + key[sum & 3]);
+    }
+    v[0]=v0; v[1]=v1;
+}
+static
+void xtea256_encrypt(uint8_t * payload, const uint32_t *key, uint32_t length, uint64_t iv)
+{
+	uint32_t i;
+
+	if(length & 7)
+		return;
+
+	for (i=0;i<length;i+=8){
+		*(uint64_t *)payload ^= iv;
+		encipher(32, (uint32_t *)payload , (void *)key);
+		iv = *(uint64_t *)payload;
+		payload += 8;
+	}
+}
+static
+void xtea256_decrypt(uint8_t * payload, const uint32_t *key, uint32_t length, uint64_t iv)
+{
+	uint32_t i;
+	uint64_t hold;
+
+	if(length & 7)
+		return;
+
+	for (i=0;i<length;i+=8){
+		hold = *(uint64_t *)payload;
+		decipher(32, (uint32_t *)payload, (void *)key);
+		*(uint64_t *)payload ^= iv;
+		iv = hold;
+		payload += 8;
+	}
+}
+
+
+
+
+
+uint8_t IV_crypt[8] = {
+		0x44, 0xc3, 0xba, 0x43, 0x50, 0x82, 0x09, 0xf3
+};
+static
+void bufseqnr_put(uip_ds6_nbr_t *nbr, uint8_t seqnr)
+{
+	nbr->seqnr_buf[nbr->seqnr_idx_head] = seqnr;
+	nbr->seqnr_idx_head = (nbr->seqnr_idx_head+1)&15;
+	if(nbr->seqnr_idx_level<16)
+		nbr->seqnr_idx_level++;
+}
+static
+uint8_t bufseqnr_check_dublicate(uip_ds6_nbr_t *nbr, uint8_t seqnr)
+{
+	uint8_t i;
+
+	for(i=0; i< nbr->seqnr_idx_level; i++){
+		if(nbr->seqnr_buf[i] == seqnr)
+			return 1;
+	}
+	return 0;
+}
+static
+uint8_t bufseqnr_get_next(uip_ds6_nbr_t *nbr)
+{
+	if(nbr->seqnr_idx_head == 0)
+		return nbr->seqnr_buf[15];
+	else
+		return nbr->seqnr_buf[nbr->seqnr_idx_head-1];
+
+}
 /*--------------------------------------------------------------------*/
 /**
  * \brief This function is called by the 6lowpan code to send out a
@@ -1274,25 +1374,58 @@ send_packet(linkaddr_t *dest)
 static uint8_t
 output(const uip_lladdr_t *localdest)
 {
-  int framer_hdrlen;
-  int max_payload;
+	int framer_hdrlen;
+	int max_payload;
 
-  /* The MAC address of the destination of the packet */
-  linkaddr_t dest;
+	/* The MAC address of the destination of the packet */
+	linkaddr_t dest;
 
-  /* init */
-  uncomp_hdr_len = 0;
-  packetbuf_hdr_len = 0;
+	/* init */
+	uncomp_hdr_len = 0;
+	packetbuf_hdr_len = 0;
 
-  /* reset packetbuf buffer */
-  packetbuf_clear();
-  packetbuf_ptr = packetbuf_dataptr();
+	/* reset packetbuf buffer */
+	packetbuf_clear();
+	packetbuf_ptr = packetbuf_dataptr();
 
-  if(callback) {
-    /* call the attribution when the callback comes, but set attributes
-       here ! */
-    set_packet_attrs();
-  }
+	if(callback){
+		/* call the attribution when the callback comes, but set attributes
+		 here ! */
+		set_packet_attrs();
+	}
+
+////////////////////////////////////////////////////////////////
+	uip_ds6_nbr_t *nbr;
+	uip_ipaddr_t *border_router;
+	rpl_dag_t *dag;
+	if((UIP_IP_BUF->proto != UIP_PROTO_ICMP)
+			&& (UIP_IP_BUF->proto != UIP_PROTO_ICMP6)){
+		dag = rpl_get_any_dag();
+		border_router = &dag->dag_id;
+
+		nbr = uip_ds6_nbr_lookup(&UIP_IP_BUF->destipaddr);
+		if(nbr == NULL){
+			nbr = uip_ds6_nbr_lookup(border_router);
+			if(nbr == NULL)
+				return 0;
+		}
+
+		uint16_t hotfix;
+		uip_len += 2; // make sure we have room for padding number
+		hotfix = uip_len & 7;
+		//add padding to buffer
+		hotfix = (8 - hotfix);
+		uip_len += hotfix;
+		uip_buf[uip_len - 2] = bufseqnr_get_next(nbr) + 1;
+		uip_buf[uip_len - 1] = hotfix & 0xf; // insert padding number in the end
+
+		xtea256_encrypt(PAYLOAD_BUF, (void *) nbr->nbr_session_key,
+				uip_len, *(uint64_t *) IV_crypt);
+
+	}
+///////////////////////////////////////////////////////////////////////
+
+
 
 #if PACKETBUF_WITH_PACKET_TYPE
 #define TCP_FIN 0x01
@@ -1719,11 +1852,53 @@ input(void)
     }
 #endif
 
+
+    ////////////////////////////////////////////////////////////////
+    uip_ds6_nbr_t *nbr;
+	uip_ipaddr_t *border_router;
+	rpl_dag_t *dag;
+
+	if((UIP_IP_BUF->proto != UIP_PROTO_ICMP) && (UIP_IP_BUF->proto != UIP_PROTO_ICMP6)){
+		dag = rpl_get_any_dag();
+		border_router = &dag->dag_id;
+
+		nbr = uip_ds6_nbr_lookup(&UIP_IP_BUF->srcipaddr);
+		if(nbr == NULL){
+			nbr = uip_ds6_nbr_lookup(border_router);
+			if(nbr == NULL)
+				return;
+		}
+
+		if(uip_len & 7){
+			uip_len = 0;
+			return;
+		}
+
+		xtea256_decrypt(PAYLOAD_BUF, (void *) nbr->nbr_session_key, uip_len, *(uint64_t *) IV_crypt);
+
+		uint16_t hotfix;
+
+		hotfix = uip_buf[uip_len - 1];
+
+
+		if(bufseqnr_check_dublicate(nbr,uip_buf[uip_len - 2]) || (hotfix>7)){
+			bufseqnr_put(nbr,uip_buf[uip_len - 2]);
+			uip_len = 0;
+			return;
+		}
+		bufseqnr_put(nbr,uip_buf[uip_len - 2]);
+
+		uip_len -= hotfix;
+		uip_len -= 2;
+	}
+	///////////////////////////////////////////////////////////////////////
+
     /* if callback is set then set attributes and call */
     if(callback) {
       set_packet_attrs();
       callback->input_callback();
     }
+
 
     tcpip_input();
 #if SICSLOWPAN_CONF_FRAG

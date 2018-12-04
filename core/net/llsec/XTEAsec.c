@@ -49,7 +49,7 @@
 #include "net/packetbuf.h"
 #include "net/ipv6/uip-ds6.h"
 #include "net/rpl/rpl.h"
-
+static
 void encipher(unsigned num_rounds, uint32_t *v, unsigned const key[4])
 {
     unsigned i;
@@ -61,7 +61,7 @@ void encipher(unsigned num_rounds, uint32_t *v, unsigned const key[4])
     }
     v[0]=v0; v[1]=v1;
 }
-
+static
 void decipher(unsigned num_rounds, uint32_t *v, unsigned const key[4])
 {
     unsigned i;
@@ -73,7 +73,7 @@ void decipher(unsigned num_rounds, uint32_t *v, unsigned const key[4])
     }
     v[0]=v0; v[1]=v1;
 }
-
+static
 void encipher_payload_xtea(uint8_t * payload, const uint32_t *key, uint32_t length, uint64_t iv)
 {
 	uint32_t i;
@@ -88,7 +88,7 @@ void encipher_payload_xtea(uint8_t * payload, const uint32_t *key, uint32_t leng
 		payload += 8;
 	}
 }
-
+static
 void decipher_payload_xtea(uint8_t * payload, const uint32_t *key, uint32_t length, uint64_t iv)
 {
 	uint32_t i;
@@ -106,20 +106,21 @@ void decipher_payload_xtea(uint8_t * payload, const uint32_t *key, uint32_t leng
 	}
 }
 
-
+static
 uint8_t crypt_key32[32] = {
 		0x72, 0xab, 0x7b, 0x23, 0x5f, 0x2d, 0xdd, 0x19,
 		0x55, 0x13, 0xba, 0xdd, 0xa1, 0xf8, 0x92, 0x14,
 		0xc3, 0xad, 0x3d, 0x41, 0x82, 0xa2, 0xa8, 0xfa,
 		0x5f, 0xbe, 0xb5, 0xd9, 0x54, 0x25, 0x78, 0x77
 };
+static
 uint8_t IV_crypt[8] = {
 		0x44, 0xc3, 0xba, 0x43, 0x50, 0x82, 0x09, 0xf3
 };
 
 #define UIP_IP_BUF   ((struct uip_ip_hdr *)&uip_buf[UIP_LLH_LEN])
 
-
+static
 void bufseqnr_put(uip_ds6_nbr_t *nbr, uint8_t seqnr)
 {
 	nbr->seqnr_buf[nbr->seqnr_idx_head] = seqnr;
@@ -127,7 +128,7 @@ void bufseqnr_put(uip_ds6_nbr_t *nbr, uint8_t seqnr)
 	if(nbr->seqnr_idx_level<16)
 		nbr->seqnr_idx_level++;
 }
-
+static
 uint8_t bufseqnr_check_dublicate(uip_ds6_nbr_t *nbr, uint8_t seqnr)
 {
 	uint8_t i;
