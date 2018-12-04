@@ -16,11 +16,14 @@ dbg_putchar(const char ch)
 	//	udi_cdc_multi_putc(USB_PORT, ch);
 
 #ifdef log_print
-	put_char_into_log(ch);
-	put_char_into_log('<');
+	if(ch != '\n'){
+		put_char_into_log(ch);
+	} else{
+		put_char_into_log('<');
 		put_char_into_log('b');
 		put_char_into_log('r');
 		put_char_into_log('>');
+	}
 #endif
 }
 
