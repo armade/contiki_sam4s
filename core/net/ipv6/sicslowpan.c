@@ -148,6 +148,7 @@ void uip_log(char *msg);
 /** @} */
 
 #define PAYLOAD_BUF  ((void *)&uip_buf[UIP_IPH_LEN])
+#define PAYLOAD_BUF_IV  ((void *)&uip_buf[UIP_IPH_LEN+8])
 
 /** \brief Maximum available size for frame headers,
            link layer security-related overhead, as well as
@@ -1242,7 +1243,7 @@ packet_sent(void *ptr, int status, int transmissions)
 
 
 static
-void encipher(unsigned num_rounds, uint32_t *v, unsigned const key[4])
+void encipher(unsigned num_rounds, uint32_t *v, const uint32_t *key)
 {
     unsigned i;
     unsigned v0=v[0], v1=v[1], sum=0, delta=0x9E3779B9; //0x9E3779CD
@@ -1254,7 +1255,7 @@ void encipher(unsigned num_rounds, uint32_t *v, unsigned const key[4])
     v[0]=v0; v[1]=v1;
 }
 static
-void decipher(unsigned num_rounds, uint32_t *v, unsigned const key[4])
+void decipher(unsigned num_rounds, uint32_t *v, const uint32_t *key)
 {
     unsigned i;
     unsigned v0=v[0], v1=v[1], delta=0x9E3779B9, sum=delta*num_rounds;
@@ -1305,14 +1306,18 @@ void xtea256_decrypt(uint8_t * payload, const uint32_t *key, uint32_t length, ui
 uint8_t IV_crypt[8] = {
 		0x44, 0xc3, 0xba, 0x43, 0x50, 0x82, 0x09, 0xf3
 };
+
+// we store the last 15 seqnumber from each neighbor.
 static
 void bufseqnr_put(uip_ds6_nbr_t *nbr, uint8_t seqnr)
 {
 	nbr->seqnr_buf[nbr->seqnr_idx_head] = seqnr;
-	nbr->seqnr_idx_head = (nbr->seqnr_idx_head+1)&15;
+	nbr->seqnr_idx_head++;
+	nbr->seqnr_idx_head&=15;
 	if(nbr->seqnr_idx_level<16)
 		nbr->seqnr_idx_level++;
 }
+// if seqnumber of received packet is equal to one of the last 15. skip.
 static
 uint8_t bufseqnr_check_dublicate(uip_ds6_nbr_t *nbr, uint8_t seqnr)
 {
@@ -1327,12 +1332,15 @@ uint8_t bufseqnr_check_dublicate(uip_ds6_nbr_t *nbr, uint8_t seqnr)
 static
 uint8_t bufseqnr_get_next(uip_ds6_nbr_t *nbr)
 {
+	// Get last received number + 1
 	if(nbr->seqnr_idx_head == 0)
-		return nbr->seqnr_buf[15];
+		return nbr->seqnr_buf[15] + 1;
 	else
-		return nbr->seqnr_buf[nbr->seqnr_idx_head-1];
+		return nbr->seqnr_buf[nbr->seqnr_idx_head-1] + 1;
 
 }
+extern int csprng_get(unsigned char *dst, int bytes);
+
 /*--------------------------------------------------------------------*/
 /**
  * \brief This function is called by the 6lowpan code to send out a
@@ -1409,18 +1417,24 @@ output(const uip_lladdr_t *localdest)
 			if(nbr == NULL)
 				return 0;
 		}
-
+		// TODO: there is no check in uip_buf bounds are respected.
+		// For now we assume small data frames over 6lowpan.
 		uint16_t hotfix;
+		// Move data to make room for IV
+		memmove(PAYLOAD_BUF_IV,PAYLOAD_BUF,uip_len-UIP_IPH_LEN);
+		uip_len += 8;
+
 		uip_len += 2; // make sure we have room for padding number
 		hotfix = uip_len & 7;
 		//add padding to buffer
 		hotfix = (8 - hotfix);
 		uip_len += hotfix;
-		uip_buf[uip_len - 2] = bufseqnr_get_next(nbr) + 1;
+		uip_buf[uip_len - 2] = bufseqnr_get_next(nbr);
 		uip_buf[uip_len - 1] = hotfix & 0xf; // insert padding number in the end
 
+		csprng_get(IV_crypt, 8);
 		xtea256_encrypt(PAYLOAD_BUF, (void *) nbr->nbr_session_key,
-				uip_len, *(uint64_t *) IV_crypt);
+				(uip_len-20), *(uint64_t *) IV_crypt);
 
 	}
 ///////////////////////////////////////////////////////////////////////
@@ -1869,17 +1883,16 @@ input(void)
 				return;
 		}
 
-		if(uip_len & 7){
+		if((uip_len-UIP_IPH_LEN) & 7){ // Skip packet. we append padding, and if this packet is unaligned it's not for us.
 			uip_len = 0;
 			return;
 		}
 
-		xtea256_decrypt(PAYLOAD_BUF, (void *) nbr->nbr_session_key, uip_len, *(uint64_t *) IV_crypt);
+		xtea256_decrypt(PAYLOAD_BUF, (void *) nbr->nbr_session_key, (uip_len-UIP_IPH_LEN), *(uint64_t *) IV_crypt);
 
 		uint16_t hotfix;
 
 		hotfix = uip_buf[uip_len - 1];
-
 
 		if(bufseqnr_check_dublicate(nbr,uip_buf[uip_len - 2]) || (hotfix>7)){
 			bufseqnr_put(nbr,uip_buf[uip_len - 2]);
@@ -1890,6 +1903,8 @@ input(void)
 
 		uip_len -= hotfix;
 		uip_len -= 2;
+		uip_len -= 8;
+		memmove(PAYLOAD_BUF,PAYLOAD_BUF_IV,uip_len-UIP_IPH_LEN);
 	}
 	///////////////////////////////////////////////////////////////////////
 

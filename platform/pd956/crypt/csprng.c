@@ -93,7 +93,7 @@ void csprng_start(void)
 	}
 	csprng_feed(clock_get_unix_time()); // if clock is set this will be good.
 	csprng_feedix = 0;
-	csprng_ready = 0;
+	//csprng_ready = 0;
 
 	ctimer_set(&rng_timer, 20, RNG_handler, NULL);
 

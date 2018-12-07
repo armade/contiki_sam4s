@@ -356,8 +356,10 @@ static void htu21_notify_ready(void *not_used)
 		 */
 		if(!ret){
 			PRINTF("HTU21: Not ready for temperature reading\n");
-			if(retry_count++ > 5)
+			if(retry_count++ > 5){
 				htu21_error();
+				return;
+			}
 
 			ctimer_set(&startup_timer, 1 * (1000 / CLOCK_SECOND),
 					htu21_notify_ready, NULL); // 1ms retry
@@ -388,8 +390,10 @@ static void htu21_notify_ready(void *not_used)
 		 */
 		if(!ret){
 			PRINTF("HTU21: Not ready for humidity reading\n");
-			if(retry_count++ > 5)
+			if(retry_count++ > 5){
 				htu21_error();
+				return;
+			}
 
 			ctimer_set(&startup_timer, 1 * (1000 / CLOCK_SECOND),
 					htu21_notify_ready, NULL); // 1ms retry
