@@ -1302,7 +1302,7 @@ void xtea256_decrypt(uint8_t * payload, const uint32_t *key, uint32_t length, ui
 
 
 
-
+static
 uint8_t IV_crypt[8] = {
 		0x44, 0xc3, 0xba, 0x43, 0x50, 0x82, 0x09, 0xf3
 };
@@ -1403,6 +1403,12 @@ output(const uip_lladdr_t *localdest)
 	}
 
 ////////////////////////////////////////////////////////////////
+	// We move uip_buf data section up by 8 bytes. This allow us to insert random data
+	// at the beginning. This will prevent identifying two identically packeted.
+	// The random 8 bytes does not need to be know by the receiver, since
+	// they are garbage. We add two more bytes to the buffer. one padding byte
+	// that tells how many bytes are padded to align buffer to encryption. And
+	// a sequence number to detect replay packet.
 	uip_ds6_nbr_t *nbr;
 	uip_ipaddr_t *border_router;
 	rpl_dag_t *dag;
@@ -1424,7 +1430,7 @@ output(const uip_lladdr_t *localdest)
 		memmove(PAYLOAD_BUF_IV,PAYLOAD_BUF,uip_len-UIP_IPH_LEN);
 		uip_len += 8;
 
-		uip_len += 2; // make sure we have room for padding number
+		uip_len += 2; // make sure we have room for padding and seq number
 		hotfix = uip_len & 7;
 		//add padding to buffer
 		hotfix = (8 - hotfix);
