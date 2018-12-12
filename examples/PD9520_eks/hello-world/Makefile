@@ -7,7 +7,7 @@ ifeq ($(UUID),)
 endif
 
 CFLAGS += -D NODE_GPS=1 -D NODE_ROUTER=1
-APPS += mqtt servreg-hack ntpd gpsd ftp tinydtls
+APPS += mqtt servreg-hack ntpd gpsd ftp 
 
 CFLAGS += -DUIP_FALLBACK_INTERFACE=ip64_uip_fallback_interface
 
