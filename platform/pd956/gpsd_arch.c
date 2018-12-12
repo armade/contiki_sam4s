@@ -57,7 +57,7 @@ void UART1_Handler(void)
 	if(UART1->UART_IMR & US_CSR_TXEMPTY){
 
 		UART1->UART_THR = init_cmd[++cmd_index];
-		//uart_write(UART1,*config_init++);
+		uart_write(UART1,*config_init++);
 
 		if(cmd_index == sizeof(init_cmd)){
 			uart_disable_interrupt(UART1,US_IDR_TXEMPTY);

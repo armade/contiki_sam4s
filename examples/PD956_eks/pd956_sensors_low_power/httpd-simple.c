@@ -333,6 +333,25 @@ static page_t http_relay4_cfg_page = {
 };
 #endif
 
+#ifdef NODE_GPS
+static char generate_maps_config(struct httpd_state *s);
+
+static page_t http_maps_cfg_page = {
+  NULL,
+  "maps.html",
+  "Map",
+  generate_maps_config,
+};
+
+static char generate_weather_config(struct httpd_state *s);
+
+static page_t http_weather_cfg_page = {
+  NULL,
+  "weather.html",
+  "Weather",
+  generate_weather_config,
+};
+#endif
 
 static char generate_mqtt_config(struct httpd_state *s);
 
@@ -1453,6 +1472,301 @@ PT_THREAD(generate_relay4_config(struct httpd_state *s))
 }
 #endif
 
+#ifdef NODE_GPS
+static
+PT_THREAD(generate_maps_config(struct httpd_state *s))
+{
+
+  PT_BEGIN(&s->generate_pt);
+
+  /* Generate top matter (doctype, title, nav links etc) */
+  PT_WAIT_THREAD(&s->generate_pt,
+                 generate_top_matter(s, http_maps_cfg_page.title,
+                                     http_config_css2));
+  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<fieldset>"));
+  /////////////////////////////////////////////////////
+  float value;
+  int ret;
+  static int low_lat, high_lat;
+  static int low_lon, high_lon;
+
+  ret = GPS_sensor.value(GPS_SENSOR_TYPE_LAT);
+
+  if(ret == SENSOR_ERROR){
+  	  PT_WAIT_THREAD(&s->generate_pt,
+  	                   enqueue_chunk(s, 0, "<h1>No GPS signal</h1>"));
+  	  goto MAPS_EXIT;
+    }
+    value = *(float *)ret;
+
+    high_lat = value;
+    low_lat = (value - high_lat) * 10000000;
+
+    ret = GPS_sensor.value(GPS_SENSOR_TYPE_LONG);
+    if(ret == SENSOR_ERROR){
+      	  PT_WAIT_THREAD(&s->generate_pt,
+      	                   enqueue_chunk(s, 0, "<h1>No GPS signal</h1>"));
+      	  goto MAPS_EXIT;
+        }
+    value = *(float *)ret;
+
+    high_lon = value;
+    low_lon = (value - high_lon) * 10000000;
+
+
+
+  PT_WAIT_THREAD(&s->generate_pt,
+                 enqueue_chunk(s, 0, "<h1>%s</h1>", http_maps_cfg_page.title));
+
+  PT_WAIT_THREAD(&s->generate_pt,
+                   enqueue_chunk(s, 0, "<link rel=\"stylesheet\" href=\"https://unpkg.com/leaflet@1.3.4/dist/leaflet.css\""));
+  PT_WAIT_THREAD(&s->generate_pt,
+                       enqueue_chunk(s, 0, "integrity=\"sha512-puBpdR0798OZvTTbP4A8Ix/l+A4dHDD0DGqYW6RQ+9jxkRFclaxxQb/SJAWZfWAkuyeQUytO7+7N4QKrDh+drA==\""));
+                    		   PT_WAIT_THREAD(&s->generate_pt,
+                    		                        enqueue_chunk(s, 0, "crossorigin=\"\"/>"));
+
+  PT_WAIT_THREAD(&s->generate_pt,
+                     enqueue_chunk(s, 0, "<script src=\"https://unpkg.com/leaflet@1.3.4/dist/leaflet.js\""));
+  PT_WAIT_THREAD(&s->generate_pt,
+                       enqueue_chunk(s, 0, "integrity=\"sha512-nMMmRyTVoLYqjP9hrbed9S+FzjZHW5gY1TWCHA5ckwXZBadntCNs8kEqAWdrb9O7rxbCaA4lKTIWjDXZxflOcA==\""));
+  PT_WAIT_THREAD(&s->generate_pt,
+                       enqueue_chunk(s, 0, "crossorigin=\"\"></script>"));
+  PT_WAIT_THREAD(&s->generate_pt,
+                       enqueue_chunk(s, 0, "<div id=\"mapid\" style=\"height: 600px;\"></div>"));
+  PT_WAIT_THREAD(&s->generate_pt,
+                     enqueue_chunk(s, 0, "<script>"));
+  PT_WAIT_THREAD(&s->generate_pt,
+                       enqueue_chunk(s, 0, "var mymap = L.map('mapid').setView([%d.%.7d, %d.%.7d], 18);",high_lat,low_lat,high_lon,low_lon));
+
+  PT_WAIT_THREAD(&s->generate_pt,
+                       enqueue_chunk(s, 0, "L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token=pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcmZ3N3gifQ.rJcFIG214AriISLbB6B5aw', {"));
+  PT_WAIT_THREAD(&s->generate_pt,
+                       enqueue_chunk(s, 0, "maxZoom: 23,"));
+  PT_WAIT_THREAD(&s->generate_pt,
+                       enqueue_chunk(s, 0, "attribution: 'Map data &copy; <a href=\"https://www.openstreetmap.org/\">OpenStreetMap</a> contributors, ' +"));
+  PT_WAIT_THREAD(&s->generate_pt,
+                       enqueue_chunk(s, 0, "'<a href=\"https://creativecommons.org/licenses/by-sa/2.0/\">CC-BY-SA</a>, ' +"));
+  PT_WAIT_THREAD(&s->generate_pt,
+                       enqueue_chunk(s, 0, "'Imagery � <a href=\"https://www.mapbox.com/\">Mapbox</a>',"));
+  PT_WAIT_THREAD(&s->generate_pt,
+                       enqueue_chunk(s, 0, "id: 'mapbox.streets'"));
+  PT_WAIT_THREAD(&s->generate_pt,
+                       enqueue_chunk(s, 0, "}).addTo(mymap);"));
+
+  PT_WAIT_THREAD(&s->generate_pt,
+                       enqueue_chunk(s, 0, "L.marker([%d.%.7d, %d.%.7d]).addTo(mymap)",high_lat,low_lat,high_lon,low_lon));
+  PT_WAIT_THREAD(&s->generate_pt,
+                       enqueue_chunk(s, 0, ".bindPopup(\"<b>You are here!</b><br />(%d.%.7d, %d.%.7d).\").openPopup();",high_lat,low_lat,high_lon,low_lon));
+
+  PT_WAIT_THREAD(&s->generate_pt,
+                       enqueue_chunk(s, 0, "L.circle([%d.%.7d, %d.%.7d ], 5, {",high_lat,low_lat,high_lon,low_lon));
+  PT_WAIT_THREAD(&s->generate_pt,
+                       enqueue_chunk(s, 0, "color: 'red',"));
+  PT_WAIT_THREAD(&s->generate_pt,
+                       enqueue_chunk(s, 0, "fillColor: '#f03',"));
+  PT_WAIT_THREAD(&s->generate_pt,
+                       enqueue_chunk(s, 0, "fillOpacity: 0.5"));
+  PT_WAIT_THREAD(&s->generate_pt,
+                       enqueue_chunk(s, 0, "}).addTo(mymap).bindPopup(\"I am a circle.\");"));
+
+  PT_WAIT_THREAD(&s->generate_pt,
+                       enqueue_chunk(s, 0, "var popup = L.popup();"));
+
+  PT_WAIT_THREAD(&s->generate_pt,
+                       enqueue_chunk(s, 0, "function onMapClick(e) {"));
+  PT_WAIT_THREAD(&s->generate_pt,
+                       enqueue_chunk(s, 0, "popup"));
+  PT_WAIT_THREAD(&s->generate_pt,
+                       enqueue_chunk(s, 0, ".setLatLng(e.latlng)"));
+  PT_WAIT_THREAD(&s->generate_pt,
+                       enqueue_chunk(s, 0, ".setContent(\"You clicked the map at \" + e.latlng.toString())"));
+  PT_WAIT_THREAD(&s->generate_pt,
+                       enqueue_chunk(s, 0, ".openOn(mymap);"));
+  PT_WAIT_THREAD(&s->generate_pt,
+                       enqueue_chunk(s, 0, "}"));
+
+  PT_WAIT_THREAD(&s->generate_pt,
+                       enqueue_chunk(s, 0, "mymap.on('click', onMapClick);"));
+  PT_WAIT_THREAD(&s->generate_pt,
+                       enqueue_chunk(s, 0, "</script>"));
+MAPS_EXIT:
+  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "</fieldset>"));
+    //=====================================================================================
+  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 1, http_bottom));
+
+  PT_END(&s->generate_pt);
+}
+
+
+static
+PT_THREAD(generate_weather_config(struct httpd_state *s))
+{
+
+  PT_BEGIN(&s->generate_pt);
+
+  /* Generate top matter (doctype, title, nav links etc) */
+  PT_WAIT_THREAD(&s->generate_pt,
+                 generate_top_matter(s, http_maps_cfg_page.title,
+                                     http_config_css2));
+  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<fieldset>"));
+  /////////////////////////////////////////////////////
+  float value;
+  int ret;
+  static int low_lat, high_lat;
+  static int low_lon, high_lon;
+
+  ret = GPS_sensor.value(GPS_SENSOR_TYPE_LAT);
+
+  if(ret == SENSOR_ERROR){
+	  PT_WAIT_THREAD(&s->generate_pt,
+	                   enqueue_chunk(s, 0, "<h1>No GPS signal</h1>"));
+	  goto WEATHER_EXIT;
+  }
+    value = *(float *)ret;
+
+    high_lat = value;
+    low_lat = (value - high_lat) * 10000000;
+
+    ret = GPS_sensor.value(GPS_SENSOR_TYPE_LONG);
+    if(ret == SENSOR_ERROR){
+    	  PT_WAIT_THREAD(&s->generate_pt,
+    	                   enqueue_chunk(s, 0, "<h1>No GPS signal</h1>"));
+    	  goto WEATHER_EXIT;
+      }
+    value = *(float *)ret;
+
+    high_lon = value;
+    low_lon = (value - high_lon) * 10000000;
+
+
+
+  PT_WAIT_THREAD(&s->generate_pt,
+                 enqueue_chunk(s, 0, "<h1>%s</h1>", http_weather_cfg_page.title));
+
+  PT_WAIT_THREAD(&s->generate_pt,
+                   enqueue_chunk(s, 0, "<h2 %s</h2>", "id=\"Location\"> Getting data "));
+
+  PT_WAIT_THREAD(&s->generate_pt,
+                      enqueue_chunk(s, 0, "<img id=\"w_icon\" height=\"75\" width=\"75\" alt=\"icon\"/> "));
+  PT_WAIT_THREAD(&s->generate_pt,
+                     enqueue_chunk(s, 0, "<p id=\"myT\"></p>\n"));
+  PT_WAIT_THREAD(&s->generate_pt,
+                     enqueue_chunk(s, 0, "<p id=\"myH\"></p>\n"));
+  PT_WAIT_THREAD(&s->generate_pt,
+                     enqueue_chunk(s, 0, "<p id=\"myP\"></p>\n"));
+  PT_WAIT_THREAD(&s->generate_pt,
+                     enqueue_chunk(s, 0, "<p id=\"myW\"></p>\n"));
+  PT_WAIT_THREAD(&s->generate_pt,
+                     enqueue_chunk(s, 0, "<p id=\"mySunRise\"></p>\n"));
+  PT_WAIT_THREAD(&s->generate_pt,
+                     enqueue_chunk(s, 0, "<p id=\"mySunSet\"></p>\n"));
+
+  PT_WAIT_THREAD(&s->generate_pt,
+                     enqueue_chunk(s, 0, "<script>\n"));
+  PT_WAIT_THREAD(&s->generate_pt,
+                     enqueue_chunk(s, 0, " const http = new XMLHttpRequest() \n"));
+
+  PT_WAIT_THREAD(&s->generate_pt,
+                     enqueue_chunk(s, 0, "http.open(\"GET\", \"http://api.openweathermap.org/data/2.5/weather?lat=%d.%.7d&lon=%d.%.7d&appid=c592e14137c3471fa9627b44f6649db4\")\n ",high_lat,low_lat,high_lon,low_lon));
+  PT_WAIT_THREAD(&s->generate_pt,
+                     enqueue_chunk(s, 0, "http.send() \n"));
+
+  PT_WAIT_THREAD(&s->generate_pt,
+                     enqueue_chunk(s, 0, "http.onload = () => got_request(http.responseText) \n"));
+
+  PT_WAIT_THREAD(&s->generate_pt,
+                     enqueue_chunk(s, 0, "function got_request(txt){\n"));
+  PT_WAIT_THREAD(&s->generate_pt,
+                     enqueue_chunk(s, 0, "obj = JSON.parse(txt);\n"));
+  PT_WAIT_THREAD(&s->generate_pt,
+                     enqueue_chunk(s, 0, "var tmp;\n"));
+  PT_WAIT_THREAD(&s->generate_pt,
+                     enqueue_chunk(s, 0, "var tmp2;\n"));
+  PT_WAIT_THREAD(&s->generate_pt,
+                       enqueue_chunk(s, 0, "var hours;\n"));
+  PT_WAIT_THREAD(&s->generate_pt,
+                       enqueue_chunk(s, 0, "var minutes;\n"));
+  PT_WAIT_THREAD(&s->generate_pt,
+                       enqueue_chunk(s, 0, "var seconds;\n"));
+  PT_WAIT_THREAD(&s->generate_pt,
+                         enqueue_chunk(s, 0, "var date;\n"));
+  PT_WAIT_THREAD(&s->generate_pt,
+                           enqueue_chunk(s, 0, "var formattedTime;\n"));
+
+  PT_WAIT_THREAD(&s->generate_pt,
+                     enqueue_chunk(s, 0, "document.getElementById(\"Location\").innerHTML = obj.name + \" (\" + obj.sys.country + \")\";\n"));
+
+  PT_WAIT_THREAD(&s->generate_pt,
+                     enqueue_chunk(s, 0, "tmp = obj.main.temp-273.15;\n"));
+  PT_WAIT_THREAD(&s->generate_pt,
+                     enqueue_chunk(s, 0, "document.getElementById(\"myT\").innerHTML = \"Temperature: \"+tmp.toFixed(2) +\"[°C]\";\n"));
+
+  PT_WAIT_THREAD(&s->generate_pt,
+                     enqueue_chunk(s, 0, "tmp = obj.main.humidity;\n"));
+  PT_WAIT_THREAD(&s->generate_pt,
+                     enqueue_chunk(s, 0, "document.getElementById(\"myH\").innerHTML = \"Humidity: \"+tmp.toFixed(2) + \"[%%]\";\n"));
+
+  PT_WAIT_THREAD(&s->generate_pt,
+                     enqueue_chunk(s, 0, "tmp = obj.main.pressure;\n"));
+  PT_WAIT_THREAD(&s->generate_pt,
+                     enqueue_chunk(s, 0, "document.getElementById(\"myP\").innerHTML = \"Pressure: \"+tmp.toFixed(2) + \"[hPa]\";\n"));
+
+  PT_WAIT_THREAD(&s->generate_pt,
+                     enqueue_chunk(s, 0, "tmp = obj.wind.deg;\n"));
+  PT_WAIT_THREAD(&s->generate_pt,
+                     enqueue_chunk(s, 0, "tmp2 = obj.wind.speed;\n"));
+  PT_WAIT_THREAD(&s->generate_pt,
+                     enqueue_chunk(s, 0, "document.getElementById(\"myW\").innerHTML = \"Wind: Direction \"+tmp.toFixed(2) + \"[°]\" + \",  Speed \"+tmp2.toFixed(2) + \"[m/s]\";\n"));
+
+  PT_WAIT_THREAD(&s->generate_pt,
+                     enqueue_chunk(s, 0, "tmp = obj.sys.sunrise;\n"));
+  PT_WAIT_THREAD(&s->generate_pt,
+                       enqueue_chunk(s, 0, "date = new Date(tmp*1000);\n"));
+  PT_WAIT_THREAD(&s->generate_pt,
+                       enqueue_chunk(s, 0, "hours = date.getHours();\n"));
+  PT_WAIT_THREAD(&s->generate_pt,
+                       enqueue_chunk(s, 0, "minutes = \"0\" + date.getMinutes();\n"));
+  PT_WAIT_THREAD(&s->generate_pt,
+                         enqueue_chunk(s, 0, "seconds = \"0\" + date.getSeconds();\n"));
+  PT_WAIT_THREAD(&s->generate_pt,
+                           enqueue_chunk(s, 0, "formattedTime = hours + ':' + minutes.substr(-2) + ':' + seconds.substr(-2);\n"));
+  PT_WAIT_THREAD(&s->generate_pt,
+                     enqueue_chunk(s, 0, "document.getElementById(\"mySunRise\").innerHTML = \"Sunrise: \" + formattedTime + \"   (\"+tmp + \"[s])\";\n"));
+
+  PT_WAIT_THREAD(&s->generate_pt,
+                     enqueue_chunk(s, 0, "tmp = obj.sys.sunset;\n"));
+  PT_WAIT_THREAD(&s->generate_pt,
+                         enqueue_chunk(s, 0, "date = new Date(tmp*1000);\n"));
+    PT_WAIT_THREAD(&s->generate_pt,
+                         enqueue_chunk(s, 0, "hours = date.getHours();\n"));
+    PT_WAIT_THREAD(&s->generate_pt,
+                         enqueue_chunk(s, 0, "minutes = \"0\" + date.getMinutes();\n"));
+    PT_WAIT_THREAD(&s->generate_pt,
+                           enqueue_chunk(s, 0, "seconds = \"0\" + date.getSeconds();\n"));
+    PT_WAIT_THREAD(&s->generate_pt,
+                             enqueue_chunk(s, 0, "formattedTime = hours + ':' + minutes.substr(-2) + ':' + seconds.substr(-2);\n"));
+  PT_WAIT_THREAD(&s->generate_pt,
+                     enqueue_chunk(s, 0, "document.getElementById(\"mySunSet\").innerHTML = \"Sunset: \" + formattedTime + \"   (\"+tmp + \"[s])\";\n"));
+
+  PT_WAIT_THREAD(&s->generate_pt,
+                       enqueue_chunk(s, 0, "var test = obj.weather[0].icon;"));
+  PT_WAIT_THREAD(&s->generate_pt,
+                       enqueue_chunk(s, 0, "document.getElementById('w_icon').src = \"http://openweathermap.org/img/w/\" + test + \".png\";"));
+  PT_WAIT_THREAD(&s->generate_pt,
+                     enqueue_chunk(s, 0, "}\n"));
+  PT_WAIT_THREAD(&s->generate_pt,
+                     enqueue_chunk(s, 0, "</script>\n"));
+
+
+WEATHER_EXIT:
+  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "</fieldset>\n"));
+    //=====================================================================================
+  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 1, http_bottom));
+
+  PT_END(&s->generate_pt);
+}
+#endif
+
 
 /*---------------------------------------------------------------------------*/
 static void
@@ -1892,6 +2206,11 @@ init(void)
 
 #ifdef NODE_4_ch_relay
   list_add(pages_list, &http_relay4_cfg_page);
+#endif
+
+#ifdef NODE_GPS
+  list_add(pages_list, &http_maps_cfg_page);
+  list_add(pages_list, &http_weather_cfg_page);
 #endif
 
   list_add(pages_list, &http_mqtt_cfg_page);

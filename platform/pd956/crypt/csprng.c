@@ -14,6 +14,7 @@
 #include "platform-conf.h"
 #include "stdint.h"
 #include "clock.h"
+#include "lib/random.h"
 
 #include "csprng.h"
 #include "sha256.h"
