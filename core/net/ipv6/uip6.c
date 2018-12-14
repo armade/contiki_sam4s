@@ -182,9 +182,7 @@ uint8_t uip_ext_opt_offset = 0;
  */
 /** Packet buffer for incoming and outgoing packets */
 #ifndef UIP_CONF_EXTERNAL_BUFFER
-#ifdef ENABLE_TCM
-__attribute__((__section__(".data_TCM")))
-#endif
+
 uip_buf_t uip_aligned_buf;
 #endif /* UIP_CONF_EXTERNAL_BUFFER */
 

@@ -797,7 +797,7 @@ void gmac_dev_reset(gmac_device_t* p_gmac_dev, gmac_quelist_t queue_idx)
  * \param p_gmac_dev   Pointer to GMAC device instance.
  */
 #ifdef ENABLE_TCM
-__attribute__((__section__(".code_TCM")))
+//__attribute__((__section__(".code_TCM")))
 #endif
 void gmac_handler(gmac_device_t* p_gmac_dev, gmac_quelist_t queue_idx)
 {

@@ -120,9 +120,6 @@ uip_lladdr_t uip_lladdr = {{0,0,0,0,0,0}};
 #endif
 
 /* The packet buffer that contains incoming packets. */
-#ifdef ENABLE_TCM
-__attribute__((__section__(".data_TCM")))
-#endif
 uip_buf_t uip_aligned_buf;
 
 void *uip_appdata;               /* The uip_appdata pointer points to

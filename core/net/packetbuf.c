@@ -60,9 +60,6 @@ static uint8_t hdrlen;
    an even 32-bit boundary. On some platforms (most notably the
    msp430 or OpenRISC), having a potentially misaligned packet buffer may lead to
    problems when accessing words. */
-#ifdef ENABLE_TCM
-__attribute__((__section__(".data_TCM")))
-#endif
 static uint32_t packetbuf_aligned[(PACKETBUF_SIZE + 3) / 4];
 static uint8_t *packetbuf = (uint8_t *)packetbuf_aligned;
 

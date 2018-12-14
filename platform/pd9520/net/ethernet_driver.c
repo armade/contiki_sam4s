@@ -24,7 +24,7 @@ volatile uint8_t link_status = 0;
 /** The GMAC driver instance */
 static gmac_device_t gs_gmac_dev;
 #ifdef ENABLE_TCM
-__attribute__((__section__(".code_TCM")))
+//__attribute__((__section__(".code_TCM")))
 #endif
 void GMAC_Handler(void)
 {
@@ -103,7 +103,7 @@ init(void)
 		ctimer_set(&rx_poll_timer, 100, rx_soft_poll, NULL);
 }
 #ifdef ENABLE_TCM
-__attribute__((__section__(".code_TCM")))
+//__attribute__((__section__(".code_TCM")))
 #endif
 void rx_input(uint32_t ul_status)
 {
