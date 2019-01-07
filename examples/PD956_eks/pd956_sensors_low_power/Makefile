@@ -1,5 +1,5 @@
 DEFINES+=PROJECT_CONF_H=\"project-conf.h\"
-CFLAGS += -D NODE_GPS=1  -DLOW_CLOCK=0
+CFLAGS += -D NODE_HTU21D=1  -DLOW_CLOCK=0
 #define NODE_4_ch_relay
 #define NODE_LIGHT
 #define NODE_HARD_LIGHT

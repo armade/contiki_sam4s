@@ -971,7 +971,7 @@ PROCESS_THREAD(mqtt_client_process, ev, data)
 			// If for some reason the chain breaks we need to just sleep on it.
 			// Timeout_timer makes sure we get here 1s after wake up.
 			etimer_stop(&timeout_timer);
-			if(no_sleep_allowed || NTP_status() || !sleep_counter || (ev == PROCESS_EVENT_TIMER && data == &timeout_timer))
+			if(no_sleep_allowed || NTP_status() || !sleep_counter || (ev == PROCESS_EVENT_TIMER && data == &timeout_timer) || ((state!=5)&& (state!=6)))
 			{
 
 				if(sleep_counter){

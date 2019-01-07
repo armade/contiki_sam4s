@@ -1299,7 +1299,13 @@ void xtea256_decrypt(uint8_t * payload, const uint32_t *key, uint32_t length, ui
 	}
 }
 
-
+static
+uint8_t crypt_key32[32] = {
+		0x72, 0xab, 0x7b, 0x23, 0x5f, 0x2d, 0xdd, 0x19,
+		0x55, 0x13, 0xba, 0xdd, 0xa1, 0xf8, 0x92, 0x14,
+		0xc3, 0xad, 0x3d, 0x41, 0x82, 0xa2, 0xa8, 0xfa,
+		0x5f, 0xbe, 0xb5, 0xd9, 0x54, 0x25, 0x78, 0x77
+};
 
 
 static
@@ -1409,20 +1415,33 @@ output(const uip_lladdr_t *localdest)
 	// they are garbage. We add two more bytes to the buffer. one padding byte
 	// that tells how many bytes are padded to align buffer to encryption. And
 	// a sequence number to detect replay packet.
-	uip_ds6_nbr_t *nbr;
+/*	uip_ds6_nbr_t *nbr;
 	uip_ipaddr_t *border_router;
 	rpl_dag_t *dag;
+	uint8_t addr_tmp[16];
+	uip_ipaddr_t *addr_tmp2;
 	if((UIP_IP_BUF->proto != UIP_PROTO_ICMP)
 			&& (UIP_IP_BUF->proto != UIP_PROTO_ICMP6)){
 		dag = rpl_get_any_dag();
 		border_router = &dag->dag_id;
+		//memcpy(addr_tmp,&UIP_IP_BUF->destipaddr,sizeof(addr_tmp));
+		//addr_tmp[0]=0xfe;
+		//addr_tmp[1] = 0x80;
+		//nbr = uip_ds6_nbr_lookup((const uip_ipaddr_t *)addr_tmp);
 
-		nbr = uip_ds6_nbr_lookup(&UIP_IP_BUF->destipaddr);
+		addr_tmp2 = uip_ds6_nbr_ipaddr_from_lladdr(&UIP_IP_BUF->destipaddr);
+		nbr = uip_ds6_nbr_lookup((const uip_ipaddr_t *)addr_tmp2);
+
 		if(nbr == NULL){
-			nbr = uip_ds6_nbr_lookup(border_router);
+			memcpy(addr_tmp,border_router,sizeof(addr_tmp));
+			addr_tmp[0]=0xfe;
+			addr_tmp[1] = 0x80;
+			nbr = uip_ds6_nbr_lookup(addr_tmp);
 			if(nbr == NULL)
 				return 0;
 		}
+
+
 		// TODO: there is no check in uip_buf bounds are respected.
 		// For now we assume small data frames over 6lowpan.
 		uint16_t hotfix;
@@ -1439,10 +1458,50 @@ output(const uip_lladdr_t *localdest)
 		uip_buf[uip_len - 1] = hotfix & 0xf; // insert padding number in the end
 
 		csprng_get(IV_crypt, 8);
-		xtea256_encrypt(PAYLOAD_BUF, (void *) nbr->nbr_session_key,
-				(uip_len-20), *(uint64_t *) IV_crypt);
+		xtea256_encrypt(PAYLOAD_BUF,(void *) crypt_key32,
+				(uip_len-40), *(uint64_t *) IV_crypt);
 
-	}
+	}*/
+/*
+	if((UIP_IP_BUF->proto != UIP_PROTO_ICMP) && (UIP_IP_BUF->proto != UIP_PROTO_ICMP6)){
+			dag = rpl_get_any_dag();
+			border_router = &dag->dag_id;
+
+			memcpy(addr_tmp,&UIP_IP_BUF->destipaddr,sizeof(addr_tmp));
+					addr_tmp[0]=0xfe;
+					addr_tmp[1] = 0x80;
+					nbr = uip_ds6_nbr_lookup((const uip_ipaddr_t *)addr_tmp);
+
+
+			if(nbr == NULL){
+				nbr = uip_ds6_nbr_lookup(border_router);
+				if(nbr == NULL)
+					return;
+			}
+
+			if((uip_len-UIP_IPH_LEN) & 7){ // Skip packet. we append padding, and if this packet is unaligned it's not for us.
+				uip_len = 0;
+				return;
+			}
+
+			xtea256_decrypt(PAYLOAD_BUF, (void *) nbr->nbr_session_key, (uip_len-UIP_IPH_LEN), *(uint64_t *) IV_crypt);
+
+			uint16_t hotfix;
+
+			hotfix = uip_buf[uip_len - 1];
+
+			if(bufseqnr_check_dublicate(nbr,uip_buf[uip_len - 2]) || (hotfix>7)){
+				bufseqnr_put(nbr,uip_buf[uip_len - 2]);
+				uip_len = 0;
+				return;
+			}
+			bufseqnr_put(nbr,uip_buf[uip_len - 2]);
+
+			uip_len -= hotfix;
+			uip_len -= 2;
+			uip_len -= 8;
+			memmove(PAYLOAD_BUF,PAYLOAD_BUF_IV,uip_len-UIP_IPH_LEN);
+		}*/
 ///////////////////////////////////////////////////////////////////////
 
 
@@ -1874,17 +1933,28 @@ input(void)
 
 
     ////////////////////////////////////////////////////////////////
-    uip_ds6_nbr_t *nbr;
+/*    uip_ds6_nbr_t *nbr;
 	uip_ipaddr_t *border_router;
 	rpl_dag_t *dag;
+	uint8_t addr_tmp[16];
 
 	if((UIP_IP_BUF->proto != UIP_PROTO_ICMP) && (UIP_IP_BUF->proto != UIP_PROTO_ICMP6)){
 		dag = rpl_get_any_dag();
 		border_router = &dag->dag_id;
 
-		nbr = uip_ds6_nbr_lookup(&UIP_IP_BUF->srcipaddr);
+		//memcpy(addr_tmp,&UIP_IP_BUF->srcipaddr,sizeof(addr_tmp));
+		//		addr_tmp[0]=0xfe;
+		//		addr_tmp[1] = 0x80;
+		//		nbr = uip_ds6_nbr_lookup((const uip_ipaddr_t *)addr_tmp);
+
+		nbr = uip_ds6_nbr_ipaddr_from_lladdr(&UIP_IP_BUF->srcipaddr);
+
+
 		if(nbr == NULL){
-			nbr = uip_ds6_nbr_lookup(border_router);
+			memcpy(addr_tmp,border_router,sizeof(addr_tmp));
+			addr_tmp[0]=0xfe;
+			addr_tmp[1] = 0x80;
+			nbr = uip_ds6_nbr_lookup(addr_tmp);
 			if(nbr == NULL)
 				return;
 		}
@@ -1894,7 +1964,7 @@ input(void)
 			return;
 		}
 
-		xtea256_decrypt(PAYLOAD_BUF, (void *) nbr->nbr_session_key, (uip_len-UIP_IPH_LEN), *(uint64_t *) IV_crypt);
+		xtea256_decrypt(PAYLOAD_BUF,(void *)crypt_key32 , (uip_len-UIP_IPH_LEN), *(uint64_t *) IV_crypt);
 
 		uint16_t hotfix;
 
@@ -1911,7 +1981,7 @@ input(void)
 		uip_len -= 2;
 		uip_len -= 8;
 		memmove(PAYLOAD_BUF,PAYLOAD_BUF_IV,uip_len-UIP_IPH_LEN);
-	}
+	}*/
 	///////////////////////////////////////////////////////////////////////
 
     /* if callback is set then set attributes and call */

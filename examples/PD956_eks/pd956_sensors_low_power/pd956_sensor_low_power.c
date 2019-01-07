@@ -610,6 +610,7 @@ static void get_HTU21D_reading()
 	int low, high;
 	char *buf;
 
+
 	if(HTU21D_sensor_humid_reading.publish){
 
 		value = HTU21D_sensor.value(HTU21D_SENSOR_TYPE_HUMID);

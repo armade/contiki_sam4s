@@ -14,7 +14,7 @@ www.eXtremeElectronics.co.in
 #include "gpio.h"
 #include "pio_handler.h"
 #if defined(NODE_HTU21D) || defined(NODE_BMP280) || defined(NODE_LM73)
-Pio *I2C_base = (Pio *)PIOB;
+Pio *I2C_base = (Pio *)PIOA;
 
 #define NOP(NO, unused)      asm volatile("NOP");
 
@@ -102,6 +102,7 @@ uint8_t SoftI2CWriteByte(uint8_t data)
 {
 	 
 	 uint8_t i;
+	 volatile int retries;
 	 	
 	 for(i=0;i<8;i++)
 	 {
@@ -115,7 +116,10 @@ uint8_t SoftI2CWriteByte(uint8_t data)
 		SOFT_I2C_SCL_HIGH;
 		H_DEL;
 		
-		while(SOFT_I2C_READ_PIN(SCL)==0);
+		retries = 2000;
+		while(SOFT_I2C_READ_PIN(SCL)==0){
+			if(!retries--)	return 0;
+		}
 			
 		data=data<<1;
 	}
@@ -130,8 +134,10 @@ uint8_t SoftI2CWriteByte(uint8_t data)
 	SOFT_I2C_SCL_HIGH;
 	H_DEL;
 
-	while(SOFT_I2C_READ_PIN(SCL)==0);
-
+	retries = 2000;
+	while(SOFT_I2C_READ_PIN(SCL)==0){
+		if(!retries--)	return 0;
+	}
 
 	uint8_t ack=!(SOFT_I2C_READ_PIN(SDA));
 
@@ -147,6 +153,7 @@ uint8_t SoftI2CReadByte(uint8_t ack)
 {
 	uint8_t data=0x00;
 	uint8_t i;
+	volatile int retries;
 			
 	for(i=0;i<8;i++)
 	{
@@ -155,7 +162,10 @@ uint8_t SoftI2CReadByte(uint8_t ack)
 		SOFT_I2C_SCL_HIGH;
 		H_DEL;
 			
-		while(SOFT_I2C_READ_PIN(SCL)==0);
+		retries = 2000;
+		while(SOFT_I2C_READ_PIN(SCL)==0){
+			if(!retries--)	return 0;
+		}
 		
 		if(SOFT_I2C_READ_PIN(SDA))
 			data|=(0x80>>i);
