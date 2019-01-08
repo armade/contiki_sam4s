@@ -607,11 +607,10 @@ PT_THREAD(generate_index(struct httpd_state *s))
     memset(ipaddr_buf, 0, IPADDR_BUF_LEN);
     get_neighbour_state_text(ipaddr_buf, s->nbr->state);
 
-    // Just to test
+    	// Just to test
        memset(ipaddr_buf, 0, IPADDR_BUF_LEN);
        for(i=0;i<sizeof(s->nbr->nbr_session_key);i++)
-       	sprintf(&ipaddr_buf[i],"%x",s->nbr->nbr_session_key[i]);
-
+    	   sprintf(&ipaddr_buf[i],"%x",s->nbr->nbr_session_key[i]);
        PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "%s", ipaddr_buf));
 
     PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, " %s<br>", ipaddr_buf));
