@@ -376,14 +376,14 @@ static void mqtt_event(struct mqtt_connection *m, mqtt_event_t event,
 	switch (event)
 	{
 		case MQTT_EVENT_CONNECTED:
-			DBG("APP - Application has a MQTT connection\n");
+			PRINTF("APP - Application has a MQTT connection\n");
 			timer_set(&connection_life, CONNECTION_STABLE_TIME);
 			state = MQTT_CLIENT_STATE_CONNECTED;
 			process_poll(&mqtt_client_process);
 			break;
 
 		case MQTT_EVENT_DISCONNECTED:
-			DBG("APP - MQTT Disconnect. Reason %u\n", *((mqtt_event_t *)data));
+			PRINTF("APP - MQTT Disconnect. Reason %u\n", *((mqtt_event_t *)data));
 
 			/* Do nothing if the disconnect was the result of an incoming config */
 			if (state != MQTT_CLIENT_STATE_NEWCONFIG)
@@ -401,7 +401,7 @@ static void mqtt_event(struct mqtt_connection *m, mqtt_event_t event,
 			{
 				msg_ptr->first_chunk = 0;
 
-				DBG("APP - Application received a publish on topic '%s'. Payload "
+				PRINTF("APP - Application received a publish on topic '%s'. Payload "
 						"size is %i bytes. Content:\n\n",
 						msg_ptr->topic, msg_ptr->payload_length);
 			}
@@ -411,21 +411,21 @@ static void mqtt_event(struct mqtt_connection *m, mqtt_event_t event,
 			break;
 
 		case MQTT_EVENT_SUBACK:
-			DBG("APP - Application is subscribed to topic successfully\n");
+			PRINTF("APP - Application is subscribed to topic successfully\n");
 			break;
 
 		case MQTT_EVENT_UNSUBACK:
-			DBG("APP - Application is unsubscribed to topic successfully\n");
+			PRINTF("APP - Application is unsubscribed to topic successfully\n");
 			break;
 
 		case MQTT_EVENT_PUBACK:
 			state = MQTT_CLIENT_STATE_PUBLISHING_DONE;
 			process_post(PROCESS_BROADCAST, MQTT_publish_sensor_data_done_event, NULL);
-			DBG("APP - Publishing complete.\n");
+			PRINTF("APP - Publishing complete.\n");
 			break;
 
 		default:
-			DBG("APP - Application got a unhandled MQTT event: %i\n", event);
+			 PRINTF("APP - Application got a unhandled MQTT event: %i\n", event); //DBG
 			break;
 	}
 }
@@ -610,7 +610,7 @@ static int construct_client_id(void)
 			"d:%s:%s:%02x%02x%02x%02x%02x%02x", conf->Company, conf->Modul_type,
 			linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1],
 			linkaddr_node_addr.u8[2], linkaddr_node_addr.u8[5],
-			linkaddr_node_addr.u8[6], linkaddr_node_addr.u8[7]);
+			linkaddr_node_addr.u8[6], linkaddr_node_addr.u8[7]); //TODO: use PD snr instead as id
 
 	/* len < 0: Error. Len >= BUFFER_SIZE: Buffer too small */
 	if (len < 0 || len >= BUFFER_SIZE)
@@ -687,6 +687,9 @@ static void publish(void)
 	int len;
 	int remaining = APP_BUFFER_SIZE;
 
+	// There is no need to supply 12 mA into the radio when measuring the temperature.
+	NETSTACK_RADIO.on();
+
 	seq_nr_value++;
 
 	buf_ptr = app_buffer;
@@ -733,8 +736,7 @@ static void publish(void)
 		printf("Buffer too short. Have %d, need %d + \\0\n", remaining, len);
 		return;
 	}
-	// There is no need to supply 12 mA into the radio when measuring the temperature.
-	NETSTACK_RADIO.on();
+
 	mqtt_publish(&conn, NULL, pub_topic, (uint8_t *) app_buffer,
 			strlen(app_buffer), MQTT_QOS_LEVEL_1, MQTT_RETAIN_OFF);
 
@@ -971,13 +973,14 @@ PROCESS_THREAD(mqtt_client_process, ev, data)
 			// If for some reason the chain breaks we need to just sleep on it.
 			// Timeout_timer makes sure we get here 1s after wake up.
 			etimer_stop(&timeout_timer);
-			if(no_sleep_allowed || NTP_status() || !sleep_counter || (ev == PROCESS_EVENT_TIMER && data == &timeout_timer) || ((state!=5)&& (state!=6)))
+			if(no_sleep_allowed || NTP_status() || !sleep_counter || (ev == PROCESS_EVENT_TIMER && data == &timeout_timer) || ((state!=MQTT_CLIENT_STATE_PUBLISHING)&& (state!=MQTT_CLIENT_STATE_PUBLISHING_DONE)))
 			{
 
 				if(sleep_counter){
 					sleep_counter = 0;
 					etimer_set(&sleep_retry_timer, conf->pub_interval);
 					PRINTF("MQTT: can't sleep\n");
+					NETSTACK_RADIO.on(); // Just to be sure. otherwise we end in a radio silence mode. This only happens if we get an error in sensor measurement.
 				}else{
 					sleep_counter = 1;
 					etimer_set(&timeout_timer, 3*CLOCK_SECOND);

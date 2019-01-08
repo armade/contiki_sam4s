@@ -574,7 +574,7 @@ static
 PT_THREAD(generate_index(struct httpd_state *s))
 {
   char ipaddr_buf[IPADDR_BUF_LEN]; /* Intentionally on stack */
-  uint8_t i;
+  static uint8_t i;
 
   PT_BEGIN(&s->generate_pt);
 
