@@ -687,8 +687,7 @@ static void publish(void)
 	int len;
 	int remaining = APP_BUFFER_SIZE;
 
-	// There is no need to supply 12 mA into the radio when measuring the temperature.
-	NETSTACK_RADIO.on();
+
 
 	seq_nr_value++;
 
@@ -736,7 +735,8 @@ static void publish(void)
 		printf("Buffer too short. Have %d, need %d + \\0\n", remaining, len);
 		return;
 	}
-
+	// There is no need to supply 12 mA into the radio when measuring the temperature.
+	NETSTACK_RADIO.on();
 	mqtt_publish(&conn, NULL, pub_topic, (uint8_t *) app_buffer,
 			strlen(app_buffer), MQTT_QOS_LEVEL_1, MQTT_RETAIN_OFF);
 
@@ -929,6 +929,7 @@ static void state_machine(void)
 		 * that can bring us out is a new config event
 		 */
 		printf("Default case: State=0x%02x\n", state);
+		state = MQTT_CLIENT_STATE_ERROR;
 		return;
 	}
 
@@ -961,7 +962,6 @@ PROCESS_THREAD(mqtt_client_process, ev, data)
 
 	update_config();
 
-
 	/* Main loop */
 	while (1)
 	{
@@ -984,6 +984,7 @@ PROCESS_THREAD(mqtt_client_process, ev, data)
 				}else{
 					sleep_counter = 1;
 					etimer_set(&timeout_timer, 3*CLOCK_SECOND);
+					PRINTF("MQTT: Trig from no sleep\n");
 					process_post(PROCESS_BROADCAST, Trig_sensors, NULL);
 				}
 
@@ -991,7 +992,7 @@ PROCESS_THREAD(mqtt_client_process, ev, data)
 			{
 				if(NETSTACK_RADIO.sleep() !=-1){
 
-					rtimer_arch_sleep(conf->pub_interval/CLOCK_SECOND * RTIMER_ARCH_SECOND); // 54uA in wait mode
+					rtimer_arch_sleep(conf->pub_interval/CLOCK_SECOND * RTIMER_ARCH_SECOND); // 54uA in wait mode (cpu + extern flash) + sensor
 					// if sleeptime is 60 sec, and we are awake 100ms we can live on a battery with 2700mAh for
 					// 60/60.1*54uA+0.1/60.1*22mA = 90.5uA avg  2700mA/90.5uA = 29829hr ~ 3.4 years
 

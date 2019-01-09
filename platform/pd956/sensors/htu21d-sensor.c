@@ -447,7 +447,7 @@ static void htu21_enable_sensor(bool enable)
 /**
  * \brief Returns a reading from the sensor
  * \param type HTU21D_SENSOR_TYPE_TEMP or HTU21D_SENSOR_TYPE_HUMID
- * \return Temperature (centi degrees C) or Humidity (centi %).
+ * \return Temperature (°C * 1000) or Humidity (%RH * 1000).
  */
 static int htu21_value(int type)
 {

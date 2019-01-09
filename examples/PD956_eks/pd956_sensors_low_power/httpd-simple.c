@@ -907,9 +907,9 @@ PT_THREAD(generate_device_log(struct httpd_state *s))
   PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0,"</p>"));
   PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "</fieldset>"));
 
-  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<script>"));
-  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "setTimeout(\"location.reload(true);\", 5000)")); //Auto Refreshing Every 5 Seconds
-  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "</script>"));
+  //PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<script>"));
+  //PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "setTimeout(\"location.reload(true);\", 5000)")); //Auto Refreshing Every 5 Seconds
+  //PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "</script>"));
 
   PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 1, http_bottom));
 
