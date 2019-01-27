@@ -26,11 +26,11 @@ I/O Configuration
 #endif
 
 #ifdef NODE_HTU21D
-//#define SCL            PIO_PB2
-//#define SDA            PIO_PB3
+#define SCL            PIO_PB2
+#define SDA            PIO_PB3
 
-#define SCL            PIO_PA6
-#define SDA            PIO_PA8
+//#define SCL            PIO_PA6
+//#define SDA            PIO_PA8
 #endif
 
 #else

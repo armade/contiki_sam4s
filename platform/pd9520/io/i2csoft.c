@@ -113,7 +113,7 @@ uint8_t SoftI2CWriteByte(uint8_t data)
 
 	SOFT_I2C_SCL_LOW;
 	H_DEL;
-	
+	SOFT_I2C_SCL_HIGH;
 	return ack;
 }
  
@@ -150,6 +150,7 @@ uint8_t SoftI2CReadByte(uint8_t ack)
 	SOFT_I2C_SCL_LOW;
 	H_DEL;
 	SOFT_I2C_SDA_HIGH;
+
 
 	return data;
 }

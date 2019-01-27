@@ -263,7 +263,7 @@ void board_init(void)
 void enable_cache(void)
 {
 // I'm currently operating on two cpu's. One with cache and one without.
-	if((CHIPID->CHIPID_CIDR &0xFFFFFFFE) == 0x29970EE0){
+	/*if((CHIPID->CHIPID_CIDR &0xFFFFFFFE) == 0x29970EE0){
 		printf("I - Found cache. Enabling it.\n\r");
 		// Enable the CMCC module. (cache)
 
@@ -271,5 +271,5 @@ void enable_cache(void)
 		CMCC->CMCC_MEN |= CMCC_MEN_MENABLE;
 
 		CMCC->CMCC_CTRL |= CMCC_CTRL_CEN;
-	}
+	}*/
 }

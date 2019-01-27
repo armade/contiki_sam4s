@@ -16,7 +16,7 @@
 #include "platform-conf.h"
 #include "clock.h"
 #include "ntpd.h"
-
+#include "compiler.h"
 
 #include <string.h>
 #include <strings.h>
@@ -736,7 +736,7 @@ static void publish(void)
 		return;
 	}
 	// There is no need to supply 12 mA into the radio when measuring the temperature.
-	NETSTACK_RADIO.on();
+	//NETSTACK_RADIO.on(); // yes there is. we are not alone
 	mqtt_publish(&conn, NULL, pub_topic, (uint8_t *) app_buffer,
 			strlen(app_buffer), MQTT_QOS_LEVEL_1, MQTT_RETAIN_OFF);
 
@@ -961,7 +961,6 @@ PROCESS_THREAD(mqtt_client_process, ev, data)
 	MQTT_publish_sensor_data_done_event = process_alloc_event();
 
 	update_config();
-
 	/* Main loop */
 	while (1)
 	{
@@ -983,7 +982,7 @@ PROCESS_THREAD(mqtt_client_process, ev, data)
 					NETSTACK_RADIO.on(); // Just to be sure. otherwise we end in a radio silence mode. This only happens if we get an error in sensor measurement.
 				}else{
 					sleep_counter = 1;
-					etimer_set(&timeout_timer, 3*CLOCK_SECOND);
+					etimer_set(&timeout_timer, 5*CLOCK_SECOND);
 					PRINTF("MQTT: Trig from no sleep\n");
 					process_post(PROCESS_BROADCAST, Trig_sensors, NULL);
 				}
@@ -991,17 +990,20 @@ PROCESS_THREAD(mqtt_client_process, ev, data)
 			}else
 			{
 				if(NETSTACK_RADIO.sleep() !=-1){
-
+					if(PIOB->PIO_PDSR & PIO_PB2)
+						PIOB->PIO_CODR = PIO_PB2;
+					else
+						PIOB->PIO_SODR = PIO_PB2;
 					rtimer_arch_sleep(conf->pub_interval/CLOCK_SECOND * RTIMER_ARCH_SECOND); // 54uA in wait mode (cpu + extern flash) + sensor
 					// if sleeptime is 60 sec, and we are awake 100ms we can live on a battery with 2700mAh for
 					// 60/60.1*54uA+0.1/60.1*22mA = 90.5uA avg  2700mA/90.5uA = 29829hr ~ 3.4 years
-
+					NETSTACK_RADIO.on();
 					// TODO: Need timing to indicate how long the radio is on. the radio is now not active doing
 					// sensor measurements. a ping is about 47ms in avg. so if we assume 50ms on-time we get:
 					// 60/60.1*54uA + 0.05/60.1*22mA + 0.05/60.1*10mA = 70.5uA avg  2700mA/90.5uA = 29829hr ~ 4.3 years
 					PRINTF("MQTT: Just woke up, trig\n");
 
-					etimer_set(&timeout_timer, 3*CLOCK_SECOND); // We have 3 sec to complete sensor measurement and publish result. Otherwise we will treat it as nosleep.
+					etimer_set(&timeout_timer, 5*CLOCK_SECOND); // We have 5 sec to complete sensor measurement and publish result. Otherwise we will treat it as nosleep.
 					process_post(PROCESS_BROADCAST, Trig_sensors, NULL);
 				}
 				else

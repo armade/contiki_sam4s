@@ -121,7 +121,7 @@ typedef unsigned short uip_stats_t;
 
 // If we sleep we can't route, bom.
 #if defined(NODE_BMP280) || defined(NODE_HTU21D) ||  defined(NODE_DHT11)
-#define UIP_CONF_ROUTER                 0
+#define UIP_CONF_ROUTER                 1
 #else
 #define UIP_CONF_ROUTER                 1
 #endif

@@ -46,7 +46,7 @@
 #define TEMPERATURE_COEFF_ADD								(-46850)
 
 // Coefficients for relative humidity computation
-#define HUMIDITY_COEFF_MUL									(12500)
+#define HUMIDITY_COEFF_MUL									(125000)
 #define HUMIDITY_COEFF_ADD									(-6000)
 
 // Conversion timings
@@ -223,7 +223,7 @@ static int htu21_read_serial_number(uint64_t * serial_number)
 	SoftI2CWriteByte(HTU21_READ_SERIAL_LAST_6BYTES_COMMAND >> 8);
 	SoftI2CWriteByte(HTU21_READ_SERIAL_LAST_6BYTES_COMMAND & 0xff);
 	SoftI2Cread_register(HTU21_ADDR, Last, 6); // SNC_1, SNC_0, crc, SNA_1, SNA_0, crc
-
+	SoftI2CStop();
 	// Arranged: SNA_1 SNA_0 SNB_3 SNB_2 SNB_1 SNB_0 SNC_1 SNC_0
 	// FIXED VALUES
 	//	SNA_1 = 0x48 ,
@@ -304,26 +304,25 @@ static int32_t htu21_compute_compensated_humidity(int32_t temperature,
 }
 
 static
-void htu21_convert_temperature_and_relative_humidity(int32_t *temperature,
-		int32_t *humidity)
+void htu21_convert_temperature_and_relative_humidity(int32_t *temperature,int32_t *humidity)
 {
 	int64_t adc = *temperature;
 
-	// Perform conversion function
-	if(*temperature != SENSOR_ERROR)
-		*temperature = (((int64_t)(adc) * TEMPERATURE_COEFF_MUL) >> 16)
-				+ TEMPERATURE_COEFF_ADD;
+	if (*temperature != SENSOR_ERROR)
+		*temperature = ((adc * TEMPERATURE_COEFF_MUL) >> 16) + TEMPERATURE_COEFF_ADD;
 
 	adc = *humidity;
-	if(*humidity != SENSOR_ERROR){
-		*humidity = (((int64_t)(adc) * HUMIDITY_COEFF_MUL) >> 16)
-				* 10+ HUMIDITY_COEFF_ADD;
+
+	if (*humidity != SENSOR_ERROR) {
+		*humidity = ((adc * HUMIDITY_COEFF_MUL) >> 16) + HUMIDITY_COEFF_ADD;
 		*humidity = htu21_compute_compensated_humidity(*temperature, *humidity);
-		if(*humidity >= 100000)
+
+		if (*humidity >= 100000)
 			*humidity = 100000;
 	}
 
 	return;
+
 }
 
 static void htu21_error(void)
@@ -369,8 +368,8 @@ static void htu21_notify_ready(void *not_used)
 		if(!htu21_crc_check(HTU21_temp, buffer[2])){
 			HTU21_temp = SENSOR_ERROR;
 		}
-		PRINTF("HTU21_temp: 0x%.2x 0x%.2x 0x%.2x\n",
-				buffer[0], buffer[1], buffer[2]);
+		//PRINTF("HTU21_temp: 0x%.2x 0x%.2x 0x%.2x\n",
+		//		buffer[0], buffer[1], buffer[2]);
 		SoftI2C_cmd(HTU21_ADDR, HTU21_READ_HUMIDITY_NO_HOLD_COMMAND, 0);
 		sensor_state = SENSOR_STATUS_HUMID_MEAS;
 		ctimer_set(&startup_timer,
@@ -403,12 +402,18 @@ static void htu21_notify_ready(void *not_used)
 		if(!htu21_crc_check(HTU21_humid, buffer[2])){
 			HTU21_humid = SENSOR_ERROR;
 			return;
-		} PRINTF("HTU21_humid: 0x%.2x 0x%.2x 0x%.2x\n",
-				buffer[0], buffer[1], buffer[2]);
+		} //PRINTF("HTU21_humid: 0x%.2x 0x%.2x 0x%.2x\n",
+			//	buffer[0], buffer[1], buffer[2]);
+
+		//Zero out the status bits but keep them in place
+		HTU21_temp  &= 0xFFFC;
+		HTU21_humid &= 0xFFFC;
 		// All done now convert and notify
 		htu21_convert_temperature_and_relative_humidity(&HTU21_temp,
 				&HTU21_humid);
+
 		sensor_state = SENSOR_STATUS_READY;
+		SoftI2CStop();
 		sensors_changed(&HTU21D_sensor);
 	}
 
@@ -437,9 +442,9 @@ static void htu21_init(void)
 static void htu21_enable_sensor(bool enable)
 {
 	if(enable){
-		PRINTF("HTU21: Trig measurement\n");
+		//PRINTF("HTU21: Trig measurement\n");
 		retry_count = 0;
-		SoftI2C_cmd(HTU21_ADDR, HTU21_READ_TEMPERATURE_HOLD_COMMAND, 0);
+		SoftI2C_cmd(HTU21_ADDR, HTU21_READ_TEMPERATURE_NO_HOLD_COMMAND, 0);
 	}
 }
 
@@ -447,7 +452,7 @@ static void htu21_enable_sensor(bool enable)
 /**
  * \brief Returns a reading from the sensor
  * \param type HTU21D_SENSOR_TYPE_TEMP or HTU21D_SENSOR_TYPE_HUMID
- * \return Temperature (°C * 1000) or Humidity (%RH * 1000).
+ * \return Temperature (ï¿½C * 1000) or Humidity (%RH * 1000).
  */
 static int htu21_value(int type)
 {

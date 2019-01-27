@@ -50,11 +50,11 @@ SEARCH_DIR(.)
 /* Memory Spaces Definitions */
 MEMORY
 {
-  itcm (rwx) 		: ORIGIN = 0x00000000, LENGTH = 0x00010000  
-  dtcm (rw)  		: ORIGIN = 0x20000000, LENGTH = 0x00010000 
+  itcm (rwx) 		: ORIGIN = 0x00000000, LENGTH = 0x00008000  
+  dtcm (rw)  		: ORIGIN = 0x20000000, LENGTH = 0x00008000 
   rom (rx)   		: ORIGIN = 0x00400000, LENGTH = 0x00100000
-  ram (rwx)  		: ORIGIN = 0x20400000, LENGTH = 0x0003EFFF /* 384Kib ram (64Kib x 2 for tcm and 4Kib nocache)*/
-  ram_nocache (rwx) : ORIGIN = 0x2043f000, LENGTH = 0x00001000
+  ram (rwx)  		: ORIGIN = 0x20400000, LENGTH = 0x0004f000 /* 384Kib ram (32Kib x 2 for tcm and 4Kib nocache)*/
+  ram_nocache (rwx) : ORIGIN = 0x2044f000, LENGTH = 0x00001000
 }
 
 /* The stack size used by the application. NOTE: you need to adjust according to your application. */
@@ -190,13 +190,13 @@ SECTIONS
         _eheap = .;
     } > ram
     
-   /* .ram_nocache (NOLOAD) :
+    .ram_nocache (NOLOAD) :
     {
         . = ALIGN(8);
         *(.ram_nocache)
-    } >ram_nocache*/
+    } >ram_nocache
 
     . = ALIGN(4);
     _end = . ;
-    _ram_end_ = ORIGIN(ram) + LENGTH(ram) -1 ;
+
 }

@@ -92,9 +92,9 @@ extern "C" {
 /** TX descriptor lists */
 /*#ifdef ENABLE_TCM
 __attribute__((__section__(".data_TCM")))
-#endif
-COMPILER_ALIGNED(16)*/
-COMPILER_SECTION(".ram_nocache") COMPILER_ALIGNED(32)
+#endif*/
+COMPILER_SECTION(".ram_nocache")
+COMPILER_ALIGNED(8)
 static gmac_tx_descriptor_t gs_tx_desc_null, gs_tx_desc[GMAC_TX_BUFFERS];
 /** TX callback lists */
 static gmac_dev_tx_cb_t gs_tx_callback[GMAC_TX_BUFFERS];
@@ -103,7 +103,7 @@ static gmac_dev_tx_cb_t gs_tx_callback[GMAC_TX_BUFFERS];
 __attribute__((__section__(".data_TCM")))
 #endif*/
 COMPILER_SECTION(".ram_nocache")
-COMPILER_ALIGNED(32) 
+COMPILER_ALIGNED(8)
 static gmac_rx_descriptor_t gs_rx_desc_null, gs_rx_desc[GMAC_RX_BUFFERS];
 /** Send Buffer. Section 3.6 of AMBA 2.0 spec states that burst should not cross the
  * 1K Boundaries. Receive buffer manager write operations are burst of 2 words => 3 lsb bits
@@ -112,14 +112,14 @@ static gmac_rx_descriptor_t gs_rx_desc_null, gs_rx_desc[GMAC_RX_BUFFERS];
 /*#ifdef ENABLE_TCM
 __attribute__((__section__(".data_TCM")))
 #endif*/
-COMPILER_ALIGNED(32)
+COMPILER_ALIGNED(4)
 static uint8_t gs_uc_tx_buffer[GMAC_TX_BUFFERS * GMAC_TX_UNITSIZE];
 
 /** Receive Buffer */
 /*#ifdef ENABLE_TCM
 __attribute__((__section__(".data_TCM")))
 #endif*/
-COMPILER_ALIGNED(32)
+COMPILER_ALIGNED(4)
 static uint8_t gs_uc_rx_buffer[GMAC_RX_BUFFERS * GMAC_RX_UNITSIZE];
 
 /**
@@ -594,6 +594,7 @@ uint32_t gmac_dev_write(gmac_device_t* p_gmac_dev, gmac_quelist_t queue_idx, voi
 	/* Set up/copy data to transmission buffer */
 	if (p_buffer && ul_size) {
 		/* Driver manages the ring buffer */
+		//__DSB();
 		memcpy((void *)p_tx_td->addr, p_buffer, ul_size);
 		//__ISB();
 		//SCB_CleanDCache_by_Addr((void *)p_tx_td->addr,ul_size);
@@ -619,7 +620,7 @@ uint32_t gmac_dev_write(gmac_device_t* p_gmac_dev, gmac_quelist_t queue_idx, voi
 
 	/* Now start to transmit if it is still not done */
 	gmac_start_transmission(p_hw);
-
+	//__ISB();
 	return GMAC_OK;
 }
 

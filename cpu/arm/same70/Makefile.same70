@@ -44,8 +44,8 @@ CFLAGS += 	-mcpu=cortex-m7\
 			-g3\
 			-D __SAME70Q20__\
 			-D __VFP_FP__\
-			-D SAME70 \
-			-D MPU_HAS_NOCACHE_REGION 
+			-D SAME70 
+			#-D MPU_HAS_NOCACHE_REGION 
 
 CFLAGS +=	-D ENABLE_TCM
 
