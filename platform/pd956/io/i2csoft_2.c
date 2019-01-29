@@ -56,13 +56,11 @@ void _i2c_release_wait(int pin)
 {
 	int n = 0;
 
-	_i2c_release(pin);
-	while (!SOFT_I2C_READ_PIN(pin)) {
+	while (!_i2c_release(pin)) {
 		if (++n >= 5000000)	{
 			PRINTF("Warning: I2C Bus busy or defective. Pin %d is LOW for 4.5s.\n", pin);
 			return;
 		}
-		_i2c_release(pin);//why??
 	}
 
 }
@@ -213,7 +211,6 @@ void SoftI2CStop(void)
 uint8_t SoftI2CWriteByte(uint8_t data)
 {
 	return i2c_send_byte(data);
-	 
 }
  
 #define I2C_ACK		0

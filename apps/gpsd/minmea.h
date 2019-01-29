@@ -253,6 +253,22 @@ static inline float minmea_tocoord(struct minmea_float *f)
     return (float) degrees + (float) minutes / (60 * f->scale);
 }
 
+static inline double minmea_tofloat_double(struct minmea_float *f)
+{
+    if (f->scale == 0)
+        return NAN;
+    return (float) f->value / (float) f->scale;
+}
+
+static inline double minmea_tocoord_double(struct minmea_float *f)
+{
+    if (f->scale == 0)
+        return NAN;
+    int degrees = f->value / (f->scale * 100);
+    int minutes = f->value - degrees*(f->scale * 100);
+    return (double) degrees + (double) minutes / (60 * f->scale);
+}
+
 
 #ifdef __cplusplus
 }

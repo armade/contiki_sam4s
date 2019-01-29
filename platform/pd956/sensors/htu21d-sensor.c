@@ -350,7 +350,7 @@ static void htu21_notify_ready(void *not_used)
 		/* If the internal processing is finished, the HTU21D(F)
 		 * sensor acknowledges the poll of the MCU and data can
 		 * be read by the MCU. If the measurement processing is
-		 * not finished, the HTU21D(F) sensor answers no ACK bit
+		 * not finished, the HTU21D(F) sensor answers NACK
 		 * and start condition must be issued once more.
 		 */
 		if(!ret){
@@ -366,7 +366,8 @@ static void htu21_notify_ready(void *not_used)
 
 		HTU21_temp = (buffer[0] << 8) | buffer[1];
 		if(!htu21_crc_check(HTU21_temp, buffer[2])){
-			HTU21_temp = SENSOR_ERROR;
+			htu21_error();
+			return;
 		}
 		//PRINTF("HTU21_temp: 0x%.2x 0x%.2x 0x%.2x\n",
 		//		buffer[0], buffer[1], buffer[2]);
@@ -400,7 +401,7 @@ static void htu21_notify_ready(void *not_used)
 
 		HTU21_humid = (buffer[0] << 8) | buffer[1];
 		if(!htu21_crc_check(HTU21_humid, buffer[2])){
-			HTU21_humid = SENSOR_ERROR;
+			htu21_error();
 			return;
 		} //PRINTF("HTU21_humid: 0x%.2x 0x%.2x 0x%.2x\n",
 			//	buffer[0], buffer[1], buffer[2]);
