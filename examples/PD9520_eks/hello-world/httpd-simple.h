@@ -52,8 +52,8 @@
 #define HTTPD_SIMPLE_MAIN_BUF_SIZE (UIP_TCP_MSS*4)
 #endif
 /*---------------------------------------------------------------------------*/
-#define HTTPD_PATHLEN  32
-#define HTTPD_INBUF_LEN (HTTPD_PATHLEN + 10)
+#define HTTPD_PATHLEN  31
+#define HTTPD_INBUF_LEN (HTTPD_PATHLEN )
 
 #define TMP_BUF_SIZE   (UIP_TCP_MSS + 1)
 /*---------------------------------------------------------------------------*/

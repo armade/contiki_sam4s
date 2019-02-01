@@ -59,6 +59,7 @@
 #define SENSOR_STARTUP_DELAY 1*(1000/CLOCK_SECOND)
 static struct ctimer startup_timer;
 static float Temp_float_val;
+static double Temp_double_val;
 /*---------------------------------------------------------------------------*/
 static int enabled = SENSOR_STATUS_DISABLED;
 /*---------------------------------------------------------------------------*/
@@ -112,6 +113,29 @@ gps_value(int type)
 				return SENSOR_ERROR;
 			Temp_float_val = minmea_tofloat(&frame_vtg.speed_kph);
 			return (int)&Temp_float_val;
+
+			// Double precision
+		case GPS_SENSOR_TYPE_LAT_DP:
+			if(frame_gga.latitude.scale == 0)
+				return SENSOR_ERROR;
+			Temp_double_val = minmea_tocoord_double(&frame_gga.latitude);
+			return (int)&Temp_double_val;
+		case GPS_SENSOR_TYPE_LONG_DP:
+			if(frame_gga.longitude.scale == 0)
+				return SENSOR_ERROR;
+			Temp_double_val = minmea_tocoord_double(&frame_gga.longitude);
+			return (int)&Temp_double_val;
+		case GPS_SENSOR_TYPE_ALT_DP:
+			if(frame_gga.altitude.scale == 0)
+				return SENSOR_ERROR;
+			Temp_double_val = minmea_tofloat_double(&frame_gga.altitude);
+			return (int)&Temp_double_val;
+		case GPS_SENSOR_TYPE_SPEED_DP:
+			if(frame_vtg.speed_kph.scale == 0)
+				return SENSOR_ERROR;
+			Temp_double_val = minmea_tofloat_double(&frame_vtg.speed_kph);
+			return (int)&Temp_double_val;
+
 		default:	return SENSOR_ERROR;
 	}
 

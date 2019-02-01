@@ -1462,7 +1462,27 @@ PT_THREAD(generate_relay4_config(struct httpd_state *s))
   PT_END(&s->generate_pt);
 }
 #endif
+/**
+ * Double to ASCII
+ */
+void dtoa(char *s, double n, int max)
+{
+	int high = n;
+	double low_dp = n-high;
+	int low = 0;
+	char tmp;
+	int index;
 
+	index = sprintf(s,"%d",high);
+	s[index++]='.';
+	do{
+		low_dp *=10;
+		tmp = low_dp;
+		low_dp = low_dp-tmp;
+		s[index++]=tmp+0x30;
+	}while(low_dp && index<max);
+	s[index]=0;
+}
 
 static
 PT_THREAD(generate_maps_config(struct httpd_state *s))
@@ -1477,33 +1497,37 @@ PT_THREAD(generate_maps_config(struct httpd_state *s))
   PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<fieldset>"));
   /////////////////////////////////////////////////////
   float value;
+  double value_dp;
   int ret;
-  static int low_lat, high_lat;
-  static int low_lon, high_lon;
+  //static int low_lat, high_lat;
+  //static int low_lon, high_lon;
+  static char lat_str[53], lon_str[53];
 
-  ret = GPS_sensor.value(GPS_SENSOR_TYPE_LAT);
+  ret = GPS_sensor.value(GPS_SENSOR_TYPE_LAT_DP);
 
   if(ret == SENSOR_ERROR){
   	  PT_WAIT_THREAD(&s->generate_pt,
   	                   enqueue_chunk(s, 0, "<h1>No GPS signal</h1>"));
   	  goto MAPS_EXIT;
     }
-    value = *(float *)ret;
+    value_dp = *(double *)ret;
 
-    high_lat = value;
-    low_lat = (value - high_lat) * 10000000;
+    dtoa(lat_str,value_dp,16);
 
-    ret = GPS_sensor.value(GPS_SENSOR_TYPE_LONG);
+    //high_lat = value_dp;
+    //low_lat = (value_dp - high_lat) * 10000000;
+
+    ret = GPS_sensor.value(GPS_SENSOR_TYPE_LONG_DP);
     if(ret == SENSOR_ERROR){
       	  PT_WAIT_THREAD(&s->generate_pt,
       	                   enqueue_chunk(s, 0, "<h1>No GPS signal</h1>"));
       	  goto MAPS_EXIT;
         }
-    value = *(float *)ret;
+    value_dp = *(double *)ret;
 
-    high_lon = value;
-    low_lon = (value - high_lon) * 10000000;
-
+    //high_lon = value_dp;
+    //low_lon = (value_dp - high_lon) * 10000000;
+    dtoa(lon_str,value_dp,16);
 
 
   PT_WAIT_THREAD(&s->generate_pt,
@@ -1527,7 +1551,7 @@ PT_THREAD(generate_maps_config(struct httpd_state *s))
   PT_WAIT_THREAD(&s->generate_pt,
                      enqueue_chunk(s, 0, "<script>"));
   PT_WAIT_THREAD(&s->generate_pt,
-                       enqueue_chunk(s, 0, "var mymap = L.map('mapid').setView([%d.%.7d, %d.%.7d], 18);",high_lat,low_lat,high_lon,low_lon));
+                       enqueue_chunk(s, 0, "var mymap = L.map('mapid').setView([%s, %s], 18);",lat_str,lon_str));
 
   PT_WAIT_THREAD(&s->generate_pt,
                        enqueue_chunk(s, 0, "L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token=pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcmZ3N3gifQ.rJcFIG214AriISLbB6B5aw', {"));
@@ -1545,12 +1569,12 @@ PT_THREAD(generate_maps_config(struct httpd_state *s))
                        enqueue_chunk(s, 0, "}).addTo(mymap);"));
 
   PT_WAIT_THREAD(&s->generate_pt,
-                       enqueue_chunk(s, 0, "L.marker([%d.%.7d, %d.%.7d]).addTo(mymap)",high_lat,low_lat,high_lon,low_lon));
+                       enqueue_chunk(s, 0, "L.marker([%s, %s]).addTo(mymap)",lat_str,lon_str));
   PT_WAIT_THREAD(&s->generate_pt,
-                       enqueue_chunk(s, 0, ".bindPopup(\"<b>You are here!</b><br />(%d.%.7d, %d.%.7d).\").openPopup();",high_lat,low_lat,high_lon,low_lon));
+                       enqueue_chunk(s, 0, ".bindPopup(\"<b>You are here!</b><br />(%s, %s).\").openPopup();",lat_str,lon_str));
 
   PT_WAIT_THREAD(&s->generate_pt,
-                       enqueue_chunk(s, 0, "L.circle([%d.%.7d, %d.%.7d ], 5, {",high_lat,low_lat,high_lon,low_lon));
+                       enqueue_chunk(s, 0, "L.circle([%s, %s ], 5, {",lat_str,lon_str));
   PT_WAIT_THREAD(&s->generate_pt,
                        enqueue_chunk(s, 0, "color: 'red',"));
   PT_WAIT_THREAD(&s->generate_pt,

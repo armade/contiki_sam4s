@@ -469,6 +469,7 @@ static int htu21_value(int type)
 		} else if(type == HTU21D_SENSOR_TYPE_HUMID){
 			return (int) HTU21_humid;
 		}
+		return SENSOR_ERROR;
 	}
 }
 /*---------------------------------------------------------------------------*/
@@ -513,8 +514,8 @@ static int htu21_configure(int type, int enable)
 				htu21_enable_sensor(1);
 				sensor_state = SENSOR_STATUS_TEMP_MEAS;
 				ctimer_set(&startup_timer,
-						htu21_temperature_conversion_time
-								* (1000 / CLOCK_SECOND), htu21_notify_ready,
+						htu21_temperature_conversion_time * (1000 / CLOCK_SECOND),
+						htu21_notify_ready,
 						NULL);
 
 			} else{

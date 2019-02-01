@@ -72,19 +72,15 @@ init(void)
 	/* Fill in GMAC options */
 	gmac_option.uc_copy_all_frame = 1;
 	gmac_option.uc_no_boardcast = 1;
-
 	memcpy(gmac_option.uc_mac_addr, gs_uc_mac_address, sizeof(gs_uc_mac_address));
 	memcpy(ip64_eth_addr.addr, gs_uc_mac_address, sizeof(gs_uc_mac_address));
 	gs_gmac_dev.p_hw = GMAC;
-
 	/* Init GMAC driver structure */
 	gmac_dev_init(GMAC, &gs_gmac_dev, &gmac_option);
-
 	/* Enable Interrupt */
 	NVIC_EnableIRQ(GMAC_IRQn);
-
 	gmac_dev_set_rx_callback(&gs_gmac_dev, GMAC_QUE_0,rx_input);
-
+	__DSB();
 	/* Init MAC PHY driver */
 	if (ethernet_phy_init(GMAC, 0, sysclk_get_cpu_hz())
 					!= GMAC_OK) {
@@ -181,7 +177,7 @@ extern int KSZ8863_config_intr(void);
 PROCESS_THREAD(ksz8863_link_process, ev, data)
 {
   uint32_t ul_value;
-  //uint32_t ul_frm_size;
+  uint32_t ul_frm_size;
   PROCESS_BEGIN();
 
   KSZ8863_config_intr();
@@ -206,10 +202,10 @@ PROCESS_THREAD(ksz8863_link_process, ev, data)
 		  	}
 		  	//ethernet_phy_auto_negotiate3(GMAC, 1);
 		   //Establish ethernet link
-		  //	ul_frm_size = ethernet_phy_set_link(GMAC, 1, 1);
-		  	//if(ul_frm_size != GMAC_OK) {
-		  //		printf("Set link ERROR (%d)!\n",ul_frm_size);
-		  //	}
+		  	ul_frm_size = ethernet_phy_set_link(GMAC, 1, 1);
+		  	if(ul_frm_size != GMAC_OK) {
+		  		printf("Set link ERROR (%d)!\n",ul_frm_size);
+		  	}
 		  	link_status = 1;
 		  	printf("-- Link up. \n");
 	  }
