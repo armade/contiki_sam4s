@@ -24,7 +24,8 @@ www.eXtremeElectronics.co.in
 
 void i2c_reset(void);
 
-Pio *I2C_base = (Pio *)PIOB;
+//Pio *I2C_base = (Pio *)PIOB;
+Pio *I2C_base = (Pio *)PIOA;
 
 #define NOP(NO, unused)      asm volatile("NOP");
 
@@ -89,25 +90,21 @@ void i2c_stop(void)
 // Reset bus sequence
 void i2c_reset(void)
 {
-	uint8_t i;
-	uint8_t n = 0;
+	//uint8_t i;
+	uint16_t n = 0;
 
 	_i2c_release(SDA);
 
 	do {
-		for (i = 0; i < 10; i++) {
-			_i2c_pull(SCL);
-			_i2c_release(SCL);
-		}
-		if (++n >= 100) {
+		if (++n >= 1000) {
 			PRINTF("Warning: I2C Bus busy or defective. SDA doesn't go UP after reset.\n");
 			return;
 		}
-		H_DEL;
-	} while (!SOFT_I2C_READ_PIN(SDA));
+		_i2c_pull(SCL);
+	} while (!_i2c_release(SCL));
 
-	_i2c_pull(SCL);
-	_i2c_pull(SDA);
+	//_i2c_pull(SCL);
+	//_i2c_pull(SDA);
 
 	i2c_stop();
 }
@@ -156,8 +153,8 @@ int i2c_send_byte(uint8_t byte)
 
 // Reads a byte, MSB first
 uint8_t i2c_read_byte(void) {
-	int byte = 0x00;
-	int i;
+	uint8_t byte = 0x00;
+	uint8_t i;
 
 	for (i=0; i<8; i++)
 		byte = (byte << 1) | i2c_read_bit();
