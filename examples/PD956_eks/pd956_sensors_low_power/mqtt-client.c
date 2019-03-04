@@ -117,7 +117,7 @@ static process_event_t MQTT_publish_sensor_data_done_event;
 #if defined(NODE_GPS) || defined(NODE_4_ch_relay) || defined(NODE_HARD_LIGHT) || defined(NODE_LIGHT) || defined(NODE_STEP_MOTOR)
 #define no_sleep_allowed 1
 #else
-static volatile uint8_t no_sleep_allowed = 0;
+static volatile uint8_t no_sleep_allowed = 1;
 #endif
 /*---------------------------------------------------------------------------*/
 PROCESS(mqtt_client_process, "PD956 MQTT Client");
@@ -978,12 +978,12 @@ PROCESS_THREAD(mqtt_client_process, ev, data)
 				if(sleep_counter){
 					sleep_counter = 0;
 					etimer_set(&sleep_retry_timer, conf->pub_interval);
-					PRINTF("MQTT: can't sleep\n");
+					//PRINTF("MQTT: can't sleep\n");
 					NETSTACK_RADIO.on(); // Just to be sure. otherwise we end in a radio silence mode. This only happens if we get an error in sensor measurement.
 				}else{
 					sleep_counter = 1;
 					etimer_set(&timeout_timer, 5*CLOCK_SECOND);
-					PRINTF("MQTT: Trig from no sleep\n");
+					//PRINTF("MQTT: Trig from no sleep\n");
 					process_post(PROCESS_BROADCAST, Trig_sensors, NULL);
 				}
 
@@ -1001,7 +1001,7 @@ PROCESS_THREAD(mqtt_client_process, ev, data)
 					// TODO: Need timing to indicate how long the radio is on. the radio is now not active doing
 					// sensor measurements. a ping is about 47ms in avg. so if we assume 50ms on-time we get:
 					// 60/60.1*54uA + 0.05/60.1*22mA + 0.05/60.1*10mA = 70.5uA avg  2700mA/90.5uA = 29829hr ~ 4.3 years
-					PRINTF("MQTT: Just woke up, trig\n");
+					//PRINTF("MQTT: Just woke up, trig\n");
 
 					etimer_set(&timeout_timer, 5*CLOCK_SECOND); // We have 5 sec to complete sensor measurement and publish result. Otherwise we will treat it as nosleep.
 					process_post(PROCESS_BROADCAST, Trig_sensors, NULL);

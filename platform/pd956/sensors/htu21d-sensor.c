@@ -100,19 +100,19 @@ static uint32_t htu21_humidity_conversion_time =
 
 
 static int sensor_state = SENSOR_STATUS_DISABLED;
-//static uint8_t retry_count;
+static uint8_t retry_count;
 
 /*---------------------------------------------------------------------------*/
 //static struct rtimer delay_timer;
-//static struct ctimer startup_timer;
+static struct ctimer startup_timer;
 /*---------------------------------------------------------------------------*/
 /* Wait SENSOR_STARTUP_DELAY clock ticks for the sensor to be ready - ~80ms */
 #define SENSOR_STARTUP_DELAY 80*(1000/CLOCK_SECOND)
 
 
 
-int32_t HTU21_temp = 0;
-int32_t HTU21_humid = 0;
+static int32_t HTU21_temp = 0;
+static int32_t HTU21_humid = 0;
 
 /*---------------------------------------------------------------------------*/
 static inline uint16_t SoftI2Cread_register(uint8_t Addr, uint8_t *Data,
@@ -331,7 +331,7 @@ static void htu21_error(void)
 	sensor_state = SENSOR_STATUS_READY;
 	sensors_changed(&HTU21D_sensor);
 }
-
+/*
 static void htu21_hold_func(void) {
 	uint8_t buffer[3] = { 0 };
 	//uint16_t ret;
@@ -364,7 +364,7 @@ static void htu21_hold_func(void) {
 	sensor_state = SENSOR_STATUS_READY;
 	SoftI2CStop();
 	sensors_changed(&HTU21D_sensor);
-}
+}*/
 /*
 static void htu21_timer_func(struct rtimer *t, void *ptr) {
 	uint8_t buffer[3] = { 0 };
@@ -446,7 +446,7 @@ static void htu21_timer_func(struct rtimer *t, void *ptr) {
 		sensors_changed(&HTU21D_sensor);
 	}
 }*/
-/*static void htu21_notify_ready(void *not_used)
+static void htu21_notify_ready(void *not_used)
 {
 	uint8_t buffer[3] = { 0 };
 	uint16_t ret;
@@ -523,15 +523,16 @@ static void htu21_timer_func(struct rtimer *t, void *ptr) {
 		//Zero out the status bits but keep them in place
 		HTU21_temp &= 0xFFFC;
 		HTU21_humid &= 0xFFFC;
+		PRINTF("0x%x   0x%x",HTU21_temp,HTU21_humid);
 		// All done now convert and notify
 		htu21_convert_temperature_and_relative_humidity(&HTU21_temp, &HTU21_humid);
-
+		PRINTF("    %d   %d\n",HTU21_temp,HTU21_humid);
 		sensor_state = SENSOR_STATUS_READY;
 		SoftI2CStop();
 		sensors_changed(&HTU21D_sensor);
 	}
 
-}*/
+}
 /*---------------------------------------------------------------------------*/
 /**
  * \brief Initalise the sensor
@@ -553,13 +554,12 @@ static void htu21_init(void)
  */
 static void htu21_enable_sensor(bool enable)
 {
-	if(enable){/*
+	if(enable){
 		//PRINTF("HTU21: Trig measurement\n");
 		retry_count = 0;
 		SoftI2C_cmd(HTU21_ADDR, HTU21_READ_TEMPERATURE_NO_HOLD_COMMAND, 0);
-		// Test: if not working just remove
-		SoftI2CStop();*/
-		htu21_hold_func();
+		SoftI2CStop();
+		//htu21_hold_func();
 	}
 }
 
@@ -571,10 +571,10 @@ static void htu21_enable_sensor(bool enable)
  */
 static int htu21_value(int type)
 {
-	if(sensor_state != SENSOR_STATUS_READY){
+	/*if(sensor_state != SENSOR_STATUS_READY){
 		PRINTF("HTU21: Sensor disabled or starting up (%d)\n", sensor_state);
 		return SENSOR_ERROR;
-	}
+	}*/
 
 	if((type != HTU21D_SENSOR_TYPE_TEMP) && type != HTU21D_SENSOR_TYPE_HUMID){
 		PRINTF("HTU21: Invalid type\n");
@@ -630,11 +630,14 @@ static int htu21_configure(int type, int enable)
 			if(enable){
 				htu21_enable_sensor(1);
 				sensor_state = SENSOR_STATUS_TEMP_MEAS;
+				ctimer_set(&startup_timer,
+						htu21_temperature_conversion_time*CLOCK_SECOND/1000, htu21_notify_ready,
+						NULL);
 				//rtimer_set(&delay_timer, RTIMER_NOW() + (htu21_temperature_conversion_time *
 				//RTIMER_ARCH_SECOND)/1000, 1, htu21_timer_func, NULL);
 
 			} else{
-				//ctimer_stop(&startup_timer);
+				ctimer_stop(&startup_timer);
 				htu21_enable_sensor(0);
 				sensor_state = SENSOR_STATUS_INITIALISED;
 			}

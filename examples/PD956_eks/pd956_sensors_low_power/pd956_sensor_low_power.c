@@ -621,7 +621,7 @@ static void get_HTU21D_reading()
 			memset(buf, 0, SENSOR_CONVERTED_LEN);
 			high = value / 1000;
 			low = value - high * 1000;
-			snprintf(buf, SENSOR_CONVERTED_LEN, "%d.%d", high, low);
+			snprintf(buf, SENSOR_CONVERTED_LEN, "%d.%.3d", high, low);
 		} else{
 			INSERT_NA(buf);
 		}
@@ -637,7 +637,7 @@ static void get_HTU21D_reading()
 			memset(buf, 0, SENSOR_CONVERTED_LEN);
 			high = value / 1000;
 			low = value - high * 1000;
-			snprintf(buf, SENSOR_CONVERTED_LEN, "%d.%d", high, low);
+			snprintf(buf, SENSOR_CONVERTED_LEN, "%d.%.3d", high, low);
 		} else{
 			INSERT_NA(buf);
 		}
