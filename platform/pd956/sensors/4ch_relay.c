@@ -58,7 +58,7 @@ unsigned pin_array[] = {
 
 static int sensor_status = SENSOR_STATUS_DISABLED;
 
-#define SENSOR_SWITCH_DELAY 10 *CLOCK_SECOND/1000//~10ms
+#define SENSOR_SWITCH_DELAY (10 * 1000) / CLOCK_SECOND//~10ms
 static struct ctimer switch_timer;
 
 static void

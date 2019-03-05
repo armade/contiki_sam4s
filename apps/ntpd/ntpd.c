@@ -128,7 +128,7 @@ receiver(struct simple_udp_connection *c,
 					simple_udp_sendto(&unicast_connection, &NTP_server, 48, sender_addr);
 	
 					// Wait 50 ms so we have time to send packet
-					ctimer_set(&delay_timer, 50, notify_ready, NULL);
+					ctimer_set(&delay_timer, (50 * 1000) / CLOCK_SECOND, notify_ready, NULL);
 					NTP_BUSY = 1;
 				}
 				break;
@@ -149,7 +149,7 @@ static void Send_NTP_request(uip_ipaddr_t *ipaddr)
 		// Request time
 		simple_udp_sendto(&unicast_connection, &ntpmsg, 48, ipaddr);
 		// Wait 50 ms for response
-		ctimer_set(&delay_timer, 50, notify_ready, NULL);
+		ctimer_set(&delay_timer, (50 * 1000) / CLOCK_SECOND, notify_ready, NULL);
 	}else{
 		etimer_set(&Send_NTP_request_timer, 60 * CLOCK_SECOND);
 	}
@@ -169,7 +169,7 @@ static void Send_NTP_time_to_parent(uip_ipaddr_t *ipaddr)
 		NTP_server.mode = 4;
 		simple_udp_sendto(&unicast_connection, &NTP_server, 48, ipaddr);
 		// Wait 50 ms so we have time to send packet
-		ctimer_set(&delay_timer, 50*CLOCK_SECOND/1000, notify_ready, NULL);
+		ctimer_set(&delay_timer, (50 * 1000) / CLOCK_SECOND, notify_ready, NULL);
 	}else{
 		etimer_set(&Update_parrent_timer, 60 * CLOCK_SECOND);
 	}

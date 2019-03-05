@@ -448,9 +448,10 @@ static int construct_pub_topic(void)
 
 
 /*---------------------------------------------------------------------------*/
+// TODO: for debug purpose this information is stored. Rewrite this to only
+// happen when needed so only one buffer is used.
 static int construct_configs(void)
 {
-	// TODO: expand this to generate sub topic also or copy method.
 	for (reading = MQTT_sensor_first(); reading != NULL; reading = reading->next)
 	{
 		if(reading->component_topic_config == NULL)
@@ -469,11 +470,12 @@ static int construct_configs(void)
 									"{\"name\": \"%s %s\","
 									"\"state_topic\": \"%s\","
 									"\"unit_of_measurement\": \"%s\","
-									"\"expire_after\":120,"
+									"\"expire_after\":%d,"
 									"\"value_template\":\"{{ value_json.%s}}\" }",
 									conf->Username, reading->descr, 	//name
 									pub_topic,  						//state_topic
 									reading->units,						//unit_of_measurement
+									(int)(conf->pub_interval/CLOCK_SECOND)*2 + 10,
 									reading->descr); 					//value_template
 				break;
 

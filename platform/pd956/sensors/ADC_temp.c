@@ -24,17 +24,17 @@
 static int sensor_status = SENSOR_STATUS_DISABLED;
 
 #define ADC_DONE (adc_get_status(ADC) & (1<<ADC_TEMPERATURE_SENSOR))
-int ADC_temperature;;
+static int ADC_temperature;;
 
-#define SENSOR_STARTUP_DELAY 50 //~50ms
+#define SENSOR_STARTUP_DELAY (50 * 1000) / CLOCK_SECOND //~50ms
 static struct ctimer startup_timer;
 /*---------------------------------------------------------------------------*/
 
 static void
 notify_ready(void *not_used)
 {
-	int ret = 0;
-	float temp = 0;
+	int32_t ret = 0;
+	int32_t temp = 0;
 
 	if((adc_get_status(ADC) & (1<<ADC_TEMPERATURE_SENSOR)))
 		ret = adc_get_channel_value(ADC, ADC_TEMPERATURE_SENSOR);
@@ -47,9 +47,13 @@ notify_ready(void *not_used)
 
 	//PRINTF("val: 0x%x\n",ret);
 
-	temp = (ret * 3300.0) / 4096.0;
+	//temp = (ret * 3300.0) / 4096.0;
 	//PRINTF("voltage: %f [mV]\n",temp);
-	ADC_temperature =  (float)(temp - 1440) * 212 + 27000;
+	//ADC_temperature =  (float)(temp - 1440) * 212 + 27000;
+
+	temp = (ret*3300)>>12;
+	ADC_temperature = (temp - 1440) * 212 + 27000;
+
 	//PRINTF("temperature: %d [m�C]\n",ADC_temperature);
 	sensor_status = SENSOR_STATUS_READY;
 	sensors_changed(&SAM4S_ADC_TS_sensor);

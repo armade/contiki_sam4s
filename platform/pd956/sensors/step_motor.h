@@ -40,7 +40,7 @@ typedef struct {
 #define T1_FREQ 937500
 
 //! Number of (full)steps per round on stepper motor in use.
-#define FSPR 4096 //64 steps + gear 63.68395:1 (64:1) 64*63.68=4076
+#define FSPR 4096 //64 steps + gear (64:1) 64*64=4096
 
 #define SPR (FSPR*2) // only half step
 /*---------------------------------------------------------------------------*/

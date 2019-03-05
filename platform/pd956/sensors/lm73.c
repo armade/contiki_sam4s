@@ -331,7 +331,7 @@ static int lm73_init(int type, int enable)
 				lm73_oneshot();
 				sensor_status = SENSOR_STATUS_BUSY;
 				ctimer_set(&startup_timer,
-							lm73_temperature_conversion_time * (1000 / CLOCK_SECOND),
+							(lm73_temperature_conversion_time * 1000) / CLOCK_SECOND,
 							lm73_notify_ready,
 							NULL);
 			} else{

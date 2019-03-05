@@ -241,7 +241,7 @@ SENSORS_SENSOR(soft_RGB_ctrl_sensor, "RGB", soft_RGB_value, soft_RGB_configure, 
 static void
 RGB_COLORLOOP_RUN(void *data)
 {
-	clock_time_t next = 16;
+	clock_time_t next = (16 * 1000) / CLOCK_SECOND;
 
 	switch(effect_state){
 
@@ -287,7 +287,7 @@ RGB_RANDOM_RUN(void *data)
 
 	if(next < 5)
 		next = 5;
-
+	next = (next * 1000) / CLOCK_SECOND;
 	// NB: user can't see the value update on the PWM signal. It would just confuse them.
 	value_soft_RGB(256,170,0,RGB_tmp.led.brightness);
 	ctimer_set(&RGB_effect_timer, next, RGB_RANDOM_RUN, NULL);
@@ -296,7 +296,7 @@ RGB_RANDOM_RUN(void *data)
 static void
 RGB_RAPID_RED_RUN(void *data)
 {
-	clock_time_t next = 50;
+	clock_time_t next = (50 * 1000) / CLOCK_SECOND;
 
 	if(effect_state == 255)// exit
 		return;

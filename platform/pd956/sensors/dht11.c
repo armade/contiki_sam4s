@@ -224,7 +224,7 @@ dht11_configure(int type, int enable)
 			 if(enable) {
 				 sensor_status = SENSOR_STATUS_NOT_READY;
 				 // Give the sensor some time to stabilize. 15 milliseconds should be sufficient.
-				 ctimer_set(&dht11_timer,15* CLOCK_SECOND/1000, dht11_start_measurement, NULL);
+				 ctimer_set(&dht11_timer,(15 * 1000) / CLOCK_SECOND, dht11_start_measurement, NULL);
 			 } else {
 				 ctimer_stop(&dht11_timer);
 				 sensor_status = SENSOR_STATUS_INITIALISED;

@@ -311,7 +311,7 @@ static void get_temp_reading(void)
 			memset(buf, 0, SENSOR_CONVERTED_LEN);
 			high = value / 1000;
 			low = value - high * 1000;
-			snprintf(buf, SENSOR_CONVERTED_LEN, "%d.%d", high, low);
+			snprintf(buf, SENSOR_CONVERTED_LEN, "%d.%.3d", high, low);
 		} else{
 			INSERT_NA(buf);
 		}
@@ -569,9 +569,9 @@ get_bmp_reading()
 			bmp_280_sensor_press_reading.raw = value;
 
 			memset(buf, 0, SENSOR_CONVERTED_LEN);
-			high = value/100;
-			low = value-high*100;
-			snprintf(buf, SENSOR_CONVERTED_LEN, "%d.%d", high,low);
+			high = value/1000;
+			low = value-high*1000;
+			snprintf(buf, SENSOR_CONVERTED_LEN, "%d.%.3d", high,low);
 		}
 		else
 		{
@@ -587,9 +587,9 @@ get_bmp_reading()
 			bmp_280_sensor_temp_reading.raw = value;
 
 			memset(buf, 0, SENSOR_CONVERTED_LEN);
-			high = value/100;
-			low = value-high*100;
-			snprintf(buf, SENSOR_CONVERTED_LEN, "%d.%d", high,low);
+			high = value/1000;
+			low = value-high*1000;
+			snprintf(buf, SENSOR_CONVERTED_LEN, "%d.%.3d", high,low);
 		}
 		else
 		{
@@ -715,7 +715,7 @@ static void get_GPS_reading()
 			memset(buf, 0, SENSOR_CONVERTED_LEN);
 			high = value;
 			low = (value - high) * 10000;
-			snprintf(buf, SENSOR_CONVERTED_LEN, "%d.%d", high, low);
+			snprintf(buf, SENSOR_CONVERTED_LEN, "%d.%.4d", high, low);
 		} else{
 			INSERT_NA(buf);
 		}

@@ -53,16 +53,7 @@ void SoftI2CInit(void)
 	I2C_base->PIO_MDER = (SDA) | (SCL);
 
 	// If I2C bus is out of sync, resync
-		SoftI2CSync();
-		/*while(!SOFT_I2C_READ_PIN(SDA)){
-			SOFT_I2C_SCL_HIGH;
-			H_DEL;
-			SOFT_I2C_SCL_LOW;
-			H_DEL;
-			SOFT_I2C_SCL_HIGH;
-
-			if(!retries--)	break;
-		}*/
+	SoftI2CSync();
 }
 
 void SoftI2CSync(void)

@@ -56,7 +56,7 @@
 #define PRINTF(...)
 #endif
 
-#define SENSOR_STARTUP_DELAY 1*(1000/CLOCK_SECOND)
+#define SENSOR_STARTUP_DELAY (1 * 1000) / CLOCK_SECOND
 static struct ctimer startup_timer;
 static float Temp_float_val;
 /*---------------------------------------------------------------------------*/

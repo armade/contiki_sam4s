@@ -103,7 +103,6 @@ static int sensor_state = SENSOR_STATUS_DISABLED;
 static uint8_t retry_count;
 
 /*---------------------------------------------------------------------------*/
-//static struct rtimer delay_timer;
 static struct ctimer startup_timer;
 /*---------------------------------------------------------------------------*/
 /* Wait SENSOR_STARTUP_DELAY clock ticks for the sensor to be ready - ~80ms */
@@ -365,87 +364,7 @@ static void htu21_hold_func(void) {
 	SoftI2CStop();
 	sensors_changed(&HTU21D_sensor);
 }*/
-/*
-static void htu21_timer_func(struct rtimer *t, void *ptr) {
-	uint8_t buffer[3] = { 0 };
-	uint16_t ret;
-	if (retry_count > 5) {
-		htu21_error();
-		return;
-	}
-	if (sensor_state == SENSOR_STATUS_TEMP_MEAS) {
-		ret = SoftI2Cread_register(HTU21_ADDR, buffer, 3);
-		// If the internal processing is finished, the HTU21D(F)
-		// sensor acknowledges the poll of the MCU and data can
-		// be read by the MCU. If the measurement processing is
-		// not finished, the HTU21D(F) sensor answers NACK
-		// and start condition must be issued once more.
-		//
-		if (!ret) {
-			PRINTF("HTU21: Not ready for temperature reading\n");
-			retry_count++;
-			rtimer_set(t, RTIMER_NOW() + 1 * (RTIMER_ARCH_SECOND / 1000), 1,
-					htu21_timer_func, NULL); // 1ms retry
-			return;
-		}
-		HTU21_temp = (buffer[0] << 8) | buffer[1];
-		if (!htu21_crc_check(HTU21_temp, buffer[2])) {
-			PRINTF("HTU21: CRC check failed (temperature)\n");
-			htu21_error();
-			return;
-		}
-//PRINTF("HTU21_temp: 0x%.2x 0x%.2x 0x%.2x\n",
-//
-///		buffer[0], buffer[1], buffer[2]
-//		);
-// Initiate humidity measurement
-		SoftI2C_cmd(HTU21_ADDR, HTU21_READ_HUMIDITY_NO_HOLD_COMMAND, 0);
-		sensor_state = SENSOR_STATUS_HUMID_MEAS;
-		rtimer_set(t,
-				RTIMER_NOW()
-						+ (htu21_humidity_conversion_time
-								* RTIMER_ARCH_SECOND) / 1000, 1,
-				htu21_timer_func, NULL);
-// Test: if not working just remove
-		SoftI2CStop();
-		retry_count = 0;
-		return;
-	}
-	if (sensor_state == SENSOR_STATUS_HUMID_MEAS) {
-		ret = SoftI2Cread_register(HTU21_ADDR, buffer, 3);
-		// If the internal processing is finished, the HTU21D(F)
-		// sensor acknowledges the poll of the MCU and data can
-		// be read by the MCU. If the measurement processing is
-		// not finished, the HTU21D(F) sensor answers no ACK bit
-		// and start condition must be issued once more.
-		//
-		if (!ret) {
-			PRINTF("HTU21: Not ready for humidity reading\n");
-			retry_count++;
-			rtimer_set(t, RTIMER_NOW() + 1 * (RTIMER_ARCH_SECOND/1000), 1,
-					htu21_timer_func, NULL); // 1ms retry
-			return;
-		}
-		HTU21_humid = (buffer[0] << 8) | buffer[1];
-		if (!htu21_crc_check(HTU21_humid, buffer[2])) {
-			PRINTF("HTU21: CRC check failed (humidity)\n");
-			htu21_error();
-			return;
-		}
-//PRINTF("HTU21_humid: 0x%.2x 0x%.2x 0x%.2x\n",
-// buffer[0], buffer[1], buffer[2]);
-// Now calculate values
-//Zero out the status bits but keep them in place
-		HTU21_temp &= 0xFFFC;
-		HTU21_humid &= 0xFFFC;
-// All done now convert and notify
-		htu21_convert_temperature_and_relative_humidity(&HTU21_temp,
-				&HTU21_humid);
-		sensor_state = SENSOR_STATUS_READY;
-		SoftI2CStop();
-		sensors_changed(&HTU21D_sensor);
-	}
-}*/
+
 static void htu21_notify_ready(void *not_used)
 {
 	uint8_t buffer[3] = { 0 };
@@ -468,7 +387,7 @@ static void htu21_notify_ready(void *not_used)
 		if(!ret){
 			PRINTF("HTU21: Not ready for temperature reading\n");
 			retry_count++;
-			ctimer_set(&startup_timer, 1 * (1000 / CLOCK_SECOND), htu21_notify_ready, NULL); // 1ms retry
+			ctimer_set(&startup_timer, (1 * 1000) / CLOCK_SECOND, htu21_notify_ready, NULL); // 1ms retry
 			return;
 		}
 
@@ -485,7 +404,7 @@ static void htu21_notify_ready(void *not_used)
 		SoftI2C_cmd(HTU21_ADDR, HTU21_READ_HUMIDITY_NO_HOLD_COMMAND, 0);
 		SoftI2CStop();
 		sensor_state = SENSOR_STATUS_HUMID_MEAS;
-		ctimer_set(&startup_timer, htu21_humidity_conversion_time * (1000 / CLOCK_SECOND),
+		ctimer_set(&startup_timer, (htu21_humidity_conversion_time * 1000) / CLOCK_SECOND,
 				htu21_notify_ready, NULL);
 		// Test: if not working just remove
 		//SoftI2CStop();
@@ -505,7 +424,7 @@ static void htu21_notify_ready(void *not_used)
 		if(!ret){
 			PRINTF("HTU21: Not ready for humidity reading\n");
 			retry_count++;
-			ctimer_set(&startup_timer, 1 * (1000 / CLOCK_SECOND), htu21_notify_ready, NULL); // 1ms retry
+			ctimer_set(&startup_timer, (1 * 1000) / CLOCK_SECOND, htu21_notify_ready, NULL); // 1ms retry
 			return;
 		}
 
@@ -523,12 +442,13 @@ static void htu21_notify_ready(void *not_used)
 		//Zero out the status bits but keep them in place
 		HTU21_temp &= 0xFFFC;
 		HTU21_humid &= 0xFFFC;
-		PRINTF("0x%x   0x%x",HTU21_temp,HTU21_humid);
+		//PRINTF("0x%x   0x%x",HTU21_temp,HTU21_humid);
 		// All done now convert and notify
 		htu21_convert_temperature_and_relative_humidity(&HTU21_temp, &HTU21_humid);
-		PRINTF("    %d   %d\n",HTU21_temp,HTU21_humid);
+		//PRINTF("    %d   %d\n",HTU21_temp,HTU21_humid);
 		sensor_state = SENSOR_STATUS_READY;
 		SoftI2CStop();
+		SoftI2CSync(); // If i2c bus gets out of sync the next measurement is bad.
 		sensors_changed(&HTU21D_sensor);
 	}
 
@@ -633,9 +553,6 @@ static int htu21_configure(int type, int enable)
 				ctimer_set(&startup_timer,
 						htu21_temperature_conversion_time*CLOCK_SECOND/1000, htu21_notify_ready,
 						NULL);
-				//rtimer_set(&delay_timer, RTIMER_NOW() + (htu21_temperature_conversion_time *
-				//RTIMER_ARCH_SECOND)/1000, 1, htu21_timer_func, NULL);
-
 			} else{
 				ctimer_stop(&startup_timer);
 				htu21_enable_sensor(0);
