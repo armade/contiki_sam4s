@@ -101,7 +101,8 @@ void i2c_reset(void)
 			return;
 		}
 		_i2c_pull(SCL);
-	} while (!_i2c_release(SCL));
+		_i2c_release_wait(SCL);
+	} while (!_i2c_release(SDA));
 
 	//_i2c_pull(SCL);
 	//_i2c_pull(SDA);

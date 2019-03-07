@@ -79,7 +79,7 @@ static uint8_t state;
  * We also need space for the null termination
  */
 #define BUFFER_SIZE 64
-static char client_id[BUFFER_SIZE];
+static char client_id[20];
 static char pub_topic[BUFFER_SIZE];
 //static char sub_topic[BUFFER_SIZE];
 /*---------------------------------------------------------------------------*/
@@ -117,7 +117,7 @@ static process_event_t MQTT_publish_sensor_data_done_event;
 #if defined(NODE_GPS) || defined(NODE_4_ch_relay) || defined(NODE_HARD_LIGHT) || defined(NODE_LIGHT) || defined(NODE_STEP_MOTOR)
 #define no_sleep_allowed 1
 #else
-static volatile uint8_t no_sleep_allowed = 1;
+static volatile uint8_t no_sleep_allowed = 0;
 #endif
 /*---------------------------------------------------------------------------*/
 PROCESS(mqtt_client_process, "PD956 MQTT Client");
@@ -178,6 +178,9 @@ void pub_reset_handler(uint8_t *payload, uint16_t len)
 
 void pub_relay1_handler(uint8_t *payload, uint16_t len)
 {
+	len -= 2;
+	if(len>1)
+		return;
 	//TODO: check len so payload ONLINE dos'nt turn on
 	if(!memcmp(payload,"ON",2))
 		ch4_relay_PD956.value(CH1_RELAY_ON);
@@ -188,6 +191,10 @@ void pub_relay1_handler(uint8_t *payload, uint16_t len)
 }
 void pub_relay2_handler(uint8_t *payload, uint16_t len)
 {
+	len -= 2;
+	if(len>1)
+		return;
+
 	if(!memcmp(payload,"ON",2))
 		ch4_relay_PD956.value(CH2_RELAY_ON);
 	else if(!memcmp(payload,"OFF",3))
@@ -197,6 +204,10 @@ void pub_relay2_handler(uint8_t *payload, uint16_t len)
 }
 void pub_relay3_handler(uint8_t *payload, uint16_t len)
 {
+	len -= 2;
+	if(len>1)
+		return;
+
 	if(!memcmp(payload,"ON",2))
 		ch4_relay_PD956.value(CH3_RELAY_ON);
 	else if(!memcmp(payload,"OFF",3))
@@ -206,6 +217,10 @@ void pub_relay3_handler(uint8_t *payload, uint16_t len)
 }
 void pub_relay4_handler(uint8_t *payload, uint16_t len)
 {
+	len -= 2;
+	if(len>1)
+		return;
+
 	if(!memcmp(payload,"ON",2))
 		ch4_relay_PD956.value(CH4_RELAY_ON);
 	else if(!memcmp(payload,"OFF",3))
@@ -216,6 +231,10 @@ void pub_relay4_handler(uint8_t *payload, uint16_t len)
 
 void pub_light_hard_switch_handler(uint8_t *payload, uint16_t len)
 {
+	len -= 2;
+	if(len>1)
+		return;
+
 	if(!memcmp(payload,"ON",2))
 		hard_RGB_ctrl_sensor.configure(SENSORS_ACTIVE,7);
 	else if(!memcmp(payload,"OFF",3))
@@ -271,11 +290,11 @@ void pub_light_hard_rgb_handler(uint8_t *payload, uint16_t len)
 
 void pub_light_hard_effect_handler(uint8_t *payload, uint16_t len)
 {
-	if(!memcmp(payload,"colorloop",9))
+	if(!memcmp(payload,"colorloop",9) && (len == 9))
 		hard_RGB_ctrl_sensor.configure(SENSORS_ACTIVE,10);
-	else if(!memcmp(payload,"fire",4))
+	else if(!memcmp(payload,"fire",4) && (len == 4))
 		hard_RGB_ctrl_sensor.configure(SENSORS_ACTIVE,11);
-	else if(!memcmp(payload,"rapid_red",9))
+	else if(!memcmp(payload,"rapid_red",9) && (len == 9))
 		hard_RGB_ctrl_sensor.configure(SENSORS_ACTIVE,12);
 
 	process_post(PROCESS_BROADCAST, Trig_sensors, NULL);
@@ -283,6 +302,10 @@ void pub_light_hard_effect_handler(uint8_t *payload, uint16_t len)
 //////////////////////////////////////////////////////////////////////////////////
 void pub_light_soft_switch_handler(uint8_t *payload, uint16_t len)
 {
+	len -= 2;
+	if(len>1)
+		return;
+
 	if(!memcmp(payload,"ON",2))
 		soft_RGB_ctrl_sensor.configure(SENSORS_ACTIVE,7);
 	else if(!memcmp(payload,"OFF",3))
@@ -338,11 +361,11 @@ void pub_light_soft_rgb_handler(uint8_t *payload, uint16_t len)
 
 void pub_light_soft_effect_handler(uint8_t *payload, uint16_t len)
 {
-	if(!memcmp(payload,"colorloop",9))
+	if(!memcmp(payload,"colorloop",9) && (len == 9))
 		soft_RGB_ctrl_sensor.configure(SENSORS_ACTIVE,10);
-	else if(!memcmp(payload,"fire",4))
+	else if(!memcmp(payload,"fire",4) && (len == 4))
 		soft_RGB_ctrl_sensor.configure(SENSORS_ACTIVE,11);
-	else if(!memcmp(payload,"rapid_red",9))
+	else if(!memcmp(payload,"rapid_red",9) && (len == 9))
 		soft_RGB_ctrl_sensor.configure(SENSORS_ACTIVE,12);
 
 	process_post(PROCESS_BROADCAST, Trig_sensors, NULL);
@@ -485,11 +508,11 @@ static int construct_configs(void)
 									"\"state_topic\": \"%s\","
 									"\"value_template\":\"{{ value_json.%s}}\","
 									"\"mdi\":\"lightbulb\","
-									"\"command_topic\": \"Hass/switch/%s/%s/%s/set\"}",
+									"\"command_topic\": \"Hass/switch/%s/%s/set\"}",
 									conf->Username,reading->descr, 		//name
 									pub_topic, 							//state_topic
 									reading->descr,						//value_template
-									client_id,conf->Username, reading->descr);  //command_topic
+									client_id, reading->descr);  //command_topic
 				break;
 
 			case cover_class:
@@ -513,13 +536,13 @@ static int construct_configs(void)
 				snprintf(reading->MQTT_config_ele.arg, sizeof(reading->MQTT_config_ele.arg),
 									"{\"name\":\"%s %s\","
 									"\"state_topic\":\"%s\","
-									"\"command_topic\":\"Hass/light/%s/%s/%s/set\","
+									"\"command_topic\":\"Hass/light/%s/%s/set\","
 									"\"brightness_state_topic\":\"%s\","
-									"\"brightness_command_topic\":\"Hass/light/%s/%s/brightness/set\","  // NB: brightness hardcoded. must be reading->descr of brightness element
+									"\"brightness_command_topic\":\"Hass/light/%s/brightness/set\","  // NB: brightness hardcoded. must be reading->descr of brightness element
 									"\"rgb_state_topic\":\"%s\","
-									"\"rgb_command_topic\":\"Hass/light/%s/%s/color/set\","   // NB: rgb hardcoded. must be reading->descr of rgb element
+									"\"rgb_command_topic\":\"Hass/light/%s/color/set\","   // NB: rgb hardcoded. must be reading->descr of rgb element
 									"\"effect_state_topic\":\"%s\","
-									"\"effect_command_topic\":\"Hass/light/%s/%s/effect/set\","   // NB: effect hardcoded. must be reading->descr of effect element
+									"\"effect_command_topic\":\"Hass/light/%s/effect/set\","   // NB: effect hardcoded. must be reading->descr of effect element
 									"\"state_value_template\":\"{{value_json.switch}}\","
 									"\"brightness_value_template\":\"{{value_json.brightness}}\","
 									"\"effect_value_template\":\"{{value_json.effect}}\","
@@ -527,13 +550,13 @@ static int construct_configs(void)
 									"\"rgb_value_template\":\"{{value_json.color|join(',')}}\"}",
 									conf->Username,reading->descr, 		//name
 									pub_topic, //state_topic
-									client_id,conf->Username, reading->descr,  //command_topic
+									client_id, reading->descr,  //command_topic
 									pub_topic,  //brightness status
-									client_id,conf->Username,  //brightness set
+									client_id,  //brightness set
 									pub_topic,  //color status
-									client_id,conf->Username,
+									client_id,	//color set
 									pub_topic,  //effect status
-									client_id,conf->Username);  //color set
+									client_id);	//effect set
 
 
 				break;
@@ -555,14 +578,14 @@ static int construct_sub_topic(void)
 {
 	// Common commands ////////////////////////////////////////////////////////////
 	snprintf(MQTT_COMMON_NO_SLEEP_sub_cmd.topic,
-				sizeof(MQTT_COMMON_NO_SLEEP_sub_cmd.topic), "Hass/%s/%s/%s/set",
-				client_id, conf->Username, "Sleep");
+				sizeof(MQTT_COMMON_NO_SLEEP_sub_cmd.topic), "Hass/%s/%s/set",
+				client_id, "Sleep");
 	MQTT_COMMON_NO_SLEEP_sub_cmd.data_handler = pub_sleep_handler;
 	list_add(MQTT_subscribe_list, &MQTT_COMMON_NO_SLEEP_sub_cmd);
 
 	snprintf(MQTT_COMMON_RESET_sub_cmd.topic,
-				sizeof(MQTT_COMMON_RESET_sub_cmd.topic), "Hass/%s/%s/%s/set",
-				client_id, conf->Username, "Reset");
+				sizeof(MQTT_COMMON_RESET_sub_cmd.topic), "Hass/%s/%s/set",
+				client_id, "Reset");
 	MQTT_COMMON_RESET_sub_cmd.data_handler = pub_reset_handler;
 	list_add(MQTT_subscribe_list, &MQTT_COMMON_RESET_sub_cmd);
 
@@ -608,12 +631,16 @@ static int construct_sub_topic(void)
 /*---------------------------------------------------------------------------*/
 static int construct_client_id(void)
 {
-	int len = snprintf(client_id, BUFFER_SIZE,
+	int len;
+	/*
+	 len = snprintf(client_id, BUFFER_SIZE,
 			"d:%s:%s:%02x%02x%02x%02x%02x%02x", conf->Company, conf->Modul_type,
 			linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1],
 			linkaddr_node_addr.u8[2], linkaddr_node_addr.u8[5],
 			linkaddr_node_addr.u8[6], linkaddr_node_addr.u8[7]); //TODO: use PD snr instead as id
-
+	*/
+	memcpy(client_id,device_certificate.crt.snr,device_certificate.crt.snlen);
+	len = device_certificate.crt.snlen;
 	/* len < 0: Error. Len >= BUFFER_SIZE: Buffer too small */
 	if (len < 0 || len >= BUFFER_SIZE)
 	{
