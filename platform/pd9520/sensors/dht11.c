@@ -210,7 +210,7 @@ dht11_configure(int type, int enable)
 			pio_handler_set(PIOB, ID_PIOB, data_pin, PIO_IT_FALL_EDGE, dht11_data_pin_irq);
 			// We don't have an input capture at our disposal,
 			// so we have to use high priority interrupt.
-			NVIC_SetPriority((IRQn_Type) ID_PIOB, 2);//level 0 is the highest interrupt priority (0-15)
+			NVIC_SetPriority((IRQn_Type) ID_PIOB, 0);//level 0 is the highest interrupt priority (0-15)
 			NVIC_EnableIRQ((IRQn_Type)ID_PIOB);
 
 			sensor_status = SENSOR_STATUS_INITIALISED;
@@ -224,7 +224,7 @@ dht11_configure(int type, int enable)
 			 if(enable) {
 				 sensor_status = SENSOR_STATUS_NOT_READY;
 				 // Give the sensor some time to stabilize. 15 milliseconds should be sufficient.
-				 ctimer_set(&dht11_timer,15* CLOCK_SECOND/1000, dht11_start_measurement, NULL);
+				 ctimer_set(&dht11_timer,(15 * 1000) / CLOCK_SECOND, dht11_start_measurement, NULL);
 			 } else {
 				 ctimer_stop(&dht11_timer);
 				 sensor_status = SENSOR_STATUS_INITIALISED;

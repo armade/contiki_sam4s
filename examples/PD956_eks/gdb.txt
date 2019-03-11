@@ -23,3 +23,10 @@ set *0x400e1400 = 0xA5000004
 mon reg sp=(0x400000)
 
 mon reg pc=(0x400004)
+
+______________________________________________________
+
+NOT RELATED:
+
+//http://www.variwiki.com/index.php?title=VAR-SOM-MX6_Ubuntu_Build_Ubuntu_Alip_NFS#Build_the_Wi-Fi_drivers
+//https://github.com/Microchip-Ethernet/EVB-KSZ9477/tree/master/KSZ

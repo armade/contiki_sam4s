@@ -725,7 +725,7 @@ PT_THREAD(generate_index(struct httpd_state *s))
   temp = temp - (temp_high*1000);
 
   SAM4S_ADC_TS_sensor.configure(SENSORS_ACTIVE,1); // Trig new convertion.
-  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "%sADC:%s %s%d.%d C %s",config_div_left,config_div_close,config_div_right, temp_high,temp,config_div_close));
+  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "%sADC:%s %s%d.%.3d C %s",config_div_left,config_div_close,config_div_right, temp_high,temp,config_div_close));
   /////////////////////////////////////////////////////
   static float value;
   static int low, high;
@@ -770,7 +770,7 @@ PT_THREAD(generate_index(struct httpd_state *s))
 
   high = value;
   low = (value - high) * 10000;
-  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "%sSpeed:%s %s%d.%d%s",config_div_left,config_div_close, config_div_right,high, low,config_div_close));
+  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "%sSpeed:%s %s%d.%.5d%s",config_div_left,config_div_close, config_div_right,high, low,config_div_close));
   /////////////////////////////////////////////////////
   PT_WAIT_THREAD(&s->generate_pt,
                       enqueue_chunk(s, 0, "</p>"));

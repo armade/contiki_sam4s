@@ -40,7 +40,7 @@
 #include "pio_handler.h"
 #include "board-peripherals.h"
 
-#define BUTTON_PIN            PIO_PA1
+#define BUTTON_PIN            PIO_PA6
 Pio *button_base = (Pio *)PIOA;
 
 #define BUTTON_READ_PIN(x)	((button_base->PIO_PDSR & x)?1:0)
@@ -62,6 +62,7 @@ button_detection_callback(uint32_t a, uint32_t b)
 	sensors_changed(&button_sensor);
 
 	// Change interrupt condition so we get interrupt on both falling and rising edge.
+	// We have 300ms bounce time so this should be safe
 	if ((IRQ_type == falling_egde) && (BUTTON_READ_PIN(BUTTON_PIN)==0)) {
 		// Rising Edge
 		button_base->PIO_REHLSR = BUTTON_PIN;

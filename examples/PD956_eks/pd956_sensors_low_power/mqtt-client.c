@@ -444,7 +444,7 @@ static void mqtt_event(struct mqtt_connection *m, mqtt_event_t event,
 		case MQTT_EVENT_PUBACK:
 			state = MQTT_CLIENT_STATE_PUBLISHING_DONE;
 			process_post(PROCESS_BROADCAST, MQTT_publish_sensor_data_done_event, NULL);
-			PRINTF("APP - Publishing complete.\n");
+			//PRINTF("APP - Publishing complete.\n");
 			break;
 
 		default:

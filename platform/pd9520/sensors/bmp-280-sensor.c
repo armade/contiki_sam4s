@@ -133,12 +133,12 @@ static int enabled = SENSOR_STATUS_DISABLED;
 static uint8_t sensor_value[SENSOR_DATA_BUF_SIZE];
 /*---------------------------------------------------------------------------*/
 /* Wait SENSOR_STARTUP_DELAY clock ticks for the sensor to be ready - ~80ms */
-#define SENSOR_STARTUP_DELAY 80*(1000/CLOCK_SECOND)
+#define SENSOR_STARTUP_DELAY (80 * 1000) / CLOCK_SECOND
 
 static struct ctimer startup_timer;
 
-int32_t temp = 0;
-uint32_t pres = 0;
+static int32_t temp = 0;
+static uint32_t pres = 0;
 
 static void bmp280_convert(uint8_t *data, int32_t *temp, uint32_t *press);
 static bool bmp280_read_data(uint8_t *data);
