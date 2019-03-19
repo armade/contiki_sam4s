@@ -12,6 +12,7 @@
 #include "pio_handler.h"
 
 #include "platform-conf.h"
+//qpaudxj4
 
 PROCESS(ksz8863_process, "KSZ8863 IP64 driver");
 PROCESS(ksz8863_link_process, "KSZ8863 link");
@@ -202,10 +203,10 @@ PROCESS_THREAD(ksz8863_link_process, ev, data)
 		  	}
 		  	//ethernet_phy_auto_negotiate3(GMAC, 1);
 		   //Establish ethernet link
-		  	ul_frm_size = ethernet_phy_set_link(GMAC, 1, 1);
+		  	/*ul_frm_size = ethernet_phy_set_link(GMAC, 1, 1);
 		  	if(ul_frm_size != GMAC_OK) {
 		  		printf("Set link ERROR (%d)!\n",ul_frm_size);
-		  	}
+		  	}*/
 		  	link_status = 1;
 		  	printf("-- Link up. \n");
 	  }

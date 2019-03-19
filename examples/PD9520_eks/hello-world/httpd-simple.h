@@ -53,7 +53,7 @@
 #endif
 /*---------------------------------------------------------------------------*/
 #define HTTPD_PATHLEN  31
-#define HTTPD_INBUF_LEN (HTTPD_PATHLEN )
+#define HTTPD_INBUF_LEN (HTTPD_PATHLEN + 10)
 
 #define TMP_BUF_SIZE   (UIP_TCP_MSS + 1)
 /*---------------------------------------------------------------------------*/
