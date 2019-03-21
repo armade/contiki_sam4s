@@ -1501,7 +1501,7 @@ PT_THREAD(generate_maps_config(struct httpd_state *s))
   int ret;
   //static int low_lat, high_lat;
   //static int low_lon, high_lon;
-  static char lat_str[53], lon_str[53];
+  static char lat_str[15], lon_str[15];
 
   ret = GPS_sensor.value(GPS_SENSOR_TYPE_LAT_DP);
 
@@ -1512,7 +1512,7 @@ PT_THREAD(generate_maps_config(struct httpd_state *s))
     }
     value_dp = *(double *)ret;
 
-    dtoa(lat_str,value_dp,16);
+    dtoa(lat_str,value_dp,9);
 
     //high_lat = value_dp;
     //low_lat = (value_dp - high_lat) * 10000000;
@@ -1527,7 +1527,7 @@ PT_THREAD(generate_maps_config(struct httpd_state *s))
 
     //high_lon = value_dp;
     //low_lon = (value_dp - high_lon) * 10000000;
-    dtoa(lon_str,value_dp,16);
+    dtoa(lon_str,value_dp,9);
 
 
   PT_WAIT_THREAD(&s->generate_pt,

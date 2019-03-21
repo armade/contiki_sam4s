@@ -35,7 +35,7 @@
 
 #include <inttypes.h>
 
-#define BOARD_STRING 					"PD956-01"
+#define BOARD_STRING 					"PD9520-01"
 #define SENSOR_ERROR        			0x80000000
 
 #define CC_CONF_REGISTER_ARGS          1

@@ -491,10 +491,10 @@ static int construct_configs(void)
 			case sensor_class:
 				snprintf(reading->MQTT_config_ele.arg, sizeof(reading->MQTT_config_ele.arg),
 									"{\"name\": \"%s %s\","
-									"\"state_topic\": \"%s\","
-									"\"unit_of_measurement\": \"%s\","
-									"\"expire_after\":%d,"
-									"\"value_template\":\"{{ value_json.%s}}\" }",
+									"\"stat_t\": \"%s\","
+									"\"unit_of_meas\": \"%s\","
+									"\"exp_aft\":%d,"
+									"\"val_tpl\":\"{{ value_json.%s}}\" }",
 									conf->Username, reading->descr, 	//name
 									pub_topic,  						//state_topic
 									reading->units,						//unit_of_measurement
@@ -505,10 +505,10 @@ static int construct_configs(void)
 			case switch_class:
 				snprintf(reading->MQTT_config_ele.arg, sizeof(reading->MQTT_config_ele.arg),
 									"{\"name\": \"%s %s\","
-									"\"state_topic\": \"%s\","
-									"\"value_template\":\"{{ value_json.%s}}\","
+									"\"stat_t\": \"%s\","
+									"\"val_tpl\":\"{{ value_json.%s}}\","
 									"\"mdi\":\"lightbulb\","
-									"\"command_topic\": \"Hass/switch/%s/%s/set\"}",
+									"\"cmd_t\": \"Hass/switch/%s/%s/set\"}",
 									conf->Username,reading->descr, 		//name
 									pub_topic, 							//state_topic
 									reading->descr,						//value_template
@@ -522,9 +522,9 @@ static int construct_configs(void)
 
 				snprintf(reading->MQTT_config_ele.arg, sizeof(reading->MQTT_config_ele.arg),
 									"{\"name\": \"%s %s\","
-									"\"state_topic\": \"%s\","
-									"\"device_class\": \"%s\","
-									"\"value_template\":\"{{ value_json.%s}}\",}",
+									"\"stat_t\": \"%s\","
+									"\"dev_cla\": \"%s\","
+									"\"val_tpl\":\"{{ value_json.%s}}\",}",
 									conf->Username,reading->descr, 		//name
 									pub_topic, 							//state_topic
 									DEVICE_CLASS_lookup[reading->device_class],
@@ -535,19 +535,19 @@ static int construct_configs(void)
 			case light_class:
 				snprintf(reading->MQTT_config_ele.arg, sizeof(reading->MQTT_config_ele.arg),
 									"{\"name\":\"%s %s\","
-									"\"state_topic\":\"%s\","
-									"\"command_topic\":\"Hass/light/%s/%s/set\","
-									"\"brightness_state_topic\":\"%s\","
-									"\"brightness_command_topic\":\"Hass/light/%s/brightness/set\","  // NB: brightness hardcoded. must be reading->descr of brightness element
-									"\"rgb_state_topic\":\"%s\","
-									"\"rgb_command_topic\":\"Hass/light/%s/color/set\","   // NB: rgb hardcoded. must be reading->descr of rgb element
-									"\"effect_state_topic\":\"%s\","
-									"\"effect_command_topic\":\"Hass/light/%s/effect/set\","   // NB: effect hardcoded. must be reading->descr of effect element
-									"\"state_value_template\":\"{{value_json.switch}}\","
-									"\"brightness_value_template\":\"{{value_json.brightness}}\","
-									"\"effect_value_template\":\"{{value_json.effect}}\","
-									"\"effect_list\":[\"colorloop\",\"fire\",\"rapid_red\"],"
-									"\"rgb_value_template\":\"{{value_json.color|join(',')}}\"}",
+									"\"stat_t\":\"%s\","
+									"\"cmd_t\":\"Hass/light/%s/%s/set\","
+									"\"bri_stat_t\":\"%s\","
+									"\"bri_cmd_t\":\"Hass/light/%s/brightness/set\","  // NB: brightness hardcoded. must be reading->descr of brightness element
+									"\"rgb_stat_t\":\"%s\","
+									"\"rgb_cmd_t\":\"Hass/light/%s/color/set\","   // NB: rgb hardcoded. must be reading->descr of rgb element
+									"\"fx_stat_t\":\"%s\","
+									"\"fx_cmd_t\":\"Hass/light/%s/effect/set\","   // NB: effect hardcoded. must be reading->descr of effect element
+									"\"stat_val_tpl\":\"{{value_json.switch}}\","
+									"\"bri_val_tpl\":\"{{value_json.brightness}}\","
+									"\"fx_val_tpl\":\"{{value_json.effect}}\","
+									"\"fx_list\":[\"colorloop\",\"fire\",\"rapid_red\"],"
+									"\"rgb_val_tpl\":\"{{value_json.color|join(',')}}\"}",
 									conf->Username,reading->descr, 		//name
 									pub_topic, //state_topic
 									client_id, reading->descr,  //command_topic
@@ -1027,9 +1027,9 @@ PROCESS_THREAD(mqtt_client_process, ev, data)
 					// if sleeptime is 60 sec, and we are awake 100ms we can live on a battery with 2700mAh for
 					// 60/60.1*54uA+0.1/60.1*22mA = 90.5uA avg  2700mA/90.5uA = 29829hr ~ 3.4 years
 					NETSTACK_RADIO.on();
-					// TODO: Need timing to indicate how long the radio is on. the radio is now not active doing
-					// sensor measurements. a ping is about 47ms in avg. so if we assume 50ms on-time we get:
-					// 60/60.1*54uA + 0.05/60.1*22mA + 0.05/60.1*10mA = 70.5uA avg  2700mA/90.5uA = 29829hr ~ 4.3 years
+					// TODO: Need timing to indicate how long the radio is on.
+					// A ping is about 47ms in avg. so if we assume 100ms on-time we get:
+					// 60/120.1*54uA + 0.1/120.1*22mA  = 70.5uA avg  2700mA/70uA = 38571hr ~ 4.4 years
 					//PRINTF("MQTT: Just woke up, trig\n");
 
 					etimer_set(&timeout_timer, 5*CLOCK_SECOND); // We have 5 sec to complete sensor measurement and publish result. Otherwise we will treat it as nosleep.
