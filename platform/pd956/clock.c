@@ -19,6 +19,7 @@ clock_time_t sleepticks = 0; 	// Holds ticks (less then 1 sec)
 
 
 static void Store_time_to_RTC(void *data);
+void calc_daylight_saving(tm_t *tm);
 
 void SysTick_Handler(void)
 {
@@ -204,9 +205,10 @@ void Load_time_from_RTC(void)
 	//Unix_time = 1533018106;
 	//UnixtoRTC(&timer, Unix_time);
 
-	if(clock_gpbr->RTC_valid == 0xA7)
+	if(clock_gpbr->RTC_valid == 0xA7){
 		clock_quality(clock_gpbr->stranum+1);
-	else
+		calc_daylight_saving(&timer);
+	}else
 		clock_quality(UNSYNC_TIME);
 
 	clock_set_unix_time(Unix_time,0);
@@ -245,6 +247,8 @@ int rtc_settime(Rtc* pRtc, tm_t *tm)
 	pRtc->RTC_SCCR |= RTC_SCCR_SECCLR;
 	pRtc->RTC_CR &= (uint32_t)(~(RTC_CR_UPDCAL|RTC_CR_UPDTIM)) ;
 	pRtc->RTC_SCCR |= RTC_SCCR_SECCLR; /* clear SECENV in SCCR */
+
+	calc_daylight_saving(tm);
 
 	return 0;
 }
@@ -289,4 +293,41 @@ int clock_quality(int stranum_new)
 	if(clock_gpbr->stranum < 15)
 		ctimer_set(&stranum_timer, 1 * 60 * 60 * CLOCK_SECOND, Increment_stranum, NULL); // 1 hr interval
 	return 1;
+}
+
+void calc_daylight_saving(tm_t *tm)
+{
+	uint16_t daylight_saving = 0;
+
+	if((tm->tm_mon<3) || (tm->tm_mon>10)){
+		daylight_saving = 0; //normal time
+	}
+	if((tm->tm_mon>3) && (tm->tm_mon<10)){
+		daylight_saving = 1;// summer time
+	}
+	if(tm->tm_mon == 3)	{
+		if(tm->tm_wday == 7){ 			// sunday
+			if((tm->tm_mday + 7) > 31) 	// last sunday
+				if(tm->tm_hour >= 1) 	// Change at 0100 UTC
+					daylight_saving = 1;
+		}
+		daylight_saving = 0;
+	}
+	if(tm->tm_mon == 10)	{
+		if(tm->tm_wday == 7){ 			// sunday
+			if((tm->tm_mday + 7) > 31) 	// last sunday
+				if(tm->tm_hour >= 1)	// Change at 0100 UTC
+					daylight_saving = 0;
+		}
+		daylight_saving = 1;
+	}
+
+	if(daylight_saving == 1){
+		// set rtc alarm on last sunday in oct
+		clock_set_unix_timezone(2*60*60);
+	}
+	else{
+		// set rtc alarm on last sunday in marts
+		clock_set_unix_timezone(1*60*60);
+	}
 }

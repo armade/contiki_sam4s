@@ -9,10 +9,10 @@ unsigned char sf_select;
 #define sf_array_enable()	SPI1_select(Seriel_flash_1+sf_select)
 #define sf_array_disable() 	SPI1_select(none)
 #define sf_array_rw(x)		SPI_Write(0,x)
-#define sf_array_r()		SPI_Read()
+#define sf_array_r()		stub()
 
 
-#define DEBUG 1
+#define DEBUG 0
 #if DEBUG
 #define PRINTF(...) printf(__VA_ARGS__)
 #else
@@ -24,6 +24,12 @@ unsigned char sf_array_flashchip_info[7];
 
 #define chiptype() sf_array_flashchip_info[sf_array_select_read()]
 
+unsigned stub()
+{
+	uint8_t ret;
+	SPI1_read_buffer_wait(&ret,1,0);
+	return ret;
+}
 
 void sf_array_cmd_s(unsigned char cmd)
 {
@@ -375,7 +381,7 @@ rewait3:	sf_array_waitready();
 			sf_array_cmd0(0xC1); //EXIT SECURE OTP
 			sf_array_cmd0(0xE9); //EXIT 4 BYTE MODE
 		} else {
-			PRINTF("not found: %d",retrying);
+			PRINTF("not found: (retry = %d)\n",retrying);
 			//Nothing found
 			++retrying;
 			goto retry_recovery;
@@ -557,6 +563,7 @@ int sf_array_getflashid_64byte(unsigned char *buf64)
 			for (i=0; i<16; ++i) *buf64++=sf_array_r();
 			for (   ; i<64; ++i) *buf64++=0x53; //filler for MX25 = 0x53
 			sf_array_cmd0(0xC1); //exit otp
+			return 1;
 		default:
 			return 0;
 	}

@@ -85,7 +85,9 @@ int main()
 	}
 
 	flash_init_df();
-	// sf_array_flashinit(); // only version 2
+	sf_array_flashinit(); // only version 2
+	unsigned size_flash_array = sf_array_totalsize();
+	printf("Serial FLASH array found (%dMiB)\n\r",((int)size_flash_array)>>20);
 
 	// TODO: Atmels framework has an error that must be fixed.
 	// When enumerating a device that is not supported, the code hangs in an interrupt.

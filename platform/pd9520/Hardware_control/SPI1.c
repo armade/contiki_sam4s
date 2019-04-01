@@ -11,7 +11,7 @@
 #include "drivers/spi.h"
 
 
-#define DEBUG 1
+#define DEBUG 0
 #if DEBUG
 #define PRINTF(...) printf(__VA_ARGS__)
 #else
@@ -35,7 +35,7 @@
 #define SPI1_CS2 PIO_PC29
 
 #define PIN_mux_CS PIO_PA16
-
+#define PIN_SD_CS PIO_PE5
 
 
 
@@ -52,19 +52,20 @@ spi_device_t old_spi_device=0;
 
 void SPI1_select(spi_device_t spi_device)
 {
-
+	PRINTF("SPI1 select: ");
 	if((UPS==1) && (spi_device != none))
 		PRINTF("BAD SPI mutex!!\n");
 
 	switch(spi_device)
 	{
 		case SD_card: // NB: SD card has it's own CS pin, that is not controlled here, since the driver must have full control. (CS-SD)
+			SPI1_set_baudrate(60000000,SPI_CSR_CPOL,SPI_CSR_NCPHA);
 			UPS = 1;
 			PRINTF("SD_card cs\n");
 			__Set_port(PIOA,PIN_mux_CS,0); // MISO is switched to data storage
-			__Set_port(PIOC,DATAADR_C_BIT,1); // 0b111 is sd card
-			__Set_port(PIOC,DATAADR_B_BIT,1);
-			__Set_port(PIOC,DATAADR_A_BIT,1);
+			__Set_port(PIOD,DATAADR_C_BIT,1); // 0b111 is sd card
+			__Set_port(PIOD,DATAADR_B_BIT,1);
+			__Set_port(PIOD,DATAADR_A_BIT,1);
 			SPI1PORT->PIO_SODR = (1<<SPI1_CS0_BIT)|(1<<SPI1_CS1_BIT)|(1<<SPI1_CS2_BIT); // Deselect MUX, DAC, ADC
 			break;
 			
@@ -72,9 +73,9 @@ void SPI1_select(spi_device_t spi_device)
 			PRINTF("Seriel_flash_1\n");
 			UPS = 1;
 			__Set_port(PIOA,PIN_mux_CS,0); // MISO is switched to data storage
-			__Set_port(PIOC,DATAADR_C_BIT,0); // 0b000 is Seriel_flash_1
-			__Set_port(PIOC,DATAADR_B_BIT,0);
-			__Set_port(PIOC,DATAADR_A_BIT,0);
+			__Set_port(PIOD,DATAADR_C_BIT,0); // 0b000 is Seriel_flash_1
+			__Set_port(PIOD,DATAADR_B_BIT,0);
+			__Set_port(PIOD,DATAADR_A_BIT,0);
 			SPI1PORT->PIO_SODR = (1<<SPI1_CS0_BIT)|(1<<SPI1_CS1_BIT)|(1<<SPI1_CS2_BIT); // Deselect MUX, DAC, ADC
 			break;
 			
@@ -82,9 +83,9 @@ void SPI1_select(spi_device_t spi_device)
 			PRINTF("Seriel_flash_2\n");
 			UPS = 1;
 			__Set_port(PIOA,PIN_mux_CS,0); // MISO is switched to data storage
-			__Set_port(PIOC,DATAADR_C_BIT,1); // 0b001 is Seriel_flash_2
-			__Set_port(PIOC,DATAADR_B_BIT,0);
-			__Set_port(PIOC,DATAADR_A_BIT,0);
+			__Set_port(PIOD,DATAADR_C_BIT,1); // 0b001 is Seriel_flash_2
+			__Set_port(PIOD,DATAADR_B_BIT,0);
+			__Set_port(PIOD,DATAADR_A_BIT,0);
 			SPI1PORT->PIO_SODR = (1<<SPI1_CS0_BIT)|(1<<SPI1_CS1_BIT)|(1<<SPI1_CS2_BIT); // Deselect MUX, DAC, ADC
 			break;
 			
@@ -92,9 +93,9 @@ void SPI1_select(spi_device_t spi_device)
 			PRINTF("Seriel_flash_3\n");
 			UPS = 1;
 			__Set_port(PIOA,PIN_mux_CS,0); // MISO is switched to data storage
-			__Set_port(PIOC,DATAADR_C_BIT,0); // 0b010 is Seriel_flash_3
-			__Set_port(PIOC,DATAADR_B_BIT,1);
-			__Set_port(PIOC,DATAADR_A_BIT,0);
+			__Set_port(PIOD,DATAADR_C_BIT,0); // 0b010 is Seriel_flash_3
+			__Set_port(PIOD,DATAADR_B_BIT,1);
+			__Set_port(PIOD,DATAADR_A_BIT,0);
 			SPI1PORT->PIO_SODR = (1<<SPI1_CS0_BIT)|(1<<SPI1_CS1_BIT)|(1<<SPI1_CS2_BIT); // Deselect MUX, DAC, ADC
 			break;
 			
@@ -102,9 +103,9 @@ void SPI1_select(spi_device_t spi_device)
 			PRINTF("Seriel_flash_4\n");
 			UPS = 1;
 			__Set_port(PIOA,PIN_mux_CS,0); // MISO is switched to data storage
-			__Set_port(PIOC,DATAADR_C_BIT,1); // 0b011 is Seriel_flash_4
-			__Set_port(PIOC,DATAADR_B_BIT,1);
-			__Set_port(PIOC,DATAADR_A_BIT,0);
+			__Set_port(PIOD,DATAADR_C_BIT,1); // 0b011 is Seriel_flash_4
+			__Set_port(PIOD,DATAADR_B_BIT,1);
+			__Set_port(PIOD,DATAADR_A_BIT,0);
 			SPI1PORT->PIO_SODR = (1<<SPI1_CS0_BIT)|(1<<SPI1_CS1_BIT)|(1<<SPI1_CS2_BIT); // Deselect MUX, DAC, ADC
 			break;
 			
@@ -112,9 +113,9 @@ void SPI1_select(spi_device_t spi_device)
 			PRINTF("Seriel_flash_5\n");
 			UPS = 1;
 			__Set_port(PIOA,PIN_mux_CS,0); // MISO is switched to data storage
-			__Set_port(PIOC,DATAADR_C_BIT,0); // 0b100 is Seriel_flash_5
-			__Set_port(PIOC,DATAADR_B_BIT,0);
-			__Set_port(PIOC,DATAADR_A_BIT,1);
+			__Set_port(PIOD,DATAADR_C_BIT,0); // 0b100 is Seriel_flash_5
+			__Set_port(PIOD,DATAADR_B_BIT,0);
+			__Set_port(PIOD,DATAADR_A_BIT,1);
 			SPI1PORT->PIO_SODR = (1<<SPI1_CS0_BIT)|(1<<SPI1_CS1_BIT)|(1<<SPI1_CS2_BIT); // Deselect MUX, DAC, ADC
 			break;
 			
@@ -122,9 +123,9 @@ void SPI1_select(spi_device_t spi_device)
 			PRINTF("Seriel_flash_6\n");
 			UPS = 1;
 			__Set_port(PIOA,PIN_mux_CS,0); // MISO is switched to data storage
-			__Set_port(PIOC,DATAADR_C_BIT,1); // 0b101 is Seriel_flash_6
-			__Set_port(PIOC,DATAADR_B_BIT,0);
-			__Set_port(PIOC,DATAADR_A_BIT,1);
+			__Set_port(PIOD,DATAADR_C_BIT,1); // 0b101 is Seriel_flash_6
+			__Set_port(PIOD,DATAADR_B_BIT,0);
+			__Set_port(PIOD,DATAADR_A_BIT,1);
 			SPI1PORT->PIO_SODR = (1<<SPI1_CS0_BIT)|(1<<SPI1_CS1_BIT)|(1<<SPI1_CS2_BIT); // Deselect MUX, DAC, ADC
 			break;
 	
@@ -132,9 +133,9 @@ void SPI1_select(spi_device_t spi_device)
 			PRINTF("Seriel_flash_7\n");
 			UPS = 1;
 			__Set_port(PIOA,PIN_mux_CS,0); // MISO is switched to data storage
-			__Set_port(PIOC,DATAADR_C_BIT,1); // 0b110 is Seriel_flash_7
-			__Set_port(PIOC,DATAADR_B_BIT,1);
-			__Set_port(PIOC,DATAADR_A_BIT,0);
+			__Set_port(PIOD,DATAADR_C_BIT,1); // 0b110 is Seriel_flash_7
+			__Set_port(PIOD,DATAADR_B_BIT,1);
+			__Set_port(PIOD,DATAADR_A_BIT,0);
 			SPI1PORT->PIO_SODR = (1<<SPI1_CS0_BIT)|(1<<SPI1_CS1_BIT)|(1<<SPI1_CS2_BIT); // Deselect MUX, DAC, ADC
 			break;
 			
@@ -164,8 +165,8 @@ void SPI1_select(spi_device_t spi_device)
 
 		case none:
 		default:
-			SPI1_set_baudrate(60000000,SPI_CSR_CPOL,SPI_CSR_NCPHA);
-			PRINTF("Default - none\n");
+			SPI1_set_baudrate(10000000,0,SPI_CSR_NCPHA);
+			PRINTF("None\n");
 			__Set_port(PIOA,PIN_mux_CS,1); // MISO is switched to floating generator
 			SPI1PORT->PIO_SODR = (1<<SPI1_CS0_BIT)|(1<<SPI1_CS1_BIT)|(1<<SPI1_CS2_BIT); // clr all cs
 			UPS = 0;
@@ -173,28 +174,38 @@ void SPI1_select(spi_device_t spi_device)
 	}
 	old_spi_device = spi_device;
 }	
+
+uint32_t SPI_IsFinished(Spi *spi)
+{
+	return ((spi->SPI_SR & SPI_SR_TXEMPTY) != 0);
+}
+
+
 #define SPI_PCS(npcs)       SPI_MR_PCS((~(1 << npcs) & 0xF))
 void SPI_Write(uint32_t dwNpcs, uint16_t wData)
 {
 	/* Send data */
 	while ((SPI1->SPI_SR & SPI_SR_TXEMPTY) == 0);
 
-	SPI1->SPI_TDR = wData | SPI_PCS(dwNpcs);
+	SPI1->SPI_TDR = wData;
 
 	while ((SPI1->SPI_SR & SPI_SR_TDRE) == 0);
 }
 
 uint32_t SPI_Read(void)
 {
-	while ((SPI1->SPI_SR & SPI_SR_RDRF) == 0);
+	unsigned timeout;
+	timeout = 10000;
+
+	while ((SPI1->SPI_SR & SPI_SR_RDRF) == 0){
+		if(timeout-- == 0)
+		return 0xbade;
+	}
 
 	return SPI1->SPI_RDR & 0xFFFF;
 }
 
-uint32_t SPI_IsFinished(Spi *spi)
-{
-	return ((spi->SPI_SR & SPI_SR_TXEMPTY) != 0);
-}
+
 
 
 void SPI1_write_buffer_wait(uint8_t *wData, uint16_t len)
@@ -233,14 +244,16 @@ void SPI1_init(void)
 	pio_set_peripheral(PIOC, PIO_PERIPH_C, PIO_PC27);	// SPI MOSI
 	pio_set_peripheral(PIOC, PIO_PERIPH_C, PIO_PC24);	// SPI SPCK
 
-	pio_set_peripheral(PIOD, PIO_OUTPUT_1, DATAADR_C_BIT);
-	pio_set_peripheral(PIOD, PIO_OUTPUT_1, DATAADR_B_BIT);
-	pio_set_peripheral(PIOD, PIO_OUTPUT_1, DATAADR_A_BIT);
-	pio_set_peripheral(PIOC, PIO_OUTPUT_1, SPI1_CS0);
-	pio_set_peripheral(PIOC, PIO_OUTPUT_1, SPI1_CS1);
-	pio_set_peripheral(PIOC, PIO_OUTPUT_1, SPI1_CS2);
+	pio_configure(PIOD, PIO_OUTPUT_1,DATAADR_C_BIT, 0);
+	pio_configure(PIOD, PIO_OUTPUT_1,DATAADR_B_BIT, 0);
+	pio_configure(PIOD, PIO_OUTPUT_1,DATAADR_A_BIT, 0);
 
-	pio_set_peripheral(PIOC, PIO_OUTPUT_1, PIN_mux_CS);
+	pio_configure(PIOC, PIO_OUTPUT_1,SPI1_CS0, 0);
+	pio_configure(PIOC, PIO_OUTPUT_1,SPI1_CS1, 0);
+	pio_configure(PIOC, PIO_OUTPUT_1,SPI1_CS2, 0);
+
+	pio_configure(PIOA, PIO_OUTPUT_0,PIN_mux_CS, 0);
+	pio_configure(PIOE, PIO_OUTPUT_1,PIN_SD_CS, 0);
 
 	spi_enable_clock(SPI1);
 	SPI1->SPI_CR = SPI_CR_SPIDIS;
@@ -249,7 +262,7 @@ void SPI1_init(void)
 	SPI1->SPI_MR =(SPI_MR_MSTR | SPI_MR_MODFDIS );
 
 	SPI1->SPI_CR = SPI_CR_SPIEN;//SPI_Enable(SPI1);
-	SPI1_set_baudrate(60000000,SPI_CSR_CPOL,SPI_CSR_NCPHA);
+	SPI1_set_baudrate(10000000,0,SPI_CSR_NCPHA);
 }
 
 void SPI_ConfigureNPCS(Spi *spi, uint32_t dwNpcs, uint32_t dwConfiguration)

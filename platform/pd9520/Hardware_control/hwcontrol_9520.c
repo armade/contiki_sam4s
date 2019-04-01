@@ -99,18 +99,10 @@ void delay_nanoseconds(unsigned ns)
  
 #endif
 
-const
-Pin userled[3] = { { (1<< 8)|(1<<11), PIOC, ID_PIOC, PIO_OUTPUT_1, PIO_DEFAULT}, //red
-		           { (1<< 7)|(1<<10), PIOC, ID_PIOC, PIO_OUTPUT_1, PIO_DEFAULT}, //green
-		           { (1<< 6)|(1<< 9), PIOC, ID_PIOC, PIO_OUTPUT_1, PIO_DEFAULT} }; //blue
 				   
 
 const Pin psu_enable_pin={ 1<<31 , PIOC, ID_PIOC, PIO_OUTPUT_0 , PIO_DEFAULT};
 const Pin curgen20_disable_pin={ 1<<4 , PIOB, ID_PIOB, PIO_OUTPUT_1 , PIO_DEFAULT};
-const
-Pin gpsmodule_pins[ 3]= {  { 1<<5  , PIOA, ID_PIOA, PIO_PERIPH_C , PIO_DEFAULT}, //URXD1
-						   { 1<<6  , PIOA, ID_PIOA, PIO_PERIPH_C , PIO_DEFAULT}, //UTXD1
-						   { 1<<15 , PIOA, ID_PIOA, PIO_PERIPH_B , PIO_DEFAULT}}; //PPS TIOA1
 const
 Pin tcxo_pins[ 3]= {  { 1<<3  , PIOA, ID_PIOA, PIO_PERIPH_A , PIO_DEFAULT}, //TWD0
 				      { 1<<4  , PIOA, ID_PIOA, PIO_PERIPH_A , PIO_DEFAULT}, //TWCK0
@@ -162,10 +154,7 @@ static Pin spi3[6]={ { 1<<SPI3_MISO_BIT , PIOD, ID_PIOD, PIO_INPUT   , PIO_DEFAU
 static unsigned char spi1_selected;
 volatile unsigned spi1_currentmuxmask;
 
-void spi1_init(void)
-{
-	//PIO_Configure( spi1, 6 ) ;
-}
+
 
 void spi1_delay(void)
 {
@@ -833,14 +822,8 @@ void multiplexer_b_off(void)
 
 
 
-void hotfix_pps(void)
-{
-	PIO_Configure( gpsmodule_pins, 3 );
-}
-
 void init_9520(int mck)
 {
-	PIO_Configure( userled, 3 ) ;
     spi3_init();
     spi1_init();
 	PIO_Configure( &psu_enable_pin, 1 ) ;
@@ -888,14 +871,6 @@ void init_9520(int mck)
 	UART1->UART_MR = UART_MR_FILTER_ENABLED | UART_MR_PAR_NO;
 	UART1->UART_BRGR = ((mck+4800) / 9600) / 16;
 	UART1->UART_CR = UART_CR_TXEN | UART_CR_RXEN;
-    //timer TIOA1 PPS
-	PMC_EnablePeripheral(ID_TC1);
-	TC0->TC_CHANNEL[1].TC_CCR =  TC_CCR_CLKDIS;
-	TC0->TC_CHANNEL[1].TC_IDR =  0xFFFFFFFF;
-	TC0->TC_CHANNEL[1].TC_SR;
-	TC0->TC_CHANNEL[1].TC_CMR = 1 | TC_CMR_LDRA_RISING | TC_CMR_LDRB_RISING | TC_CMR_SBSMPLR_ONE | TC_CMR_ABETRG | TC_CMR_ETRGEDG_RISING; //E70:1=mck div 8 capture mode, TIOA1 rising edge
-	TC0->TC_CHANNEL[1].TC_CCR = TC_CCR_CLKEN | TC_CCR_SWTRG;
-	PIO_Configure( gpsmodule_pins, 3 );
 
 	//TCXO, XIN32=PA7 TIOA6=PC5 - Dette giver en 2048Hz capture rate med 9155.273 counterticks/capture - og vi kan interrupte pr 2.
 	PMC_EnablePeripheral(ID_TC2); //TIOA6
@@ -1266,12 +1241,6 @@ int selftest_all(void)
 }
 
 
-void set_test_led(unsigned c)
-{
-	myPIO_PutBit(userled+0, !(c&1) );
-	myPIO_PutBit(userled+1, !(c&2) );
-	myPIO_PutBit(userled+2, !(c&4) );
-}
 
 /*void print_state(void)
 {

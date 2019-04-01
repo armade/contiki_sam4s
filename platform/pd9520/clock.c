@@ -246,6 +246,8 @@ int rtc_settime(Rtc* pRtc, tm_t *tm)
 	pRtc->RTC_CR &= (uint32_t)(~(RTC_CR_UPDCAL|RTC_CR_UPDTIM)) ;
 	pRtc->RTC_SCCR |= RTC_SCCR_SECCLR; /* clear SECENV in SCCR */
 
+	calc_daylight_saving(tm);
+
 	return 0;
 }
 
@@ -295,10 +297,10 @@ void calc_daylight_saving(tm_t *tm)
 
 	if((tm->tm_mon<3) || (tm->tm_mon>10)){
 		daylight_saving = 0; //normal time
-	}else
+	}
 	if((tm->tm_mon>3) && (tm->tm_mon<10)){
 		daylight_saving = 1;// summer time
-	}else
+	}
 	if(tm->tm_mon == 3)	{
 		if(tm->tm_wday == 7){ 			// sunday
 			if((tm->tm_mday + 7) > 31) 	// last sunday
@@ -306,7 +308,7 @@ void calc_daylight_saving(tm_t *tm)
 					daylight_saving = 1;
 		}
 		daylight_saving = 0;
-	}else
+	}
 	if(tm->tm_mon == 10)	{
 		if(tm->tm_wday == 7){ 			// sunday
 			if((tm->tm_mday + 7) > 31) 	// last sunday
