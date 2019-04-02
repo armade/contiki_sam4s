@@ -717,7 +717,7 @@ PT_THREAD(generate_index(struct httpd_state *s))
   temp_high = temp/1000;
   temp = temp - (temp_high*1000);
   LM73_sensor.configure(SENSORS_ACTIVE,1); // Trig new convertion. Just for test we are 1 conversion behind.
-  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "%sLM73:%s %s%d.%.3d C%s",config_div_left,config_div_close,config_div_right, temp_high,temp,config_div_close));
+  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "%sLM73:%s %s%d.%.3d [°C]%s",config_div_left,config_div_close,config_div_right, temp_high,temp,config_div_close));
   /////////////////////////////////////////////////////
   PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<br>"));
   temp = SAM4S_ADC_TS_sensor.value(1);
@@ -725,7 +725,7 @@ PT_THREAD(generate_index(struct httpd_state *s))
   temp = temp - (temp_high*1000);
 
   SAM4S_ADC_TS_sensor.configure(SENSORS_ACTIVE,1); // Trig new convertion.
-  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "%sADC:%s %s%d.%.3d C %s",config_div_left,config_div_close,config_div_right, temp_high,temp,config_div_close));
+  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "%sADC:%s %s%d.%.3d [°C] %s",config_div_left,config_div_close,config_div_right, temp_high,temp,config_div_close));
   /////////////////////////////////////////////////////
   static float value;
   static int low, high;
@@ -761,7 +761,7 @@ PT_THREAD(generate_index(struct httpd_state *s))
 	  high = 0;
   }
 
-  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "%sAltitude:%s %s%d.%.7d%s",config_div_left,config_div_close, config_div_right,high, low,config_div_close));
+  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "%sAltitude:%s %s%d.%.7d [m]%s",config_div_left,config_div_close, config_div_right,high, low,config_div_close));
   /////////////////////////////////////////////////////
   PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<br>"));
 
@@ -770,7 +770,7 @@ PT_THREAD(generate_index(struct httpd_state *s))
 
   high = value;
   low = (value - high) * 10000;
-  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "%sSpeed:%s %s%d.%.5d%s",config_div_left,config_div_close, config_div_right,high, low,config_div_close));
+  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "%sSpeed:%s %s%d.%.5d [km/hr]%s",config_div_left,config_div_close, config_div_right,high, low,config_div_close));
   /////////////////////////////////////////////////////
   PT_WAIT_THREAD(&s->generate_pt,
                       enqueue_chunk(s, 0, "</p>"));

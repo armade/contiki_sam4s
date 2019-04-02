@@ -260,6 +260,15 @@ void board_init(void)
 
 void enable_cache(void)
 {
+	uint32_t FPU_type = SCB_GetFPUType();
+
+	switch(FPU_type){
+		case 0:  printf("No FPU\n"); 						break;
+		case 1:  printf("Single precision FPU\n"); 			break;
+		case 2:  printf("Double + Single precision FPU\n"); break;
+		default: printf("Unable to detect FPU\n"); 			break;
+	}
+
 #ifdef CONF_BOARD_ENABLE_CACHE_AT_INIT
 	SCB_EnableICache();
 	SCB_EnableDCache();
