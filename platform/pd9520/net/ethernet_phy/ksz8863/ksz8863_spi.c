@@ -617,11 +617,13 @@ uint8_t gmac_phy_write(Gmac* p_gmac, uint8_t uc_phy_address,
                      { 1<<SPI3_CS3_BIT , PIOD, ID_PIOD, PIO_OUTPUT_1, PIO_DEFAULT} };*/
 
 #define SPI3_CS1	PIO_PD26
+#define SPI3_CS2 	PIO_PD28
+#define SPI3_CS3 	PIO_PD29
 #define SPI3_SCK	PIO_PD25
 #define SPI3_MOSI	PIO_PD24
 #define SPI3_MISO	PIO_PD23
 
-static unsigned char spi3_selected;
+unsigned char spi3_selected;
 
 void spi3_init(void)
 {
@@ -629,6 +631,8 @@ void spi3_init(void)
 	pio_set_output(PIOD, SPI3_MOSI, 1,  false, true);
 	pio_set_output(PIOD, SPI3_SCK, 1,  false, true);
 	pio_set_output(PIOD, SPI3_CS1, 1,  false, true);
+	pio_set_output(PIOD, SPI3_CS2, 1,  false, true);
+	pio_set_output(PIOD, SPI3_CS3, 1,  false, true);
 }
 
 void spi3_delay(void) //min 100ns. Det er 15.
@@ -645,7 +649,7 @@ void spi3_delay(void) //min 100ns. Det er 15.
 void spi3_unselect(void)
 {
 	if (spi3_selected) {
-		SPI3PORT->PIO_SODR = SPI3_CS1;
+		SPI3PORT->PIO_SODR = SPI3_CS1|SPI3_CS2|SPI3_CS3;
 		spi3_selected=0;
 		spi3_delay(); //idle
 	}

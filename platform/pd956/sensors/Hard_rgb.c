@@ -168,6 +168,7 @@ hard_RGB_configure(int type, int enable)
 					effect_state = 0;
 					RGB_tmp.led = (leds_hard_t){0,0,4096,256};
 					RGB_COLORLOOP_RUN(NULL);
+					Sensor_status &= ~(0xf<<12);
 					Sensor_status |= (1<<12);
 					sensors_changed(&hard_RGB_ctrl_sensor);
 				}
@@ -176,17 +177,19 @@ hard_RGB_configure(int type, int enable)
 					effect_state = 0;
 					RGB_tmp.led = (leds_hard_t){4096,4096,4096,256};
 					RGB_RANDOM_RUN(NULL);
+					Sensor_status &= ~(0xf<<12);
 					Sensor_status |= (2<<12);
 					sensors_changed(&hard_RGB_ctrl_sensor);
 				}
-				}else if(enable == 12){
-			 if((Sensor_status&0xfff) == SENSOR_STATUS_READY){
-				 effect_state = 0;
-				 RGB_tmp.led = (leds_hard_t){4096,4096,4096,256};
-				 RGB_RAPID_RED_RUN(NULL);
-				 Sensor_status |= (3<<12);
-				 sensors_changed(&hard_RGB_ctrl_sensor);
-			 }
+			}else if(enable == 12){
+				if((Sensor_status&0xfff) == SENSOR_STATUS_READY){
+					 effect_state = 0;
+					 RGB_tmp.led = (leds_hard_t){4096,4096,4096,256};
+					 RGB_RAPID_RED_RUN(NULL);
+					 Sensor_status &= ~(0xf<<12);
+					 Sensor_status |= (3<<12);
+					 sensors_changed(&hard_RGB_ctrl_sensor);
+				}
 			}
 			break;
 	}

@@ -89,8 +89,8 @@ void init_9520(int mck);
 
 
 // PM - translation
-int Get_PSU_voltage_V(void);
-void Set_PSU_voltage_V(int voltage_V);
+float Get_PSU_voltage_V(void);
+void Set_PSU_voltage_V(float voltage_V);
 void Route_io_to_analog_measurement(int io, int calib);
 int Get_analog_current_A(void);
 void Set_analog_current_A(int current);
@@ -102,7 +102,7 @@ int Get_analog_voltage(void);
 int Get_current_in_voltage_generator(void);
 int Set_digital_current(int current);
 int Route_io_to_digital_current_measure(int io, int calib);
-int Get_DUT_current_consumtion_A(void);
+float Get_DUT_current_consumtion_A(void);
 int Route_io_to_fast_in(int io, int calib);
 
 int Selfcalibration_measure_isence(void);
@@ -120,7 +120,7 @@ void Write_RTC(unsigned char reg, unsigned char val);
 float Get_temperature_RTC(void);
 float Get_temperature_lm73(void);
 
-
+/*
 typedef struct {
 	// 0x00
 	unsigned seconds : 4;
@@ -157,15 +157,15 @@ typedef struct {
 } RTC_time_t;
 
 struct s_tm {
-	int tm_sec;/**seconds after the minute: 0 - 59*/
-	int tm_min;/**minutes after the hour: 0 - 59*/
-	int tm_hour;/**hours since midnight: 0 - 23*/
-	int tm_mday;/**day of the month: 1 - 31*/
-	int tm_mon;/**months since January: 0 - 11*/
-	int tm_year;/**years since 1900*/
-	int tm_wday;/**days since Sunday: 0 - 6*/
-	int tm_yday;/**days since Jan 1st: 0 - 365*/
-	//int tm_isdst;/**daylight savings flag: -1 unknown, 0 not in DST, 1 in DST*/
+	int tm_sec;//seconds after the minute: 0 - 59
+	int tm_min;//minutes after the hour: 0 - 59
+	int tm_hour;//hours since midnight: 0 - 23
+	int tm_mday;//day of the month: 1 - 31
+	int tm_mon;//months since January: 0 - 11
+	int tm_year;//years since 1900
+	int tm_wday;//days since Sunday: 0 - 6
+	int tm_yday;//days since Jan 1st: 0 - 365
+	//int tm_isdst;//daylight savings flag: -1 unknown, 0 not in DST, 1 in DST
 };
 
 unsigned char weekday[8][4]={
@@ -178,12 +178,12 @@ unsigned char weekday[8][4]={
 	"sat\0",
 	"sun\0"
 };
-
-unsigned long long rtctime_offset(void);
+*/
+/*unsigned long long rtctime_offset(void);
 void external_RTC_get_time(struct s_tm *ptr);
 void external_RTC_set_time(struct s_tm *tvrtc);
 void internal_RTC_get_time(struct s_tm *tvrtc);
-void internal_RTC_set_time(struct s_tm *tvrtc);
+void internal_RTC_set_time(struct s_tm *tvrtc);*/
 
 typedef struct {
 	int isogen,gen20ma,spgen,psu,ethsw,cpld;//result

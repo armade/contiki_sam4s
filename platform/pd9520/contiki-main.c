@@ -124,6 +124,12 @@ int main()
 	autostart_start(autostart_processes);
 	printf("Processes running\n");
 
+	//
+	init_9520(M_CPU);
+
+
+
+	//selftest_all();
 	// Power down between tasks, when cpu is in idle
 	sleepmgr_init();
 	sleepmgr_lock_mode(SLEEPMGR_SLEEP_WFI);

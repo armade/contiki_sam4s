@@ -16,18 +16,18 @@
 // ID_TC0 is used by flash
 #define FLASH_TIMER_ID	ID_TC0
 
-#define RGB_TIMER 		TC0->TC_CHANNEL[2]
-#define RGB_TIMER_ID 	ID_TC2
-#define RGB_TIMER_IRQ	TC2_IRQn
+#define RGB_TIMER 		TC1->TC_CHANNEL[1]
+#define RGB_TIMER_ID 	ID_TC4
+#define RGB_TIMER_IRQ	TC4_IRQn
 
 #define RGB2_TIMER 		TC1->TC_CHANNEL[0]
 #define RGB2_TIMER_ID 	ID_TC3
 #define RGB2_TIMER_IRQ	TC3_IRQn
 
 // NB: move so it's the same as RGB - can't have both.
-#define step_TIMER 		TC0->TC_CHANNEL[2]
-#define step_TIMER_ID 	ID_TC2
-#define step_TIMER_IRQ	TC2_IRQn
+#define step_TIMER 		TC1->TC_CHANNEL[1]
+#define step_TIMER_ID 	ID_TC4
+#define step_TIMER_IRQ	TC4_IRQn
 
 /*#define RngTimer 		TC0->TC_CHANNEL[1]
 #define RngTimerID 		ID_TC1

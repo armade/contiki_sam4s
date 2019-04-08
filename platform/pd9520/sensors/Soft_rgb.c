@@ -47,7 +47,7 @@ static int Sensor_status = SENSOR_STATUS_DISABLED;
      ___  ___
   ___|  |_|  |
 */
-void TC2_Handler(void)
+void TC4_Handler(void)
 {
 	RGB_TIMER.TC_SR;
 
@@ -196,6 +196,7 @@ soft_RGB_configure(int type, int enable)
 					 effect_state = 0;
 					 RGB_tmp.led = (leds_t){0,0,256,256};
 					 RGB_COLORLOOP_RUN(NULL);
+					 Sensor_status &= ~(0xf<<12);
 					 Sensor_status |= (1<<12);
 					 sensors_changed(&soft_RGB_ctrl_sensor);
 				 }
@@ -204,6 +205,7 @@ soft_RGB_configure(int type, int enable)
 					 effect_state = 0;
 					 RGB_tmp.led = (leds_t){256,256,256,256};
 					 RGB_RANDOM_RUN(NULL);
+					 Sensor_status &= ~(0xf<<12);
 					 Sensor_status |= (2<<12);
 					 sensors_changed(&soft_RGB_ctrl_sensor);
 				 }
@@ -212,6 +214,7 @@ soft_RGB_configure(int type, int enable)
 					 effect_state = 0;
 					 RGB_tmp.led = (leds_t){256,256,256,256};
 					 RGB_RAPID_RED_RUN(NULL);
+					 Sensor_status &= ~(0xf<<12);
 					 Sensor_status |= (3<<12);
 					 sensors_changed(&soft_RGB_ctrl_sensor);
 				 }

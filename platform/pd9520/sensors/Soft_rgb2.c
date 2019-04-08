@@ -196,6 +196,7 @@ soft_RGB2_configure(int type, int enable)
 					 effect_state = 0;
 					 RGB_tmp.led = (leds2_t){0,0,256,256};
 					 RGB_COLORLOOP_RUN(NULL);
+					 Sensor_status &= ~(0xf<<12);
 					 Sensor_status |= (1<<12);
 					 sensors_changed(&soft_RGB_ctrl_sensor);
 				 }
@@ -204,6 +205,7 @@ soft_RGB2_configure(int type, int enable)
 					 effect_state = 0;
 					 RGB_tmp.led = (leds2_t){256,256,256,256};
 					 RGB_RANDOM_RUN(NULL);
+					 Sensor_status &= ~(0xf<<12);
 					 Sensor_status |= (2<<12);
 					 sensors_changed(&soft_RGB_ctrl_sensor);
 				 }
@@ -212,6 +214,7 @@ soft_RGB2_configure(int type, int enable)
 					 effect_state = 0;
 					 RGB_tmp.led = (leds2_t){256,0,0,256};
 					 RGB_RAPID_RED_RUN(NULL);
+					 Sensor_status &= ~(0xf<<12);
 					 Sensor_status |= (3<<12);
 					 sensors_changed(&soft_RGB_ctrl_sensor);
 				 }

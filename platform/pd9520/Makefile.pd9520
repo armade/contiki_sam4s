@@ -7,7 +7,7 @@ endif
 CONTIKI_TARGET_DIRS += 	.	sensors PD_FLASH Hardware_control io crypt crypt/uECC crypt/sha2 net net/ethernet_phy/ksz8863
 		
 PLATFORM_NET_DRIVER = clock.c ksz8863_spi.c gmac_raw_2.c ethernet_phy.c ethernet_driver.c
-PLATFORM_FLASH_DRIVER = hw_spiflash.c hl_spiflash.c FLASH_driver.c SPI1.c hl_spiflash_array.c # hwcontrol_9520.c
+PLATFORM_FLASH_DRIVER = hw_spiflash.c hl_spiflash.c FLASH_driver.c SPI1.c hl_spiflash_array.c hwcontrol_9520.c
 PLATFORM_SENSOR_DRIVER = 	ADC_temp.c \
 							Soft_rgb.c  \
 							lm73.c \

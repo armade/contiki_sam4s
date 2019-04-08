@@ -44,73 +44,85 @@ Det vil tillade selvtest af FASTIN uden at signalet også ses på et I/O.
 
 */
 
-#include "chip.h"
+#include <stdio.h>
+#include <stdint.h>
+#include <string.h>
+#include "contiki.h"
+#include "platform-conf.h"
+#include "same70.h"
 //#include "at25flash.h"
 #include "hwcontrol_9520.h"
 #include "SPI1.h"
-#define COPP
+
+#include "gpio.h"
+#include "pio_handler.h"
 
 
-	extern void critical_leave(unsigned old);
-	extern unsigned critical_enter(void);
+
+unsigned critical_enter(void)
+{
+	unsigned old = __get_PRIMASK();
+
+	if(!old)
+		__set_PRIMASK(1);
+
+	return old;
+}
+
+void critical_leave(unsigned old)
+{
+	if(!old)
+		__set_PRIMASK(0);
+}
+
+
  #define ENTER unsigned saveflag = critical_enter();
  #define EXIT critical_leave(saveflag);
 
-//#define delay_microseconds(us) PD_1007_Sleep(us)
-/*void delay_microseconds(unsigned us)
-{
-	unsigned dt,r;
-	RESET_CYCLE_COUNTER();
-	r = us*300;
-	do{
-		if(us>1){
-			PD_1007_Sleep(us-1); // Be nice to the system
-			us=0;
-		}
-		GET_CYCLE_COUNTER(dt);
-	}while (dt < r);
-}*/
-void delay_microseconds(unsigned us)
-{
-	PD_1007_Sleep(us);
-}
 
-/*void delay_nanoseconds(unsigned ns)
-{
-	unsigned dt,r;
-	RESET_CYCLE_COUNTER();
-	r = ns/3; // The MCU has hw integer div. (1 clk) - but the result is a increase in delay by 33.3% for not using floating point
-	do{
-		GET_CYCLE_COUNTER(dt);
-	}while (dt < r);
-	
-}*/
+
+
 void delay_nanoseconds(unsigned ns)
 {
-	unsigned time;
+	volatile unsigned time;
 	
-	time = ns/1000;
+	time = ns/3;
 	
 	if(time == 0)
 		time = 1;
 	
-	PD_1007_Sleep(time);
+	while(time--)
+		asm volatile("NOP");
 }
  
-#endif
+/*void delay_microseconds(unsigned us)
+{
+	delay_nanoseconds(300*us);
+}*/
 
 				   
 
-const Pin psu_enable_pin={ 1<<31 , PIOC, ID_PIOC, PIO_OUTPUT_0 , PIO_DEFAULT};
-const Pin curgen20_disable_pin={ 1<<4 , PIOB, ID_PIOB, PIO_OUTPUT_1 , PIO_DEFAULT};
-const
+
+/*const
 Pin tcxo_pins[ 3]= {  { 1<<3  , PIOA, ID_PIOA, PIO_PERIPH_A , PIO_DEFAULT}, //TWD0
 				      { 1<<4  , PIOA, ID_PIOA, PIO_PERIPH_A , PIO_DEFAULT}, //TWCK0
 				      { 1<<5  , PIOC, ID_PIOC, PIO_PERIPH_B , PIO_DEFAULT}}; //PPS TIOA1
-const
-Pin pulsgen_pin= { 1<<4  , PIOE, ID_PIOE, PIO_PERIPH_B , PIO_DEFAULT};
-
-const
+*/
+#define multiplexer_pins_base PIOC
+const unsigned multiplexer_pins[] = {
+		PIO_PC16,
+		PIO_PC15,
+		PIO_PC14,
+		PIO_PC13,
+		PIO_PC12,
+		PIO_PC22,
+		PIO_PC21,
+		PIO_PC20,
+		PIO_PC19,
+		PIO_PC18,
+		PIO_PC17
+};
+/*const
 Pin multiplexer_pins[11]= {  { 1<<16 , PIOC, ID_PIOC, PIO_OUTPUT_0 , PIO_DEFAULT}, //enable 1
 						     { 1<<15 , PIOC, ID_PIOC, PIO_OUTPUT_0 , PIO_DEFAULT}, //enable 2
 						     { 1<<14 , PIOC, ID_PIOC, PIO_OUTPUT_0 , PIO_DEFAULT}, //enable 3
@@ -122,7 +134,8 @@ Pin multiplexer_pins[11]= {  { 1<<16 , PIOC, ID_PIOC, PIO_OUTPUT_0 , PIO_DEFAULT
 						     { 1<<19 , PIOC, ID_PIOC, PIO_OUTPUT_0 , PIO_DEFAULT}, //a3
 						     { 1<<18 , PIOC, ID_PIOC, PIO_OUTPUT_0 , PIO_DEFAULT},  //a4
 						     { 1<<17 , PIOC, ID_PIOC, PIO_OUTPUT_0 , PIO_DEFAULT} }; //a5
-const
+						     */
+/*const
 Pin programmer_pins[6]= { { 1<<0  , PIOC, ID_PIOC, PIO_INPUT , PIO_PULLUP},
                           { 1<<1  , PIOC, ID_PIOC, PIO_INPUT , PIO_PULLUP},
                           { 1<<2  , PIOC, ID_PIOC, PIO_INPUT , PIO_PULLUP},
@@ -130,7 +143,7 @@ Pin programmer_pins[6]= { { 1<<0  , PIOC, ID_PIOC, PIO_INPUT , PIO_PULLUP},
                           { 1<<4  , PIOC, ID_PIOC, PIO_INPUT , PIO_PULLUP},
                           { 1<<19 , PIOD, ID_PIOD, PIO_OUTPUT_0 , PIO_DEFAULT} };
 
-
+*/
 
 #define SPI3_MISO_BIT 23
 #define SPI3_MOSI_BIT 24
@@ -139,12 +152,12 @@ Pin programmer_pins[6]= { { 1<<0  , PIOC, ID_PIOC, PIO_INPUT , PIO_PULLUP},
 #define SPI3_CS2_BIT 28
 #define SPI3_CS3_BIT 29
 #define SPI3PORT PIOD
-static Pin spi3[6]={ { 1<<SPI3_MISO_BIT , PIOD, ID_PIOD, PIO_INPUT   , PIO_DEFAULT},
+/*static Pin spi3[6]={ { 1<<SPI3_MISO_BIT , PIOD, ID_PIOD, PIO_INPUT   , PIO_DEFAULT},
                      { 1<<SPI3_MOSI_BIT , PIOD, ID_PIOD, PIO_OUTPUT_1, PIO_DEFAULT},
                      { 1<<SPI3_SCK_BIT , PIOD, ID_PIOD, PIO_OUTPUT_1, PIO_DEFAULT},
                      { 1<<SPI3_CS1_BIT , PIOD, ID_PIOD, PIO_OUTPUT_1, PIO_DEFAULT},
                      { 1<<SPI3_CS2_BIT , PIOD, ID_PIOD, PIO_OUTPUT_1, PIO_DEFAULT},
-                     { 1<<SPI3_CS3_BIT , PIOD, ID_PIOD, PIO_OUTPUT_1, PIO_DEFAULT} };
+                     { 1<<SPI3_CS3_BIT , PIOD, ID_PIOD, PIO_OUTPUT_1, PIO_DEFAULT} };*/
 
 
 //////////////////////////////////////////////////////////////////////////
@@ -283,40 +296,10 @@ unsigned spi1_adcx_int(unsigned d, unsigned n)
 /////////   SPI 3 lowlevel  //////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////
 
-static unsigned char spi3_selected;
+extern unsigned char spi3_selected;
 
-void spi3_init(void)
-{
-	PIO_Configure( spi3, 6 ) ;
-}
 
-void spi3_delay(void) //min 100ns. Det er 15.
-{
-	int i;
-	for (i=0; i<4; ++i) {
-		SPI3PORT->PIO_SODR=0;
-		SPI3PORT->PIO_SODR=0;
-		SPI3PORT->PIO_SODR=0;
-		SPI3PORT->PIO_SODR=0;
-	}
-}
 
-void spi3_unselect(void)
-{
-	if (spi3_selected) {
-		SPI3PORT->PIO_SODR = (1<<SPI3_CS1_BIT)|(1<<SPI3_CS2_BIT)|(1<<SPI3_CS3_BIT);
-		spi3_selected=0;
-		spi3_delay(); //idle
-	}
-}
-
-void spi3_select_ethsw(void) //ud paa falling edge, ind paa rising edge
-{
-	spi3_unselect();
-	SPI3PORT->PIO_CODR = 1<<SPI3_CS1_BIT;
-	spi3_delay();
-	spi3_selected=1;
-}
 void spi3_select_adc(void) //ud paa falling edge, ind paa rising edge,
 {
 	spi3_unselect();
@@ -380,25 +363,7 @@ unsigned spi3_adcx_int(unsigned d, unsigned n)
 	return out;
 }
 
-unsigned spi3_ethsw_int(unsigned d)
-{
-	unsigned out=0;
-	unsigned n=8;
-	while (n) {
-		--n;
-		if (d&(1<<n))
-			SPI3PORT->PIO_SODR = 1<<SPI3_MOSI_BIT;
-		else
-			SPI3PORT->PIO_CODR = 1<<SPI3_MOSI_BIT;
-		SPI3PORT->PIO_CODR = 1<<SPI3_SCK_BIT;
-		spi3_delay();
-		//sample before rising edge
-		if (SPI3PORT->PIO_PDSR&(1<<SPI3_MISO_BIT)) out|=1<<n;
-		SPI3PORT->PIO_SODR = 1<<SPI3_SCK_BIT;
-		spi3_delay();
-	}
-	return out;
-}
+
 
 //////////////////////////////////////////////////////////////////////////
 /////////   abstraktioner   //////////////////////////////////////////////
@@ -421,7 +386,8 @@ void lowdac_set(unsigned chan, unsigned val)
 void psu_off(void)
 {
 	ENTER
-	PIO_Clear(&psu_enable_pin);
+	pio_clear(PIOC, PIO_PC31);
+	//PIO_Clear(&psu_enable_pin);
 	lowdac_set(3, 65535); //Vgen DAC max off
 	EXIT
 }
@@ -430,14 +396,15 @@ void psu_on_dac(unsigned outval) //slew rate pos = 60V/ms = 3,96A
 {
 	ENTER
 	lowdac_set(3, 65535-outval); //vender om.
-	PIO_Set(&psu_enable_pin);
+	//PIO_Set(&psu_enable_pin);
+	pio_set(PIOC, PIO_PC31);
 	EXIT
 }
 
 void gen20mA_off(void)
 {
 	ENTER
-	PIO_Set(&curgen20_disable_pin);
+	pio_set(PIOB, PIO_PB4);//PIO_Set(&curgen20_disable_pin);
 	lowdac_set(2, 0);
 	EXIT
 }
@@ -445,7 +412,7 @@ void gen20mA_off(void)
 void gen20mA_on_dac(unsigned dac)
 {
 	ENTER
-	PIO_Clear(&curgen20_disable_pin);
+	pio_clear(PIOB, PIO_PB4);//PIO_Clear(&curgen20_disable_pin);
 	lowdac_set(2, dac);
 	EXIT
 }
@@ -502,62 +469,7 @@ signed muxadc_datas(void)
 	return muxadc_read(3,24) - 0x800000;
 }
 
-void ethsw_writeb(unsigned a, unsigned b)
-{
-	ENTER
-	spi3_select_ethsw();
-	spi3_switch_int(2);
-	spi3_switch_int(a);
-	spi3_switch_int(b);
-	spi3_unselect();
-	EXIT
-}
 
-unsigned ethsw_readb(unsigned a)
-{
-	unsigned r;
-	ENTER
-	spi3_select_ethsw();
-	spi3_ethsw_int(3);
-	spi3_ethsw_int(a);
-	r=spi3_ethsw_int(0);
-	spi3_unselect();
-	EXIT
-	return r;
-}
-
-void ethsw_write(unsigned a, unsigned char *p, unsigned n)
-{
-	ENTER
-	spi3_select_ethsw();
-	spi3_ethsw_int(2);
-	spi3_ethsw_int(a);
-	while (n) {
-		spi3_switch_int(*p++);
-		--n;
-	}
-	spi3_unselect();
-	EXIT
-}
-
-void ethsw_read(unsigned char *p, unsigned a, unsigned n)
-{
-	ENTER
-	spi3_select_ethsw();
-	spi3_ethsw_int(3);
-	spi3_ethsw_int(a);
-	while (n) {
-		*p++=spi3_switch_int(0);
-		--n;
-	}
-	spi3_unselect();
-	EXIT
-}
-
-int ethsw_checkalive(void)
-{
-	return ethsw_readb(0)==0x88;
-}
 
 void isodac_cmd(unsigned cmd)
 {
@@ -647,9 +559,9 @@ signed isoadc_datas(void)
 static unsigned char multiplexer_a_current_selection;
 static unsigned char multiplexer_b_current_selection;
 
-static inline void myPIO_PutBit(const Pin *pin, unsigned b)
+static inline void myPIO_PutBit(unsigned pin, unsigned b)
 {
-	b ?	(pin->pio->PIO_SODR = pin->mask) : (pin->pio->PIO_CODR = pin->mask);
+	b ?	(pio_set(multiplexer_pins_base,pin)) : (pio_clear(multiplexer_pins_base,pin));
 }
 
 void multiplexer_a_select_int(int iosignal) //den brede mux
@@ -670,23 +582,24 @@ void multiplexer_a_select_int(int iosignal) //den brede mux
 	if (iosignal==109) i=23; //internal gnd 2 - fremtidigt noget andet for bedre selvtest
 
 	//disable
-	PIO_Clear(multiplexer_pins+0);
-	PIO_Clear(multiplexer_pins+1);
-	PIO_Clear(multiplexer_pins+2);
-	PIO_Get(multiplexer_pins+2); //sync
+	//pio_set
+	pio_clear(multiplexer_pins_base,multiplexer_pins[0]); //PIO_Clear(multiplexer_pins+0);
+	pio_clear(multiplexer_pins_base,multiplexer_pins[1]); //PIO_Clear(multiplexer_pins+1);
+	pio_clear(multiplexer_pins_base,multiplexer_pins[2]); //PIO_Clear(multiplexer_pins+2);
+	pio_get(multiplexer_pins_base,PIO_OUTPUT_1,multiplexer_pins[2]); //PIO_Get(multiplexer_pins+2); //sync
 	delay_nanoseconds(350);
 	//configure
-	myPIO_PutBit(multiplexer_pins+5, i&1);
-	myPIO_PutBit(multiplexer_pins+6, i&2);
-	myPIO_PutBit(multiplexer_pins+7, i&4);
-	PIO_Get(multiplexer_pins+2); //sync
+	myPIO_PutBit(multiplexer_pins[5], i&1);
+	myPIO_PutBit(multiplexer_pins[6], i&2);
+	myPIO_PutBit(multiplexer_pins[7], i&4);
+	pio_get(multiplexer_pins_base,PIO_OUTPUT_1,multiplexer_pins[2]); //PIO_Get(multiplexer_pins+2); //sync
 	delay_nanoseconds(350);
 	//reenable
-	if (i<8) PIO_Set(multiplexer_pins+0);
+	if (i<8) pio_set(multiplexer_pins_base,multiplexer_pins[0]);
 	else
-		if (i<16) PIO_Set(multiplexer_pins+1);
+		if (i<16) pio_set(multiplexer_pins_base,multiplexer_pins[1]);
 		else
-			if (i<24) PIO_Set(multiplexer_pins+2);
+			if (i<24) pio_set(multiplexer_pins_base,multiplexer_pins[2]);
 	EXIT
 }
 
@@ -729,20 +642,20 @@ void multiplexer_b_select_int(int iosignal) //den smalle mux
 	}
 
 	//disable
-	PIO_Clear(multiplexer_pins+3);
-	PIO_Clear(multiplexer_pins+4);
-	PIO_Get(multiplexer_pins+4); //sync
+	pio_clear(multiplexer_pins_base,multiplexer_pins[3]); //PIO_Clear(multiplexer_pins+3);
+	pio_clear(multiplexer_pins_base,multiplexer_pins[4]); //PIO_Clear(multiplexer_pins+4);
+	pio_get(multiplexer_pins_base,PIO_OUTPUT_1,multiplexer_pins[4]); //PIO_Get(multiplexer_pins+4); //sync
 	delay_nanoseconds(350);
 	//configure
-	myPIO_PutBit(multiplexer_pins+8, i&1);
-	myPIO_PutBit(multiplexer_pins+9, i&2);
-	myPIO_PutBit(multiplexer_pins+10, i&4);
-	PIO_Get(multiplexer_pins+2); //sync
+	myPIO_PutBit(multiplexer_pins[8], i&1);
+	myPIO_PutBit(multiplexer_pins[9], i&2);
+	myPIO_PutBit(multiplexer_pins[10], i&4);
+	pio_get(multiplexer_pins_base,PIO_OUTPUT_1,multiplexer_pins[2]); //PIO_Get(multiplexer_pins+2); //sync
 	delay_nanoseconds(350);
 	//reenable
-	if (i<8) PIO_Set(multiplexer_pins+4); //enable5: den med IO 1..8
+	if (i<8) pio_set(multiplexer_pins_base,multiplexer_pins[4]); //enable5: den med IO 1..8
 	else
-		if (i<16) PIO_Set(multiplexer_pins+3); //enable4: interne signaler
+		if (i<16) pio_set(multiplexer_pins_base,multiplexer_pins[3]); //enable4: interne signaler
 	EXIT
 }
 
@@ -757,19 +670,19 @@ void multiplexer_ab_select_levelselftest_io1(void) //very special...
 	//  konfigurer til signal 0 (fastinput) samtidig med IO1 på B mux
 	i=0;
 	//disable
-	PIO_Clear(multiplexer_pins+3);
-	PIO_Clear(multiplexer_pins+4);
-	PIO_Get(multiplexer_pins+4); //sync
+	pio_clear(multiplexer_pins_base,multiplexer_pins[3]); //PIO_Clear(multiplexer_pins+3);
+	pio_clear(multiplexer_pins_base,multiplexer_pins[4]); //PIO_Clear(multiplexer_pins+4);
+	pio_get(multiplexer_pins_base,PIO_OUTPUT_1,multiplexer_pins[4]); //PIO_Get(multiplexer_pins+4); //sync
 	delay_nanoseconds(350);
 	//configure
-	myPIO_PutBit(multiplexer_pins+8, i&1);
-	myPIO_PutBit(multiplexer_pins+9, i&2);
-	myPIO_PutBit(multiplexer_pins+10, i&4);
-	PIO_Get(multiplexer_pins+2); //sync
+	myPIO_PutBit(multiplexer_pins[8], i&1);
+	myPIO_PutBit(multiplexer_pins[9], i&2);
+	myPIO_PutBit(multiplexer_pins[10], i&4);
+	pio_get(multiplexer_pins_base,PIO_OUTPUT_1,multiplexer_pins[2]); //PIO_Get(multiplexer_pins+4); //sync
 	delay_nanoseconds(350);
 	//reenable BEGGE multiplexere
-	PIO_Set(multiplexer_pins+4); //enable5: den med IO 1..8
-	PIO_Set(multiplexer_pins+3); //enable4: interne signaler
+	pio_set(multiplexer_pins_base,multiplexer_pins[4]); //enable5: den med IO 1..8
+	pio_set(multiplexer_pins_base,multiplexer_pins[3]); //enable4: interne signaler
 	EXIT
 	//vi har nu SPGEN ud paa IO1, og FASTIN på COMMON
 	multiplexer_a_select(1); // IO1 (SPGEN) på common.
@@ -824,11 +737,15 @@ void multiplexer_b_off(void)
 
 void init_9520(int mck)
 {
-    spi3_init();
-    spi1_init();
-	PIO_Configure( &psu_enable_pin, 1 ) ;
+	uint8_t i;
+
+    //spi3_init();
+    //spi1_init();
+	//PIO_Configure( &psu_enable_pin, 1 ) ;
+	pio_configure(PIOC, PIO_OUTPUT_0,PIO_PC31, 0);
 	MATRIX->CCFG_SYSIO |= 1<<4; //enable PB4, no TDI  //KKP 20160222
-	PIO_Configure( &curgen20_disable_pin, 1 ) ;
+	//PIO_Configure( &curgen20_disable_pin, 1 ) ;
+	pio_configure(PIOB, PIO_OUTPUT_1,PIO_PB4, 0);
 	delay_microseconds(5);
 	spi3_dac24(0x280001); //power on reset
 	spi1_dac24(0x280001); //power on reset
@@ -857,31 +774,31 @@ void init_9520(int mck)
 	isodac_set(3, 32768); //unused
 
 	//multiplexer initialiseres til off
-	PIO_Configure( multiplexer_pins, 11 ) ;
+	//PIO_Configure( multiplexer_pins, 11 ) ;
+
+	for(i=0; i< sizeof(multiplexer_pins)/sizeof(int);i++)
+		pio_configure(multiplexer_pins_base, PIO_OUTPUT_1,multiplexer_pins[i], 0);
+
+
+
 	multiplexer_a_current_selection=255;
 	multiplexer_b_current_selection=255;
 	//og den paa iso siden ogsaa
 	spi1_muxmask(0);
 
-	//GPS uart1 init, 9600N81
-	PMC_EnablePeripheral(ID_UART1);
-	NVIC_EnableIRQ(ID_UART1);
-	UART1->UART_CR = UART_CR_RSTRX | UART_CR_RSTTX | UART_CR_RXDIS | UART_CR_TXDIS | UART_CR_RSTSTA;
-	UART1->UART_IDR = 0xFFFFFFFF;
-	UART1->UART_MR = UART_MR_FILTER_ENABLED | UART_MR_PAR_NO;
-	UART1->UART_BRGR = ((mck+4800) / 9600) / 16;
-	UART1->UART_CR = UART_CR_TXEN | UART_CR_RXEN;
+
 
 	//TCXO, XIN32=PA7 TIOA6=PC5 - Dette giver en 2048Hz capture rate med 9155.273 counterticks/capture - og vi kan interrupte pr 2.
-	PMC_EnablePeripheral(ID_TC2); //TIOA6
+	//PMC_EnablePeripheral(ID_TC2); //TIOA6
+	pmc_enable_periph_clk(ID_TC2);
 	TC2->TC_CHANNEL[0].TC_CCR =  TC_CCR_CLKDIS;
 	TC2->TC_CHANNEL[0].TC_IDR =  0xFFFFFFFF;
 	TC2->TC_CHANNEL[0].TC_SR;
 	TC2->TC_CHANNEL[0].TC_CMR = 1 | TC_CMR_LDRA_RISING | TC_CMR_LDRB_RISING | TC_CMR_SBSMPLR_SIXTEENTH ; //E70:1=mck div 8 capture mode, TIOA6 rising /16
 	TC2->TC_CHANNEL[0].TC_CCR = TC_CCR_CLKEN | TC_CCR_SWTRG;
-	PIO_Configure( tcxo_pins, 3 );
+	//PIO_Configure( tcxo_pins, 3 );
 	
-	init_RTC();
+	//init_RTC();
 	
 /*	//pe4 TIMEROUT TIOB10 - virker ikke, skal fixes - og det skal ikke vaere her.
 	PMC_EnablePeripheral(ID_TC3); //TIOA9..11
@@ -913,7 +830,13 @@ void init_9520(int mck)
 	multiplexer_b_off();
 	multiplexer_a_off();
 
-	PIO_Configure( programmer_pins, 6 ) ;
+
+
+	static float PSU_setpoint = 5;
+	Set_PSU_voltage_V(PSU_setpoint);
+
+
+	//PIO_Configure( programmer_pins, 6 ) ;
 }
 
 selftestdata_t selftestdata;
@@ -922,7 +845,7 @@ static int i_selftest_iso_igen_read(unsigned ch)
 {
 	isoadc_write( 2, (2<<6) | ch, 16 ); //internal ref no buf, opamp voltage
 	isoadc_write( 1, 0x2004, 16 ); //single conversion, fast
-	do {PD_1007_Sleep(10);} while (isoadc_status()&128);
+	do {delay_microseconds(10);} while (isoadc_status()&128);
 	return isoadc_datas();
 }
 
@@ -935,7 +858,7 @@ int isogen_selftest(void)
 	delay_microseconds(10000);
 	isoadc_write( 2, (2<<6) | (1<<4) |7|(1<<12), 16 ); //internal ref, buffered, avdd monitor, unipolar
 	isoadc_write( 1, 0x2004, 16 ); //single conversion, fast
-	do {PD_1007_Sleep(10);} while (isoadc_status()&128);
+	do {delay_microseconds(10);} while (isoadc_status()&128);
 	u1=isoadc_datau() / 2390; //AVCC: 2389916 counts pr volt, u er millivolt VCC
 	u2=i_selftest_iso_igen_read(2) /1247;   //1246913 cts pr volt, u er millivolt OpAmp
 	u3=i_selftest_iso_igen_read(0) /716;   //716975 cts/A
@@ -957,7 +880,7 @@ int isogen_selftest(void)
 	delay_microseconds(10000);
 	isoadc_write( 2, (2<<6) | (1<<4) |7|(1<<12), 16 ); //internal ref, buffered, avdd monitor, unipolar
 	isoadc_write( 1, 0x2004, 16 ); //single conversion, fast
-	do {PD_1007_Sleep(10);} while (isoadc_status()&128);
+	do {delay_microseconds(10);} while (isoadc_status()&128);
 	u1=isoadc_datau() / 2390; //AVCC: 2389916 counts pr volt, u er millivolt VCC
 	u2=i_selftest_iso_igen_read(2) /1247;   //1246913 cts pr volt, u er millivolt OpAmp
 	u3=i_selftest_iso_igen_read(0) /716;   //716975 cts/A
@@ -984,7 +907,7 @@ int isogen_selftest(void)
 	delay_microseconds(10000);
 	isoadc_write( 2, (2<<6) | (1<<4) |7|(1<<12), 16 ); //internal ref, buffered, avdd monitor, unipolar
 	isoadc_write( 1, 0x2004, 16 ); //single conversion, fast
-	do {PD_1007_Sleep(10);} while (isoadc_status()&128);
+	do {delay_microseconds(10);} while (isoadc_status()&128);
 	u1=isoadc_datau() / 2390; //AVCC: 2389916 counts pr volt, u er millivolt VCC
 	u2=i_selftest_iso_igen_read(2) /1247;   //1246913 cts pr volt, u er millivolt OpAmp
 	u3=i_selftest_iso_igen_read(0) /716;   //716975 cts/A
@@ -1021,7 +944,7 @@ static int i_gen20mA_read(unsigned ch)
 {
 	muxadc_write( 2, (2<<6) | ch, 16 ); //internal ref no buf, opamp voltage
 	muxadc_write( 1, 0x2009, 16 ); //single conversion, normal speed
-	do {PD_1007_Sleep(10);} while (muxadc_status()&128);
+	do {delay_microseconds(10);} while (muxadc_status()&128);
 	return muxadc_datas();
 }
 
@@ -1029,7 +952,7 @@ static int i_spgen_read(unsigned ch)
 {
 	muxadc_write( 2, (2<<6) | ch, 16 ); //internal ref no buf, opamp voltage
 	muxadc_write( 1, 0x2004, 16 ); //single conversion, normal speed
-	do {PD_1007_Sleep(10);} while (muxadc_status()&128);
+	do {delay_microseconds(10);} while (muxadc_status()&128);
 	return muxadc_datas();
 }
 
@@ -1228,9 +1151,9 @@ int selftest_all(void)
 	selftestdata.gen20ma=gen20ma_selftest();
 	selftestdata.spgen=spgen_selftest();
 	selftestdata.psu=psu_selftest();
-	selftestdata.ethsw=-!ethsw_checkalive(); //-1 ved fejl
+	//selftestdata.ethsw=-!ethsw_checkalive(); //-1 ved fejl
 
-	selftestdata.cpld=initcpld9520();
+	//selftestdata.cpld=initcpld9520();
 
 	if (selftestdata.isogen) return 0;
 	if (selftestdata.gen20ma) return 0;
@@ -1254,18 +1177,35 @@ int selftest_all(void)
 
 // x*1.17/2^23*31.1 = x*4.338E-6 
 // Reading AIN6 on IC09
-int Get_PSU_voltage_V(void)
+float Get_PSU_voltage_V(void)
 {
-	return i_gen20mA_read(5);
+	float ret;
+	ret = i_gen20mA_read(5);
+	ret *= hwio_cal_userpage_internal.multiio_cal.PSU_read_mul;
+	ret += hwio_cal_userpage_internal.multiio_cal.PSU_read_zero;
+	return ret;
 }
 
-void Set_PSU_voltage_V(int voltage_V)
+void Set_PSU_voltage_V(float voltage_V)
 {
-	if(voltage_V > 0)
+	if(voltage_V > 0){
+		voltage_V *= hwio_cal_userpage_internal.multiio_cal.PSU_set_mul;
+		voltage_V += hwio_cal_userpage_internal.multiio_cal.PSU_set_zero;
 		psu_on_dac(voltage_V); //33.33V span, 1966/V
+	}
 	else{
 		psu_off();
 	}
+}
+
+// Reading AIN2 on IC09
+float Get_DUT_current_consumtion_A(void)
+{
+	float ret;
+	ret =  i_gen20mA_read(1);
+	ret *= hwio_cal_userpage_internal.multiio_cal.DUT_ana_mul;
+	ret += hwio_cal_userpage_internal.multiio_cal.DUT_ana_zero;
+	return ret;
 }
 ////////////////////////////////////////////////////////////////////////
 
@@ -1375,11 +1315,7 @@ int Route_io_to_digital_current_measure(int io, int calib)
 	return 0;
 }
 
-// Reading AIN2 on IC09
-int Get_DUT_current_consumtion_A(void)
-{
-	return i_gen20mA_read(1);
-}
+
 
 int Route_io_to_fast_in(int io, int calib)
 {
@@ -1394,7 +1330,7 @@ int Route_io_to_fast_in(int io, int calib)
 }
 /////////////////////////////////////////////////////////////////////
 
-int Set_tx_light_intensity(int tx1, int tx2, int x3PNET)
+/*int Set_tx_light_intensity(int tx1, int tx2, int x3PNET)
 {
 	if(tx1 > 31)
 		tx1 = 31;
@@ -1409,10 +1345,10 @@ int Set_tx_light_intensity(int tx1, int tx2, int x3PNET)
 	lightlink_setconfig(tx1,1,tx2,1,x3PNET);
 	
 	return 1;
-}
+}*/
 //============================================================================================================
 // Self Calibrating functions
-#define ctl1	11
+/*#define ctl1	11
 #define ctl2	10
 #define IOA		1
 #define IOB		2
@@ -1509,4 +1445,4 @@ int Selfcalibration_measure_own_supply_voltage(void)
 	multiplexer_a_select_int(2);
 	return 0;
 }
-
+*/

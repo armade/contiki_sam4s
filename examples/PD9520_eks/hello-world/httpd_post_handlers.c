@@ -19,6 +19,7 @@
 #include "board-peripherals.h"
 #include "httpd-simple.h"
 #include "clock.h"
+#include "hwcontrol_9520.h"
 
 #include <string.h>
 #include <strings.h>
@@ -33,6 +34,25 @@ new_net_config(void);
 
 // wget --post-data "effectOption=8" http://10.42.0.7/ -O /dev/null
 
+static int PSU_voltage_post_handler(char *key, int key_len, char *val, int val_len)
+{
+	float fval;
+
+	if(key_len != strlen("PSU_voltage")
+			|| strncasecmp(key, "PSU_voltage", strlen("PSU_voltage")) != 0){
+		/* Not ours */
+		return HTTPD_SIMPLE_POST_HANDLER_UNKNOWN;
+	}
+	fval = strtof(val, NULL);
+
+	if(fval < 0 || fval > 30){
+		return HTTPD_SIMPLE_POST_HANDLER_ERROR;
+	}
+
+	Set_PSU_voltage_V(fval);
+
+	return HTTPD_SIMPLE_POST_HANDLER_OK;
+}
 
 static int effectOption_post_handler(char *key, int key_len, char *val, int val_len)
 {
@@ -489,6 +509,8 @@ timezone_post_handler(char *key, int key_len, char *val, int val_len)
 
 
 /*---------------------------------------------------------------------------*/
+HTTPD_SIMPLE_POST_HANDLER(PSU_voltage,PSU_voltage_post_handler);
+
 HTTPD_SIMPLE_POST_HANDLER(effectOption,effectOption_post_handler);
 HTTPD_SIMPLE_POST_HANDLER(effectOption2,effectOption2_post_handler);
 
@@ -537,7 +559,7 @@ register_http_post_handlers(void)
 	httpd_simple_register_post_handler(&Relay_handler);
 #endif
 
-
+	httpd_simple_register_post_handler(&PSU_voltage_handler);
 
 	httpd_simple_register_post_handler(&timestamp_handler);
 	httpd_simple_register_post_handler(&timezone_handler);
