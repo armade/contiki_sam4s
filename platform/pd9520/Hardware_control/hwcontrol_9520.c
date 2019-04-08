@@ -830,12 +830,6 @@ void init_9520(int mck)
 	multiplexer_b_off();
 	multiplexer_a_off();
 
-
-
-	static float PSU_setpoint = 5;
-	Set_PSU_voltage_V(PSU_setpoint);
-
-
 	//PIO_Configure( programmer_pins, 6 ) ;
 }
 
@@ -1177,16 +1171,16 @@ int selftest_all(void)
 
 // x*1.17/2^23*31.1 = x*4.338E-6 
 // Reading AIN6 on IC09
-float Get_PSU_voltage_V(void)
+double Get_PSU_voltage_V(void)
 {
-	float ret;
+	double ret;
 	ret = i_gen20mA_read(5);
 	ret *= hwio_cal_userpage_internal.multiio_cal.PSU_read_mul;
 	ret += hwio_cal_userpage_internal.multiio_cal.PSU_read_zero;
 	return ret;
 }
 
-void Set_PSU_voltage_V(float voltage_V)
+void Set_PSU_voltage_V(double voltage_V)
 {
 	if(voltage_V > 0){
 		voltage_V *= hwio_cal_userpage_internal.multiio_cal.PSU_set_mul;

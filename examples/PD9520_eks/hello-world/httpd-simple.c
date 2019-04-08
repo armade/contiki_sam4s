@@ -46,6 +46,7 @@
 #include "clock.h"
 #include "platform-conf.h"
 #include "contiki-conf.h"
+#include "hwcontrol_9520.h"
 
 #include <stdint.h>
 #include <string.h>
@@ -358,6 +359,15 @@ static page_t http_light2_cfg_page = {
   generate_light2_config,
 };
 
+static char generate_hwcontrol_config(struct httpd_state *s);
+
+static page_t http_hwcontrol_cfg_page = {
+  NULL,
+  "hwcontrol.html",
+  "hwcontrol",
+  generate_hwcontrol_config,
+};
+
 #ifdef NODE_HARD_LIGHT
 static char generate_hard_light_config(struct httpd_state *s);
 
@@ -465,8 +475,28 @@ url_unescape(const char *src, size_t srclen, char *dst, size_t dstlen)
   return i == srclen;
 }
 /*---------------------------------------------------------------------------*/
+/**
+ * Double to ASCII
+ */
+void dtoa(char *s, double n, int max)
+{
+	int high = n;
+	double low_dp = n-high;
+	int low = 0;
+	char tmp;
+	int index;
 
-
+	index = sprintf(s,"%d",high);
+	s[index++]='.';
+	do{
+		low_dp *=10;
+		tmp = low_dp;
+		low_dp = low_dp-tmp;
+		s[index++]=tmp+0x30;
+	}while(low_dp && index<max);
+	s[index]=0;
+}
+/*---------------------------------------------------------------------------*/
 int
 ipaddr_sprintf(char *buf, uint8_t buf_len, const uip_ipaddr_t *addr)
 {
@@ -1131,6 +1161,7 @@ PT_THREAD(generate_light_config(struct httpd_state *s))
                       enqueue_chunk(s, 0, CONTENT_CLOSE SECTION_CLOSE));
     PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "</fieldset>"));
   //====================================================================================
+
   PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 1, http_bottom));
 
   PT_END(&s->generate_pt);
@@ -1278,6 +1309,68 @@ PT_THREAD(generate_light2_config(struct httpd_state *s))
                       enqueue_chunk(s, 0, CONTENT_CLOSE SECTION_CLOSE));
     PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "</fieldset>"));
   //====================================================================================
+  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 1, http_bottom));
+
+  PT_END(&s->generate_pt);
+}
+/*---------------------------------------------------------------------------*/
+static
+PT_THREAD(generate_hwcontrol_config(struct httpd_state *s))
+{
+
+  PT_BEGIN(&s->generate_pt);
+
+  /* Generate top matter (doctype, title, nav links etc) */
+  PT_WAIT_THREAD(&s->generate_pt,
+                 generate_top_matter(s, http_hwcontrol_cfg_page.title,
+                                     http_config_css2));
+
+
+  //====================================================================================
+
+    double PSU_voltage = Get_PSU_voltage_V();
+    char PSU_str[5];
+
+    dtoa(PSU_str,PSU_voltage,5);
+
+    PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<fieldset>"));
+
+    PT_WAIT_THREAD(&s->generate_pt,
+                       enqueue_chunk(s, 0, "<h1>PSU</h1>"));
+
+    PT_WAIT_THREAD(&s->generate_pt,
+                    enqueue_chunk(s, 0,
+                                  "<form name=\"input\" action=\"%s\" ",
+   							   http_hwcontrol_cfg_page.filename));
+     PT_WAIT_THREAD(&s->generate_pt,
+                    enqueue_chunk(s, 0, "method=\"post\" enctype=\""));
+     PT_WAIT_THREAD(&s->generate_pt,
+                    enqueue_chunk(s, 0, "application/x-www-form-urlencoded\" "));
+     PT_WAIT_THREAD(&s->generate_pt,
+                    enqueue_chunk(s, 0, "accept-charset=\"UTF-8\">"));
+
+    PT_WAIT_THREAD(&s->generate_pt,
+   		  	  enqueue_chunk(s, 0, "%sVoltage:%s", config_div_left, config_div_close));
+     PT_WAIT_THREAD(&s->generate_pt,
+   		  	  enqueue_chunk(s, 0, "%s<input type=\"number\" step=\"0.001\"", config_div_right));
+     PT_WAIT_THREAD(&s->generate_pt,
+   		  	  enqueue_chunk(s, 0, "value=\"%s\" ", PSU_str));
+     PT_WAIT_THREAD(&s->generate_pt,
+   		  	  enqueue_chunk(s, 0, "min=\"0\" max=\"30\" "
+                                                "name=\"PSU_voltage\">%s",
+                                          config_div_close));
+
+     PT_WAIT_THREAD(&s->generate_pt,
+                             enqueue_chunk(s, 0,"<p>"));
+         PT_WAIT_THREAD(&s->generate_pt,
+                        enqueue_chunk(s, 0,
+                                      "<input type=\"submit\" value=\"Submit\">"));
+         PT_WAIT_THREAD(&s->generate_pt,
+                             enqueue_chunk(s, 0,"</p>"));
+
+         PT_WAIT_THREAD(&s->generate_pt,
+                                 enqueue_chunk(s, 0, "</form>"));
+     PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "</fieldset>"));
   PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 1, http_bottom));
 
   PT_END(&s->generate_pt);
@@ -1462,27 +1555,7 @@ PT_THREAD(generate_relay4_config(struct httpd_state *s))
   PT_END(&s->generate_pt);
 }
 #endif
-/**
- * Double to ASCII
- */
-void dtoa(char *s, double n, int max)
-{
-	int high = n;
-	double low_dp = n-high;
-	int low = 0;
-	char tmp;
-	int index;
 
-	index = sprintf(s,"%d",high);
-	s[index++]='.';
-	do{
-		low_dp *=10;
-		tmp = low_dp;
-		low_dp = low_dp-tmp;
-		s[index++]=tmp+0x30;
-	}while(low_dp && index<max);
-	s[index]=0;
-}
 
 static
 PT_THREAD(generate_maps_config(struct httpd_state *s))
@@ -2210,6 +2283,8 @@ init(void)
 
   list_add(pages_list, &http_light_cfg_page);
   list_add(pages_list, &http_light2_cfg_page);
+
+  list_add(pages_list, &http_hwcontrol_cfg_page);
 
 #ifdef NODE_HARD_LIGHT
   list_add(pages_list, &http_hard_light_cfg_page);

@@ -89,8 +89,8 @@ void init_9520(int mck);
 
 
 // PM - translation
-float Get_PSU_voltage_V(void);
-void Set_PSU_voltage_V(float voltage_V);
+double Get_PSU_voltage_V(void);
+void Set_PSU_voltage_V(double voltage_V);
 void Route_io_to_analog_measurement(int io, int calib);
 int Get_analog_current_A(void);
 void Set_analog_current_A(int current);
