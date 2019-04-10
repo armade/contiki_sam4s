@@ -161,11 +161,11 @@ DEMO_SENSOR2(NODE_4_ch_relay4_reading,			"relay4",		UNIT_NONE,		PD956_WEB_DEMO_S
 #endif
 
 #ifdef NODE_PIR_SR501
-DEMO_SENSOR2(PIR_motion_reading,						"PIR sensor",	UNIT_NONE,		PD956_WEB_DEMO_SENSOR_PIR,				binary_sensor_class,		binary_sensor_config_topic,NULL,NULL,motion);
+DEMO_SENSOR2(PIR_motion_reading,						"PIR_sensor",	UNIT_NONE,		PD956_WEB_DEMO_SENSOR_PIR,				binary_sensor_class,		binary_sensor_config_topic,NULL,NULL,motion);
 #endif
 
 /*---------------------------------------------------------------------------*/
-static void save_config()
+static void save_config(void)
 {
 
 	int ret;
@@ -199,7 +199,7 @@ static void save_config()
 
 }
 /*---------------------------------------------------------------------------*/
-static uint8_t load_config()
+static uint8_t load_config(void)
 {
 
 	int ret;
@@ -233,15 +233,26 @@ static uint8_t load_config()
 	} else{
 		// If Bad config show all on.
 		for (reading = list_head(MQTT_sensor_list); reading != NULL ; reading =	list_item_next(reading)){
-				reading->publish = 0;
+				reading->publish = 1;
 				INSERT_NA(reading->converted);
+				web_demo_config.sensors_bitmap |= (1ULL << reading->type);
 		}
 		printf("Error bad header in config\n");
 		flash_enter_deep_sleep();
-		return 1;
+		save_config();
+		return 0;
 	}
 
 	flash_enter_deep_sleep();
+
+	if(!memcmp(tmp_cfg.sensor_name_str,(char *)SENSOR_STRING,sizeof(SENSOR_STRING)))
+	{
+		web_demo_config.sensors_bitmap = 0;
+		for (reading = list_head(MQTT_sensor_list); reading != NULL ; reading =
+						list_item_next(reading)){
+				web_demo_config.sensors_bitmap |= (1ULL << reading->type);
+		}
+	}
 	return 0;
 
 }
@@ -1059,6 +1070,7 @@ PROCESS_THREAD(PD956_MAIN_process, ev, data)
 		} else if(ev == sensors_event && data == &PIR_SR501_sensor){
 			get_PIR_SR501_reading();
 			sensor_busy &= ~(1ul<<PD956_WEB_DEMO_SENSOR_PIR);
+			sensor_busy = 0;
 #endif
 
 		}

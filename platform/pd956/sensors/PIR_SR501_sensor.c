@@ -56,6 +56,34 @@ notify_ready(void *not_used)
 	sensors_changed(&PIR_SR501_sensor);
 }
 
+volatile uint8_t IRQ_type;
+#define falling_egde 	2
+#define rising_egde 	1
+
+clock_time_t falling_timestamp;
+clock_time_t rising_timestamp;
+
+/*---------------------------------------------------------------------------*/
+static void
+PIR_detection_callback(uint32_t a, uint32_t b)
+{
+	sensors_changed(&PIR_SR501_sensor);
+
+	// Change interrupt condition so we get interrupt on both falling and rising edge.
+	// We have 300ms bounce time so this should be safe
+	if ((IRQ_type == falling_egde) && (PIR_READ_PIN(BUTTON_PIN)==0)) {
+		// Rising Edge
+		PIR_base->PIO_REHLSR = BUTTON_PIN;
+		falling_timestamp = (clock_time()*1000)/CLOCK_SECOND; //ms
+		IRQ_type = rising_egde;
+	} else if((IRQ_type == rising_egde) && (PIR_READ_PIN(BUTTON_PIN)==1)){
+		// Falling Edge
+		PIR_base->PIO_FELLSR = BUTTON_PIN;
+		rising_timestamp = (clock_time()*1000)/CLOCK_SECOND; //ms
+		IRQ_type = falling_egde;
+	}
+}
+
 /*---------------------------------------------------------------------------*/
 static int
 PIR_SR501_sensor_value(int type)
@@ -71,6 +99,11 @@ PIR_SR501_sensor_configure(int type, int enable)
 
 		case SENSORS_HW_INIT:
 			pio_set_input(PIOB,BUTTON_PIN,PIO_PULLUP);
+
+			pio_handler_set(PIOB, ID_PIOB, BUTTON_PIN, PIO_IT_RISE_EDGE, PIR_detection_callback);
+						IRQ_type = rising_egde;
+						NVIC_EnableIRQ((IRQn_Type)ID_PIOB);
+
 			sensor_status = SENSOR_STATUS_INITIALISED;
 			break;
 
@@ -80,8 +113,10 @@ PIR_SR501_sensor_configure(int type, int enable)
 
 			 if(enable) {
 				// Enable the sensor
-				 SUPC->SUPC_WUIR = SUPC_WUIR_WKUPEN12_ENABLE | SUPC_WUIR_WKUPT12_HIGH;
-				 ctimer_set(&PIR_timer, SENSOR_PIR_DELAY, notify_ready, NULL);
+				 //SUPC->SUPC_WUIR = SUPC_WUIR_WKUPEN12_ENABLE | SUPC_WUIR_WKUPT12_HIGH;
+				 //ctimer_set(&PIR_timer, SENSOR_PIR_DELAY, notify_ready, NULL);
+
+				 pio_enable_interrupt(PIOB, BUTTON_PIN);
 				sensor_status = SENSOR_STATUS_READY;
 			 } else {
 				 // Disable the sensor
