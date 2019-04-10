@@ -39,6 +39,10 @@ SENSORS(
 		,&GPS_sensor
 #endif
 
+#ifdef NODE_PIR_SR501
+		,&PIR_sensor
+#endif
+
 #ifdef NODE_ROUTER
 
 #endif

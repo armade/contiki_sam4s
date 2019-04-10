@@ -18,24 +18,29 @@ I/O Configuration
 #include "board-peripherals.h"
 
 #define DEBUGGING 1
-#if DEBUGGING
+#if DEBUGGING // This is more or less the default setting
 
-#ifdef NODE_BMP280
-#define SCL            PIO_PB3
-#define SDA            PIO_PB2
-#endif
+	#ifdef NODE_BMP280
+		#define SCL            PIO_PB3
+		#define SDA            PIO_PB2
+	#endif
 
-#ifdef NODE_HTU21D
-//#define SCL            PIO_PB2
-//#define SDA            PIO_PB3
+	#ifdef NODE_HTU21D
+		//#define SCL            PIO_PB2
+		//#define SDA            PIO_PB3
 
-#define SCL            PIO_PA6
-#define SDA            PIO_PA8
-#endif
+		#define SCL            PIO_PA6
+		#define SDA            PIO_PA8
+	#endif
+
+	#ifndef SCL
+		#define SCL            PIO_PA6
+		#define SDA            PIO_PA8
+	#endif
 
 #else
-#define SCL            PIO_PB7
-#define SDA            PIO_PB6
+	#define SCL            PIO_PB7
+	#define SDA            PIO_PB6
 #endif
 
 

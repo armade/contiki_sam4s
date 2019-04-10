@@ -480,13 +480,18 @@ url_unescape(const char *src, size_t srclen, char *dst, size_t dstlen)
  */
 void dtoa(char *s, double n, int max)
 {
-	int high = n;
-	double low_dp = n-high;
-	int low = 0;
+	int high;
+	double low_dp;
 	char tmp;
-	int index;
+	int index = 0;
 
-	index = sprintf(s,"%d",high);
+	if(n<0){
+		n=-n;
+		s[index++]='-';
+	}
+	high = n;
+	low_dp = n-high;
+	index += sprintf(s+index,"%d",high);
 	s[index++]='.';
 	do{
 		low_dp *=10;
@@ -1329,7 +1334,7 @@ PT_THREAD(generate_hwcontrol_config(struct httpd_state *s))
   //====================================================================================
 
     double PSU_voltage = Get_PSU_voltage_V();
-    char PSU_str[5];
+    static char PSU_str[10];
 
     dtoa(PSU_str,PSU_voltage,5);
 
@@ -1360,20 +1365,24 @@ PT_THREAD(generate_hwcontrol_config(struct httpd_state *s))
                                                 "name=\"PSU_voltage\">%s",
                                           config_div_close));
 
-     PT_WAIT_THREAD(&s->generate_pt,
-                             enqueue_chunk(s, 0,"<p>"));
-         PT_WAIT_THREAD(&s->generate_pt,
-                        enqueue_chunk(s, 0,
-                                      "<input type=\"submit\" value=\"Submit\">"));
-         PT_WAIT_THREAD(&s->generate_pt,
-                             enqueue_chunk(s, 0,"</p>"));
+	/////////////////////////////////////////////////////
+	PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<br>"));
 
-         PT_WAIT_THREAD(&s->generate_pt,
-                                 enqueue_chunk(s, 0, "</form>"));
-     PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "</fieldset>"));
-  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 1, http_bottom));
+	double value = Get_DUT_current_consumtion_A();
+	dtoa(PSU_str,value,10);
+	PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "%sCurrent:%s %s%s [A]%s",config_div_left,config_div_close, config_div_right,PSU_str,config_div_close));
+	/////////////////////////////////////////////////////
 
-  PT_END(&s->generate_pt);
+	PT_WAIT_THREAD(&s->generate_pt,enqueue_chunk(s, 0,"<p>"));
+	PT_WAIT_THREAD(&s->generate_pt,enqueue_chunk(s, 0,"<input type=\"submit\" value=\"Submit\">"));
+	PT_WAIT_THREAD(&s->generate_pt,enqueue_chunk(s, 0,"</p>"));
+	PT_WAIT_THREAD(&s->generate_pt,enqueue_chunk(s, 0, "</form>"));
+
+
+	PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "</fieldset>"));
+	PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 1, http_bottom));
+
+	PT_END(&s->generate_pt);
 }
 /*---------------------------------------------------------------------------*/
 #ifdef NODE_HARD_LIGHT
@@ -1569,7 +1578,6 @@ PT_THREAD(generate_maps_config(struct httpd_state *s))
                                      http_config_css2));
   PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<fieldset>"));
   /////////////////////////////////////////////////////
-  float value;
   double value_dp;
   int ret;
   //static int low_lat, high_lat;

@@ -1193,13 +1193,13 @@ void Set_PSU_voltage_V(double voltage_V)
 }
 
 // Reading AIN2 on IC09
-float Get_DUT_current_consumtion_A(void)
+double Get_DUT_current_consumtion_A(void)
 {
-	float ret;
+	volatile double ret;
 	ret =  i_gen20mA_read(1);
 	ret *= hwio_cal_userpage_internal.multiio_cal.DUT_ana_mul;
 	ret += hwio_cal_userpage_internal.multiio_cal.DUT_ana_zero;
-	return ret;
+	return -ret;
 }
 ////////////////////////////////////////////////////////////////////////
 

@@ -357,25 +357,26 @@ uint8_t ethernet_phy_auto_negotiate3(Gmac *p_gmac, uint8_t uc_phy_addr)
 	/* Get the auto negotiate link partner base page */
 	uc_rc = gmac_phy_read(p_gmac, uc_phy_addr, MII_ANLPAR, &ul_phy_analpar);
 	if (uc_rc != GMAC_OK) {
+		printf("%s - failed\n",__func__);
 		return uc_rc;
 	}
 
 
 	/* Set up the GMAC link speed */
 	if ((ul_phy_anar & ul_phy_analpar) & MII_100TX_FDX) {
-		printf(" Set MII for 100BaseTX and Full Duplex");
+		printf(" Set MII for 100BaseTX and Full Duplex\n");
 		uc_speed = true;
 		uc_fd = true;
 	} else if ((ul_phy_anar & ul_phy_analpar) & MII_10_FDX) {
-		printf(" Set MII for 10BaseT and Full Duplex ");
+		printf(" Set MII for 10BaseT and Full Duplex\n");
 		uc_speed = false;
 		uc_fd = true;
 	} else if ((ul_phy_anar & ul_phy_analpar) & MII_100TX_HDX) {
-		printf(" Set MII for 100BaseTX and half Duplex ");
+		printf(" Set MII for 100BaseTX and half Duplex\n");
 		uc_speed = true;
 		uc_fd = false;
 	} else if ((ul_phy_anar & ul_phy_analpar) & MII_10_HDX) {
-		printf(" Set MII for 10BaseT and half Duplex ");
+		printf(" Set MII for 10BaseT and half Duplex\n");
 		uc_speed = false;
 		uc_fd = false;
 	}

@@ -102,7 +102,7 @@ int Get_analog_voltage(void);
 int Get_current_in_voltage_generator(void);
 int Set_digital_current(int current);
 int Route_io_to_digital_current_measure(int io, int calib);
-float Get_DUT_current_consumtion_A(void);
+double Get_DUT_current_consumtion_A(void);
 int Route_io_to_fast_in(int io, int calib);
 
 int Selfcalibration_measure_isence(void);

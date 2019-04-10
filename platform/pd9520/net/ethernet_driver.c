@@ -32,7 +32,7 @@ void GMAC_Handler(void)
 	gmac_handler(&gs_gmac_dev, GMAC_QUE_0);
 }
 
-uint8_t gs_uc_mac_address[8];
+uint8_t gs_uc_mac_address[6];
 static struct ctimer rx_poll_timer; // if buffer is full we don't get interrupt
 
 static void
@@ -122,7 +122,7 @@ PROCESS_THREAD(ksz8863_process, ev, data)
   	if(ethernet_phy_auto_negotiate2(GMAC, 1) != GMAC_OK){
   		PROCESS_YIELD();
   	}
-  	ethernet_phy_auto_negotiate3(GMAC, 1);
+  	//ethernet_phy_auto_negotiate3(GMAC, 1);
    /*Establish ethernet link */
   	ul_frm_size = ethernet_phy_set_link(GMAC, 1, 1);
   	if(ul_frm_size != GMAC_OK) {
@@ -154,7 +154,7 @@ static int
 output(uint8_t *packet, uint16_t len)
 {
 	if(link_status){
-		gmac_dev_write(&gs_gmac_dev, GMAC_QUE_0, packet, len, NULL);
+		gmac_dev_write(&gs_gmac_dev, GMAC_QUE_0, packet, len+1, NULL);
 		return len;
 	}
 	else

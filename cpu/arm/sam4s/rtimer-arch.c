@@ -29,32 +29,10 @@ void RTT_Handler(void)
 	ENERGEST_OFF(ENERGEST_TYPE_IRQ);
 }
 
-/*void TC1_Handler(void)
-{
-	TC0->TC_CHANNEL[1].TC_IDR=1<<2; //CPAS
-	TC0->TC_CHANNEL[1].TC_SR;
-	status=0;
-	ENERGEST_ON(ENERGEST_TYPE_IRQ);
-	rtimer_run_next();
-	ENERGEST_OFF(ENERGEST_TYPE_IRQ);
-}*/
 
 void
 rtimer_arch_init(void)
 {
-	/*pmc_enable_periph_clk(ID_TC1);
-	TC0->TC_CHANNEL[1].TC_CMR= 4 | (0<<13) | (1<<15); //2=slow clock   0<<13=up
-	TC0->TC_CHANNEL[1].TC_RC=0xffff;
-
-
-	NVIC_ClearPendingIRQ(TC1_IRQn);
-	NVIC_SetPriority((IRQn_Type) ID_TC1, 0);
-	NVIC_EnableIRQ(TC1_IRQn);
-
-	TC0->TC_CHANNEL[1].TC_CCR=1;
-	TC0->TC_CHANNEL[1].TC_CCR=4;*/
-
-	//============================================//
 	rtt_sel_source(RTT, 0);
 	rtt_init(RTT, 4);
 
@@ -69,13 +47,13 @@ rtimer_arch_init(void)
 void
 rtimer_arch_set(rtimer_clock_t t)
 {
-	offset = t - RTT->RTT_VR;//offset = t - rtimer_arch_now();
+	offset = t - RTT->RTT_VR;
 }
 
 rtimer_clock_t
 rtimer_arch_now(void)
 {
-	return RTT->RTT_VR + offset;//return TC0->TC_CHANNEL[1].TC_CV;//TC0->TC_CHANNEL[1].TC_CV;
+	return RTT->RTT_VR + offset;
 }
 
 void
@@ -90,16 +68,13 @@ rtimer_arch_schedule(rtimer_clock_t t)
 	}
 
 	rtt_write_alarm_time(RTT, expiry);
-	//TC0->TC_CHANNEL[1].TC_RA=expiry;
-	//TC0->TC_CHANNEL[1].TC_IER=1<<2; //CPAS
 	status=1;
 }
 
 void
-rtimer_adjust_ticks(rtimer_clock_t howlong)
+rtimer_adjust_ticks(clock_time_t howlong)
 {
 	// Adjust other timer ticks
-	//uint32_t longhowlong = (howlong*CLOCK_CONF_SECOND)/RTIMER_ARCH_SECOND;
 	clock_adjust_ticks(howlong);
 	rtimer_run_next();
 }
@@ -122,6 +97,12 @@ void enable_brownout_reset(void)
 	SUPC->SUPC_MR = SUPC_MR_KEY_PASSWD | ul_mr | SUPC_MR_BODRSTEN;
 }
 
+
+// Hotfix: If the binary sensor should be able to wake up the device
+// 			we don't know how long we have been sleep. This is an
+//			experiment to compensate for this.
+static volatile rtimer_clock_t sleep_start, sleep_dif;
+
 void
 rtimer_arch_sleep(rtimer_clock_t howlong)
 {
@@ -143,7 +124,9 @@ rtimer_arch_sleep(rtimer_clock_t howlong)
     	ADC->ADC_ACR &= ~ADC_ACR_TSON;
     	enable_TSON = 1;
     }
+    sleep_start = rtimer_arch_now();
     sleepmgr_sleep(SLEEPMGR_WAIT);
+    sleep_dif = rtimer_arch_now() - sleep_start;
     enable_brownout_reset();
     if(enable_TSON)
     	ADC->ADC_ACR |= ADC_ACR_TSON;
@@ -153,7 +136,9 @@ rtimer_arch_sleep(rtimer_clock_t howlong)
 	/* Step 5: Once woke, wake Transceiver up */
 	//wake_from_sleep(); // TRX Wakeup
 	/* Step 6: Adjust the timer ticks - both rtimer and etimer */
-	rtimer_adjust_ticks(sleep_count/RTIMER_ARCH_SECOND);
+    // divide by rtimer to get rticks => time and time * CLOCK_CONF_SEC => clock ticks
+    //rtimer_adjust_ticks(sleep_count/RTIMER_ARCH_SECOND);
+	rtimer_adjust_ticks((sleep_dif *CLOCK_CONF_SECOND)/RTIMER_ARCH_SECOND);
     return;
 }
 

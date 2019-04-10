@@ -578,13 +578,13 @@ static int construct_sub_topic(void)
 {
 	// Common commands ////////////////////////////////////////////////////////////
 	snprintf(MQTT_COMMON_NO_SLEEP_sub_cmd.topic,
-				sizeof(MQTT_COMMON_NO_SLEEP_sub_cmd.topic), "Hass/%s/%s/set",
+				sizeof(MQTT_COMMON_NO_SLEEP_sub_cmd.topic), "Hass/power/%s/%s/set",
 				client_id, "Sleep");
 	MQTT_COMMON_NO_SLEEP_sub_cmd.data_handler = pub_sleep_handler;
 	list_add(MQTT_subscribe_list, &MQTT_COMMON_NO_SLEEP_sub_cmd);
 
 	snprintf(MQTT_COMMON_RESET_sub_cmd.topic,
-				sizeof(MQTT_COMMON_RESET_sub_cmd.topic), "Hass/%s/%s/set",
+				sizeof(MQTT_COMMON_RESET_sub_cmd.topic), "Hass/power/%s/%s/set",
 				client_id, "Reset");
 	MQTT_COMMON_RESET_sub_cmd.data_handler = pub_reset_handler;
 	list_add(MQTT_subscribe_list, &MQTT_COMMON_RESET_sub_cmd);
@@ -595,10 +595,10 @@ static int construct_sub_topic(void)
 	{
 		if(reading->component_topic_sub == NULL)
 			continue;
-
+					//ex: "Hass/light/%s/%s/set"
 		snprintf(reading->MQTT_subscr_ele.topic,sizeof(reading->MQTT_subscr_ele.topic),
 									reading->component_topic_sub,
-									client_id, conf->Username, reading->descr);
+									client_id, reading->descr);
 
 		list_add(MQTT_subscribe_list, &reading->MQTT_subscr_ele);
 

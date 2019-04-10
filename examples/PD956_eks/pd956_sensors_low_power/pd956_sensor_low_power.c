@@ -160,6 +160,9 @@ DEMO_SENSOR2(NODE_4_ch_relay3_reading,			"relay3",		UNIT_NONE,		PD956_WEB_DEMO_S
 DEMO_SENSOR2(NODE_4_ch_relay4_reading,			"relay4",		UNIT_NONE,		PD956_WEB_DEMO_SENSOR_RELAY4,			switch_class,		switch_config_topic,switch_sub_topic,pub_relay4_handler,None);
 #endif
 
+#ifdef NODE_PIR_SR501
+DEMO_SENSOR2(PIR_motion_reading,						"PIR sensor",	UNIT_NONE,		PD956_WEB_DEMO_SENSOR_PIR,				binary_sensor_class,		binary_sensor_config_topic,NULL,NULL,motion);
+#endif
 
 /*---------------------------------------------------------------------------*/
 static void save_config()
@@ -799,6 +802,33 @@ static void get_relay_reading()
 	SENSORS_DEACTIVATE(ch4_relay_PD956);
 }
 #endif
+
+#ifdef NODE_PIR_SR501
+
+static void get_PIR_SR501_reading()
+{
+	int value;
+	char *buf;
+
+
+	if(PIR_motion_reading.publish){
+
+		value = PIR_sensor.value(STATUS_STATE);
+		buf = PIR_motion_reading.converted;
+		if(value != SENSOR_ERROR){
+			PIR_motion_reading.raw = value;
+
+			memset(buf, 0, SENSOR_CONVERTED_LEN);
+			if(value)
+				snprintf(buf, SENSOR_CONVERTED_LEN, "ON");
+			else
+				snprintf(buf, SENSOR_CONVERTED_LEN, "OFF");
+		} else{
+			INSERT_NA(buf);
+		}
+	}
+}
+#endif
 /*---------------------------------------------------------------------------*/
 
 /*---------------------------------------------------------------------------*/
@@ -806,6 +836,11 @@ static void init_sensors(void)
 {
 	list_add(MQTT_sensor_list, &temp_reading);
 	INSERT_NA(temp_reading.converted);
+
+#ifdef NODE_PIR_SR501
+	list_add(MQTT_sensor_list, &PIR_motion_reading);
+	INSERT_NA(PIR_motion_reading.converted);
+#endif
 
 #ifdef NODE_STEP_MOTOR
 	list_add(MQTT_sensor_list, &step_motor_reading);
@@ -1018,6 +1053,12 @@ PROCESS_THREAD(PD956_MAIN_process, ev, data)
 		} else if(ev == sensors_event && data == &soft_RGB_ctrl_sensor){
 			get_RGB_soft_reading();
 			sensor_busy &= ~(1ul<<PD956_WEB_DEMO_SENSOR_RGB);
+#endif
+
+#ifdef NODE_PIR_SR501
+		} else if(ev == sensors_event && data == &PIR_sensor){
+			get_PIR_SR501_reading();
+			sensor_busy &= ~(1ul<<PD956_WEB_DEMO_SENSOR_PIR);
 #endif
 
 		}

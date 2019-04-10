@@ -16,8 +16,8 @@
 #define PRINTF(...)
 #endif
 
-#define RGB_R_GPIO            (PIO_PA8)
-#define RGB_G_GPIO            (PIO_PA6)
+#define RGB_R_GPIO            (PIO_PA6)
+#define RGB_G_GPIO            (PIO_PA8)
 #define RGB_B_GPIO            (PIO_PA9)
 Pio *RGB_base = (Pio *)PIOA;
 

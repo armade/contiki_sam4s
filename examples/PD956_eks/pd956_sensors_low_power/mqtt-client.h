@@ -158,10 +158,10 @@ static const char cover_config_topic[] = "Hass/cover/%s%02x%02x%02x%02x%02x%02x/
 static const char sensor_config_topic[] = "Hass/sensor/%s%02x%02x%02x%02x%02x%02x/config";
 //----------------------------------------------------------------------------------------------------------
 static const char switch_config_topic[] = "Hass/switch/%s%02x%02x%02x%02x%02x%02x/config";
-static const char switch_sub_topic[] = "Hass/switch/%s/%s/%s/set";
+static const char switch_sub_topic[] = "Hass/switch/%s/%s/set";
 //----------------------------------------------------------------------------------------------------------
 static const char light_config_topic[] = "Hass/light/%s%02x%02x%02x%02x%02x%02x/config";
-static const char light_sub_topic[] = "Hass/light/%s/%s/%s/set";
+static const char light_sub_topic[] = "Hass/light/%s/%s/set";
 //----------------------------------------------------------------------------------------------------------
 static const char binary_sensor_config_topic[] = "Hass/binary_sensor/%s%02x%02x%02x%02x%02x%02x/config";
 //----------------------------------------------------------------------------------------------------------

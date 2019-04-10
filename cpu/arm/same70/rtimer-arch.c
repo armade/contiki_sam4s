@@ -110,6 +110,10 @@ void enable_brownout_reset(void)
 	SUPC->SUPC_MR = SUPC_MR_KEY_PASSWD | ul_mr | SUPC_MR_BODRSTEN;
 }
 
+
+static volatile rtimer_clock_t sleep_start, sleep_dif;
+
+
 void
 rtimer_arch_sleep(rtimer_clock_t howlong)
 {
@@ -127,8 +131,9 @@ rtimer_arch_sleep(rtimer_clock_t howlong)
     ENERGEST_OFF(ENERGEST_TYPE_CPU);
     ENERGEST_ON(ENERGEST_TYPE_LPM);
     disable_brownout_detector();
-
+    sleep_start = rtimer_arch_now();
     sleepmgr_sleep(SLEEPMGR_WAIT);
+    sleep_dif = rtimer_arch_now() - sleep_start;
     enable_brownout_reset();
 
     ENERGEST_OFF(ENERGEST_TYPE_LPM);
