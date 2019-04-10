@@ -185,7 +185,7 @@ static void save_config()
 		for (reading = list_head(MQTT_sensor_list); reading != NULL ; reading =
 				list_item_next(reading)){
 			if(reading->publish){
-				web_demo_config.sensors_bitmap |= (1 << reading->type);
+				web_demo_config.sensors_bitmap |= (1ULL << reading->type);
 			}
 		}
 		ret = flash_write_df(CONFIG_FLASH_OFFSET, (uint8_t *) &web_demo_config,
@@ -223,7 +223,7 @@ static uint8_t load_config()
 
 		for (reading = list_head(MQTT_sensor_list); reading != NULL ; reading =
 				list_item_next(reading)){
-			if(web_demo_config.sensors_bitmap & (1 << reading->type)){
+			if(web_demo_config.sensors_bitmap & (1ULL << reading->type)){
 				reading->publish = 1;
 			} else{
 				reading->publish = 0;
@@ -231,7 +231,7 @@ static uint8_t load_config()
 			}
 		}
 	} else{
-		// If Bad config show all off.
+		// If Bad config show all on.
 		for (reading = list_head(MQTT_sensor_list); reading != NULL ; reading =	list_item_next(reading)){
 				reading->publish = 0;
 				INSERT_NA(reading->converted);
@@ -813,16 +813,16 @@ static void get_PIR_SR501_reading()
 
 	if(PIR_motion_reading.publish){
 
-		value = PIR_sensor.value(STATUS_STATE);
+		value = PIR_SR501_sensor.value(STATUS_STATE);
 		buf = PIR_motion_reading.converted;
 		if(value != SENSOR_ERROR){
 			PIR_motion_reading.raw = value;
 
 			memset(buf, 0, SENSOR_CONVERTED_LEN);
 			if(value)
-				snprintf(buf, SENSOR_CONVERTED_LEN, "ON");
+				INSERT_TXT(buf,"\"ON\"");
 			else
-				snprintf(buf, SENSOR_CONVERTED_LEN, "OFF");
+				INSERT_TXT(buf,"\"OFF\"");
 		} else{
 			INSERT_NA(buf);
 		}
@@ -965,7 +965,7 @@ PROCESS_THREAD(PD956_MAIN_process, ev, data)
 	 * own defaults and restore saved config from flash...
 	 */
 	web_demo_config.sensors_bitmap = 0xFFFFFFFF; /* all on by default */
-	web_demo_config.def_rt_ping_interval = DEFAULT_RSSI_MEAS_INTERVAL;
+	//web_demo_config.def_rt_ping_interval = DEFAULT_RSSI_MEAS_INTERVAL;
 	ret = load_config();
 
 	if(!ret)
@@ -1056,7 +1056,7 @@ PROCESS_THREAD(PD956_MAIN_process, ev, data)
 #endif
 
 #ifdef NODE_PIR_SR501
-		} else if(ev == sensors_event && data == &PIR_sensor){
+		} else if(ev == sensors_event && data == &PIR_SR501_sensor){
 			get_PIR_SR501_reading();
 			sensor_busy &= ~(1ul<<PD956_WEB_DEMO_SENSOR_PIR);
 #endif

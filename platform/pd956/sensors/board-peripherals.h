@@ -15,7 +15,7 @@
 #include "bmp-280-sensor.h"
 #include "htu21d-sensor.h"
 #include "GPS-sensor.h"
-#include "PIR-sensor.h"
+#include "PIR_SR501_sensor.h"
 
 //#define NODE_4_ch_relay
 //#define NODE_LIGHT

@@ -40,7 +40,7 @@ SENSORS(
 #endif
 
 #ifdef NODE_PIR_SR501
-		,&PIR_sensor
+		,&PIR_SR501_sensor
 #endif
 
 #ifdef NODE_ROUTER

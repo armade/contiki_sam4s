@@ -34,7 +34,7 @@
 #include <string.h>
 #include "contiki.h"
 #include "lib/sensors.h"
-#include "button-sensor.h"
+#include "PIR_SR501_sensor.h"
 #include "sys/timer.h"
 #include "gpio.h"
 #include "pio_handler.h"
@@ -53,19 +53,19 @@ static void
 notify_ready(void *not_used)
 {
 	sensor_status = SENSOR_STATUS_READY;
-	sensors_changed(&PIR_sensor);
+	sensors_changed(&PIR_SR501_sensor);
 }
 
 /*---------------------------------------------------------------------------*/
 static int
-PIR_sensor_value(int type)
+PIR_SR501_sensor_value(int type)
 {
 	return PIR_READ_PIN(BUTTON_PIN);
 }
 /*---------------------------------------------------------------------------*/
 
 static int
-PIR_sensor_configure(int type, int enable)
+PIR_SR501_sensor_configure(int type, int enable)
 {
 	switch(type) {
 
@@ -96,7 +96,7 @@ PIR_sensor_configure(int type, int enable)
 
 /*---------------------------------------------------------------------------*/
 static int
-PIR_sensor_status(int type)
+PIR_SR501_sensor_status(int type)
 {
 	if(type == STATUS_STATE)
 		return sensor_status;
@@ -105,5 +105,5 @@ PIR_sensor_status(int type)
 	return SENSOR_ERROR;
 }
 /*---------------------------------------------------------------------------*/
-SENSORS_SENSOR(PIR_sensor, "PIR sensor",PIR_sensor_value, PIR_sensor_configure, PIR_sensor_status);
+SENSORS_SENSOR(PIR_SR501_sensor, "PIR SR501 sensor",PIR_SR501_sensor_value, PIR_SR501_sensor_configure, PIR_SR501_sensor_status);
 /*---------------------------------------------------------------------------*/
