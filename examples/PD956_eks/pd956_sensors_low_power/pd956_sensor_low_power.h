@@ -185,9 +185,7 @@ typedef struct web_config_s {
   uint32_t magic;
   int len;
   char sensor_name_str[20];
-  char r;
   uint32_t sensors_bitmap;
-  int def_rt_ping_interval;
   mqtt_client_config_t mqtt_config;
  //
 } Device_config_t;

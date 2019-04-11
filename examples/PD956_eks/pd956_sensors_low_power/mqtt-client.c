@@ -176,6 +176,14 @@ void pub_reset_handler(uint8_t *payload, uint16_t len)
 	}
 }
 
+void Name_change(uint8_t *payload, uint16_t len)
+{
+	if(MQTT_CLIENT_CONFIG_EVENT_TYPE_ID_LEN > len){
+		memcpy(conf->Username, payload, len);
+		process_post(PROCESS_BROADCAST, httpd_simple_event_new_config, NULL);
+	}
+}
+
 void pub_relay1_handler(uint8_t *payload, uint16_t len)
 {
 	len -= 2;
@@ -589,6 +597,13 @@ static int construct_sub_topic(void)
 	MQTT_COMMON_RESET_sub_cmd.data_handler = pub_reset_handler;
 	list_add(MQTT_subscribe_list, &MQTT_COMMON_RESET_sub_cmd);
 
+	snprintf(MQTT_COMMON_RESET_sub_cmd.topic,
+				sizeof(MQTT_COMMON_RESET_sub_cmd.topic), "Hass/power/%s/%s/set",
+				client_id, "Name");
+	MQTT_COMMON_RESET_sub_cmd.data_handler = Name_change;
+	list_add(MQTT_subscribe_list, &MQTT_COMMON_RESET_sub_cmd);
+
+
 	//////////////////////////////////////////////////////////////////////////////
 
 	for (reading = MQTT_sensor_first(); reading != NULL; reading = reading->next)
@@ -639,7 +654,7 @@ static int construct_client_id(void)
 			linkaddr_node_addr.u8[2], linkaddr_node_addr.u8[5],
 			linkaddr_node_addr.u8[6], linkaddr_node_addr.u8[7]); //TODO: use PD snr instead as id
 	*/
-	memcpy(client_id,device_certificate.crt.snr,device_certificate.crt.snlen);
+	memcpy(client_id,(void *)device_certificate.crt.snr,device_certificate.crt.snlen);
 	len = device_certificate.crt.snlen;
 	/* len < 0: Error. Len >= BUFFER_SIZE: Buffer too small */
 	if (len < 0 || len >= BUFFER_SIZE)

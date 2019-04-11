@@ -198,6 +198,16 @@ static void save_config(void)
 	flash_enter_deep_sleep();
 
 }
+
+int New_functionality(char *a,char *b, int size)
+{
+	while(!*a++-*b++)
+	{
+		if(--size)
+			return 0;
+	}
+	return 1;
+}
 /*---------------------------------------------------------------------------*/
 static uint8_t load_config(void)
 {
@@ -235,23 +245,23 @@ static uint8_t load_config(void)
 		for (reading = list_head(MQTT_sensor_list); reading != NULL ; reading =	list_item_next(reading)){
 				reading->publish = 1;
 				INSERT_NA(reading->converted);
-				web_demo_config.sensors_bitmap |= (1ULL << reading->type);
 		}
 		printf("Error bad header in config\n");
 		flash_enter_deep_sleep();
-		save_config();
-		return 0;
+		return 1;
 	}
 
 	flash_enter_deep_sleep();
 
-	if(!memcmp(tmp_cfg.sensor_name_str,(char *)SENSOR_STRING,sizeof(SENSOR_STRING)))
+	// If device change node functionality just set all on.
+	if(New_functionality(tmp_cfg.sensor_name_str,SENSOR_STRING,sizeof(SENSOR_STRING)))
 	{
-		web_demo_config.sensors_bitmap = 0;
+		INSERT_TXT(tmp_cfg.sensor_name_str,SENSOR_STRING);
 		for (reading = list_head(MQTT_sensor_list); reading != NULL ; reading =
 						list_item_next(reading)){
-				web_demo_config.sensors_bitmap |= (1ULL << reading->type);
+			reading->publish = 1;
 		}
+		save_config();
 	}
 	return 0;
 

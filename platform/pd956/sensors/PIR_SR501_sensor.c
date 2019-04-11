@@ -71,15 +71,15 @@ PIR_detection_callback(uint32_t a, uint32_t b)
 
 	// Change interrupt condition so we get interrupt on both falling and rising edge.
 	// We have 300ms bounce time so this should be safe
-	if ((IRQ_type == falling_egde) && (PIR_READ_PIN(BUTTON_PIN)==0)) {
+	if((IRQ_type == falling_egde) && (PIR_READ_PIN(BUTTON_PIN) == 0)){
 		// Rising Edge
 		PIR_base->PIO_REHLSR = BUTTON_PIN;
-		falling_timestamp = (clock_time()*1000)/CLOCK_SECOND; //ms
+		falling_timestamp = (clock_time() * 1000) / CLOCK_SECOND; //ms
 		IRQ_type = rising_egde;
-	} else if((IRQ_type == rising_egde) && (PIR_READ_PIN(BUTTON_PIN)==1)){
+	} else if((IRQ_type == rising_egde) && (PIR_READ_PIN(BUTTON_PIN) == 1)){
 		// Falling Edge
 		PIR_base->PIO_FELLSR = BUTTON_PIN;
-		rising_timestamp = (clock_time()*1000)/CLOCK_SECOND; //ms
+		rising_timestamp = (clock_time() * 1000) / CLOCK_SECOND; //ms
 		IRQ_type = falling_egde;
 	}
 }
@@ -95,14 +95,15 @@ PIR_SR501_sensor_value(int type)
 static int
 PIR_SR501_sensor_configure(int type, int enable)
 {
-	switch(type) {
+	switch(type)
+	{
 
 		case SENSORS_HW_INIT:
-			pio_set_input(PIOB,BUTTON_PIN,PIO_PULLUP);
+			pio_set_input(PIOB, BUTTON_PIN, PIO_PULLUP);
 
 			pio_handler_set(PIOB, ID_PIOB, BUTTON_PIN, PIO_IT_RISE_EDGE, PIR_detection_callback);
-						IRQ_type = rising_egde;
-						NVIC_EnableIRQ((IRQn_Type)ID_PIOB);
+			IRQ_type = rising_egde;
+			NVIC_EnableIRQ((IRQn_Type) ID_PIOB);
 
 			sensor_status = SENSOR_STATUS_INITIALISED;
 			break;
@@ -111,19 +112,19 @@ PIR_SR501_sensor_configure(int type, int enable)
 			if(sensor_status == SENSOR_STATUS_DISABLED)
 				return SENSOR_STATUS_DISABLED;
 
-			 if(enable) {
+			if(enable){
 				// Enable the sensor
-				 //SUPC->SUPC_WUIR = SUPC_WUIR_WKUPEN12_ENABLE | SUPC_WUIR_WKUPT12_HIGH;
-				 //ctimer_set(&PIR_timer, SENSOR_PIR_DELAY, notify_ready, NULL);
+				//SUPC->SUPC_WUIR = SUPC_WUIR_WKUPEN12_ENABLE | SUPC_WUIR_WKUPT12_HIGH;
+				//ctimer_set(&PIR_timer, SENSOR_PIR_DELAY, notify_ready, NULL);
 
-				 pio_enable_interrupt(PIOB, BUTTON_PIN);
+				pio_enable_interrupt(PIOB, BUTTON_PIN);
 				sensor_status = SENSOR_STATUS_READY;
-			 } else {
-				 // Disable the sensor
-				 SUPC->SUPC_WUIR = SUPC_WUIR_WKUPEN12_DISABLE;
-				 sensor_status = SENSOR_STATUS_INITIALISED;
-			 }
-			 break;
+			} else{
+				// Disable the sensor
+				SUPC->SUPC_WUIR = SUPC_WUIR_WKUPEN12_DISABLE;
+				sensor_status = SENSOR_STATUS_INITIALISED;
+			}
+			break;
 	}
 
 	return sensor_status;
@@ -135,7 +136,6 @@ PIR_SR501_sensor_status(int type)
 {
 	if(type == STATUS_STATE)
 		return sensor_status;
-
 
 	return SENSOR_ERROR;
 }
