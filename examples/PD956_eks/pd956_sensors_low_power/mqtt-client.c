@@ -1034,10 +1034,7 @@ PROCESS_THREAD(mqtt_client_process, ev, data)
 			}else
 			{
 				if(NETSTACK_RADIO.sleep() !=-1){
-					if(PIOB->PIO_PDSR & PIO_PB2)
-						PIOB->PIO_CODR = PIO_PB2;
-					else
-						PIOB->PIO_SODR = PIO_PB2;
+
 					rtimer_arch_sleep(conf->pub_interval/CLOCK_SECOND * RTIMER_ARCH_SECOND); // 54uA in wait mode (cpu + extern flash) + sensor
 					// if sleeptime is 60 sec, and we are awake 100ms we can live on a battery with 2700mAh for
 					// 60/60.1*54uA+0.1/60.1*22mA = 90.5uA avg  2700mA/90.5uA = 29829hr ~ 3.4 years

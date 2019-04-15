@@ -252,6 +252,8 @@ static uint8_t load_config(void)
 		}
 		printf("Error bad header in config\n");
 		flash_enter_deep_sleep();
+
+		save_config();
 		return 1;
 	}
 
