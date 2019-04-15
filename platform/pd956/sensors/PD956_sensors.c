@@ -27,6 +27,10 @@ SENSORS(
 		,&ch4_relay_PD956
 #endif
 
+#ifdef NODE_1_ch_relay
+		,&ch1_relay_PD956
+#endif
+
 #ifdef NODE_BMP280
 		,&bmp_280_sensor
 #endif

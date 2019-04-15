@@ -12,12 +12,14 @@
 #include "dht11.h"
 #include "step_motor.h"
 #include "4ch_relay.h"
+#include "1ch_relay.h"
 #include "bmp-280-sensor.h"
 #include "htu21d-sensor.h"
 #include "GPS-sensor.h"
 #include "PIR_SR501_sensor.h"
 
 //#define NODE_4_ch_relay
+//#define NODE_1_ch_relay
 //#define NODE_LIGHT
 //#define NODE_HARD_LIGHT
 //#define NODE_STEP_MOTOR
@@ -49,6 +51,10 @@
 
 #ifdef NODE_4_ch_relay
 #define SENSOR_STRING 		"4ch relay"
+#endif
+
+#ifdef NODE_1_ch_relay
+#define SENSOR_STRING 		"1ch relay"
 #endif
 
 #ifdef NODE_BMP280

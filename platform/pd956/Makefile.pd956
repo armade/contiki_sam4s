@@ -16,6 +16,7 @@ PLATFORM_SENSOR_DRIVER = 	ADC_temp.c \
 							dht11.c \
 							step_motor.c \
 							4ch_relay.c \
+							1ch_relay.c \
 							bmp-280-sensor.c \
 							Hard_rgb.c \
 							htu21d-sensor.c \

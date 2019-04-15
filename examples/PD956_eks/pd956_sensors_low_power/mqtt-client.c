@@ -114,7 +114,7 @@ static MQTT_sensor_reading_t *reading;
 /*---------------------------------------------------------------------------*/
 mqtt_client_config_t *conf;
 static process_event_t MQTT_publish_sensor_data_done_event;
-#if defined(NODE_GPS) || defined(NODE_4_ch_relay) || defined(NODE_HARD_LIGHT) || defined(NODE_LIGHT) || defined(NODE_STEP_MOTOR) || defined(NODE_PIR_SR501)
+#if defined(NODE_GPS) || defined(NODE_4_ch_relay) || defined(NODE_1_ch_relay) || defined(NODE_HARD_LIGHT) || defined(NODE_LIGHT) || defined(NODE_STEP_MOTOR)
 #define no_sleep_allowed 1
 #else
 static volatile uint8_t no_sleep_allowed = 0;
@@ -148,7 +148,7 @@ void new_net_config(void)
 
 void pub_sleep_handler(uint8_t *payload, uint16_t len)
 {
-#if defined(NODE_GPS) || defined(NODE_4_ch_relay) || defined(NODE_HARD_LIGHT) || defined(NODE_LIGHT) || defined(NODE_STEP_MOTOR) || defined(NODE_PIR_SR501)
+#if defined(NODE_GPS) || defined(NODE_4_ch_relay) || defined(NODE_1_ch_relay) || defined(NODE_HARD_LIGHT) || defined(NODE_LIGHT) || defined(NODE_STEP_MOTOR)
 	// these nodes can't sleep so i decide to ignore this command
 #else
 	if(!memcmp(payload,"wake",4))

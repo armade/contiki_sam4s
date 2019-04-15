@@ -1,6 +1,7 @@
 DEFINES+=PROJECT_CONF_H=\"project-conf.h\"
 CFLAGS += -D NODE_PIR_SR501=1  -DLOW_CLOCK=1
 #define NODE_4_ch_relay
+#define NODE_1_ch_relay
 #define NODE_LIGHT
 #define NODE_HARD_LIGHT
 #define NODE_STEP_MOTOR

@@ -160,6 +160,10 @@ DEMO_SENSOR2(NODE_4_ch_relay3_reading,			"relay3",		UNIT_NONE,		PD956_WEB_DEMO_S
 DEMO_SENSOR2(NODE_4_ch_relay4_reading,			"relay4",		UNIT_NONE,		PD956_WEB_DEMO_SENSOR_RELAY4,			switch_class,		switch_config_topic,switch_sub_topic,pub_relay4_handler,None);
 #endif
 
+#ifdef NODE_1_ch_relay
+DEMO_SENSOR2(NODE_1_ch_relay1_reading,			"relay1",		UNIT_NONE,		PD956_WEB_DEMO_SENSOR_RELAY1,			switch_class,		switch_config_topic,switch_sub_topic,pub_relay1_handler,None);
+#endif
+
 #ifdef NODE_PIR_SR501
 DEMO_SENSOR2(PIR_motion_reading,						"PIR_sensor",	UNIT_NONE,		PD956_WEB_DEMO_SENSOR_PIR,				binary_sensor_class,		binary_sensor_config_topic,NULL,NULL,motion);
 #endif
@@ -750,6 +754,32 @@ static void get_GPS_reading()
 }
 #endif
 
+#ifdef NODE_1_ch_relay
+static void get_relay_reading()
+{
+	char *buf;
+	int ret;
+
+	if(NODE_1_ch_relay1_reading.publish){
+		ret = ch1_relay_PD956.value(STATUS_CH1);
+		buf = NODE_1_ch_relay1_reading.converted;
+
+		if(ret != SENSOR_ERROR){
+			NODE_1_ch_relay1_reading.raw = ret;
+			memset(buf, 0, SENSOR_CONVERTED_LEN);
+			if(ret)
+				INSERT_TXT(buf,"\"ON\"");
+			else
+				INSERT_TXT(buf,"\"OFF\"");
+		} else{
+			INSERT_NA(buf);
+		}
+	}
+	SENSORS_DEACTIVATE(ch1_relay_PD956);
+}
+
+#endif
+
 #ifdef NODE_4_ch_relay
 static void get_relay_reading()
 {
@@ -938,6 +968,11 @@ static void init_sensors(void)
 	INSERT_NA(NODE_4_ch_relay3_reading.converted);
 	INSERT_NA(NODE_4_ch_relay4_reading.converted);
 #endif
+
+#ifdef NODE_1_ch_relay
+	list_add(MQTT_sensor_list, &NODE_1_ch_relay1_reading);
+	INSERT_NA(NODE_1_ch_relay1_reading.converted);
+#endif
 }
 
 
@@ -1062,6 +1097,12 @@ PROCESS_THREAD(PD956_MAIN_process, ev, data)
 			sensor_busy &= ~(1ul << PD956_WEB_DEMO_SENSOR_RELAY2);
 			sensor_busy &= ~(1ul << PD956_WEB_DEMO_SENSOR_RELAY3);
 			sensor_busy &= ~(1ul << PD956_WEB_DEMO_SENSOR_RELAY4);
+#endif
+
+#ifdef NODE_1_ch_relay
+		} else if(ev == sensors_event && data == &ch1_relay_PD956){
+			get_relay_reading();
+			sensor_busy &= ~(1ul << PD956_WEB_DEMO_SENSOR_RELAY1);
 #endif
 
 #ifdef NODE_HARD_LIGHT

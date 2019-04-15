@@ -333,6 +333,34 @@ Relay_post_handler(char *key, int key_len, char *val, int val_len)
 	return HTTPD_SIMPLE_POST_HANDLER_OK;
 }
 #endif
+
+#ifdef NODE_1_ch_relay
+static int
+Relay_post_handler(char *key, int key_len, char *val, int val_len)
+{
+	int ret = HTTPD_SIMPLE_POST_HANDLER_UNKNOWN;
+	uint8_t tmp;
+	if(key_len != strlen("relayx") ||
+			strncasecmp(key, "relay", strlen("relay")) != 0) {
+		/* Not ours */
+		return HTTPD_SIMPLE_POST_HANDLER_UNKNOWN;
+	}
+
+	ret = atoi(val);
+	tmp = *(key+5)-0x30;
+	if(ret == 0 ){
+		ch1_relay_PD956.value((tmp<<1)+15);
+	}
+	else if(ret == 1){
+		ch1_relay_PD956.value((tmp<<1)+14);
+	}
+	else{
+		return HTTPD_SIMPLE_POST_HANDLER_ERROR;
+	}
+
+	return HTTPD_SIMPLE_POST_HANDLER_OK;
+}
+#endif
 /*---------------------------------------------------------------------------*/
 static int
 org_id_post_handler(char *key, int key_len, char *val, int val_len)
@@ -678,6 +706,9 @@ HTTPD_SIMPLE_POST_HANDLER(Step_motor_position,step_motor_position_post_handler);
 #ifdef NODE_4_ch_relay
 HTTPD_SIMPLE_POST_HANDLER(Relay,Relay_post_handler);
 #endif
+#ifdef NODE_1_ch_relay
+HTTPD_SIMPLE_POST_HANDLER(Relay,Relay_post_handler);
+#endif
 HTTPD_SIMPLE_POST_HANDLER(Company, org_id_post_handler);
 HTTPD_SIMPLE_POST_HANDLER(Modul_type, type_id_post_handler);
 HTTPD_SIMPLE_POST_HANDLER(Username, event_type_id_post_handler);
@@ -710,6 +741,9 @@ register_http_post_handlers(void)
 	httpd_simple_register_post_handler(&Step_motor_position_handler);
 #endif
 #ifdef NODE_4_ch_relay
+	httpd_simple_register_post_handler(&Relay_handler);
+#endif
+#ifdef NODE_1_ch_relay
 	httpd_simple_register_post_handler(&Relay_handler);
 #endif
 	httpd_simple_register_post_handler(&Company_handler);

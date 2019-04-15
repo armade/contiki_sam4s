@@ -7,6 +7,14 @@
 #define LOW_CLOCK 1
 #endif
 
+
+//__________________
+//|     PB3 PB2    |-----
+//|     |---|      |    |
+//|     |---|      |    |
+//|________________|-----
+// PA7 PA6 PA9 PA10
+
 #if LOW_CLOCK
 /* The frequency of the main processor */
 #define F_CPU 30000000 		//2.0mA max + 4mA ADC + 12-14mA radio ~ 18-20mA

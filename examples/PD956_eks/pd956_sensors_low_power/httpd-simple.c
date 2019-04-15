@@ -333,6 +333,17 @@ static page_t http_relay4_cfg_page = {
 };
 #endif
 
+#ifdef NODE_1_ch_relay
+static char generate_relay1_config(struct httpd_state *s);
+
+static page_t http_relay1_cfg_page = {
+  NULL,
+  "relay1.html",
+  "relay1 Config",
+  generate_relay1_config,
+};
+#endif
+
 #ifdef NODE_GPS
 static char generate_maps_config(struct httpd_state *s);
 
@@ -1480,6 +1491,84 @@ PT_THREAD(generate_relay4_config(struct httpd_state *s))
 }
 #endif
 
+#ifdef NODE_1_ch_relay
+static
+PT_THREAD(generate_relay1_config(struct httpd_state *s))
+{
+	static int i = 0;
+  PT_BEGIN(&s->generate_pt);
+
+  /* Generate top matter (doctype, title, nav links etc) */
+  PT_WAIT_THREAD(&s->generate_pt,
+                 generate_top_matter(s, http_relay1_cfg_page.title,
+                                     http_config_css2));
+
+  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<fieldset>"));
+  /* Sensor Settings */
+  PT_WAIT_THREAD(&s->generate_pt,
+                 enqueue_chunk(s, 0, "<h1>Relay</h1>"));
+
+  PT_WAIT_THREAD(&s->generate_pt,
+                      enqueue_chunk(s, 0, "%s%s%s", config_div_right,
+                                    "on|off", config_div_close
+                                    ));
+  PT_WAIT_THREAD(&s->generate_pt,
+                 enqueue_chunk(s, 0,
+                               "<form name=\"input\" action=\"%s\" ",
+                               http_relay1_cfg_page.filename));
+  PT_WAIT_THREAD(&s->generate_pt,
+                 enqueue_chunk(s, 0, "method=\"post\" enctype=\""));
+  PT_WAIT_THREAD(&s->generate_pt,
+                 enqueue_chunk(s, 0, "application/x-www-form-urlencoded\" "));
+  PT_WAIT_THREAD(&s->generate_pt,
+                 enqueue_chunk(s, 0, "accept-charset=\"UTF-8\">"));
+
+  for(i = 0; i<1; i++)
+  {
+     PT_WAIT_THREAD(&s->generate_pt,
+                    enqueue_chunk(s, 0, "%srelay%d:%s%s", config_div_left,
+                                  i+1, config_div_close,
+                                  config_div_right));
+
+     PT_WAIT_THREAD(&s->generate_pt,
+                    enqueue_chunk(s, 0, "<input type=\"radio\" value=\"1\" "));
+     PT_WAIT_THREAD(&s->generate_pt,
+                    enqueue_chunk(s, 0, "title=\"On\" name=\"relay%d\"%s>",
+                                  i,
+								  ch1_relay_PD956.value(i+STATUS_CH1) ? " Checked" : ""));
+     PT_WAIT_THREAD(&s->generate_pt,
+                    enqueue_chunk(s, 0, "<input type=\"radio\" value=\"0\" "));
+     PT_WAIT_THREAD(&s->generate_pt,
+                    enqueue_chunk(s, 0, "title=\"Off\" name=\"relay%d\"%s>%s",
+                                  i,
+								  ch1_relay_PD956.status(i+STATUS_CH1) ? "" : " Checked",
+                                  config_div_close));
+   }
+
+  PT_WAIT_THREAD(&s->generate_pt,
+                     enqueue_chunk(s, 0,"<p>"));
+
+  PT_WAIT_THREAD(&s->generate_pt,
+                 enqueue_chunk(s, 0,
+                               "<input type=\"submit\" value=\"Submit\">"));
+  PT_WAIT_THREAD(&s->generate_pt,
+                       enqueue_chunk(s, 0,"</p>"));
+  PT_WAIT_THREAD(&s->generate_pt,
+                 enqueue_chunk(s, 0, "</form>"));
+
+  PT_WAIT_THREAD(&s->generate_pt,
+                      enqueue_chunk(s, 0, CONTENT_CLOSE SECTION_CLOSE));
+
+
+
+      //=====================================================================================
+  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "</fieldset>"));
+  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 1, http_bottom));
+
+  PT_END(&s->generate_pt);
+}
+#endif
+
 #ifdef NODE_GPS
 static
 PT_THREAD(generate_maps_config(struct httpd_state *s))
@@ -2214,6 +2303,10 @@ init(void)
 
 #ifdef NODE_4_ch_relay
   list_add(pages_list, &http_relay4_cfg_page);
+#endif
+
+#ifdef NODE_1_ch_relay
+  list_add(pages_list, &http_relay1_cfg_page);
 #endif
 
 #ifdef NODE_GPS
