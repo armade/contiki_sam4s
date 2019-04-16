@@ -71,19 +71,19 @@ PIR_detection_callback(uint32_t a, uint32_t b)
 
 	// Change interrupt condition so we get interrupt on both falling and rising edge.
 	// We have 300ms bounce time so this should be safe
-	/*if((IRQ_type == falling_egde) && (PIR_READ_PIN(PIR_DETECT_PIN) == 0)){
+	if((IRQ_type == falling_egde) && (PIR_READ_PIN(PIR_DETECT_PIN) == 0)){
 		// Set to Rising Edge
 		PIR_base->PIO_REHLSR = PIR_DETECT_PIN;
 		falling_timestamp = (clock_time() * 1000) / CLOCK_SECOND; //ms
 		IRQ_type = rising_egde;
-		//SUPC->SUPC_WUIR = SUPC_WUIR_WKUPEN12_ENABLE | SUPC_WUIR_WKUPT12_LOW;
+		SUPC->SUPC_WUIR = SUPC_WUIR_WKUPEN12_ENABLE | SUPC_WUIR_WKUPT12_HIGH;
 		sensors_changed(&PIR_SR501_sensor);
-	} else*/ if((IRQ_type == rising_egde) && (PIR_READ_PIN(PIR_DETECT_PIN) == 1)){
+	} else if((IRQ_type == rising_egde) && (PIR_READ_PIN(PIR_DETECT_PIN) == 1)){
 		// Set to Falling Edge
 		PIR_base->PIO_FELLSR = PIR_DETECT_PIN;
 		rising_timestamp = (clock_time() * 1000) / CLOCK_SECOND; //ms
 		IRQ_type = falling_egde;
-		//SUPC->SUPC_WUIR = SUPC_WUIR_WKUPEN12_ENABLE | SUPC_WUIR_WKUPT12_HIGH;
+		SUPC->SUPC_WUIR = SUPC_WUIR_WKUPEN12_ENABLE | SUPC_WUIR_WKUPT12_LOW;
 		sensors_changed(&PIR_SR501_sensor);
 	}
 }
@@ -104,22 +104,25 @@ PIR_SR501_sensor_configure(int type, int enable)
 
 		case SENSORS_HW_INIT:
 			pio_set_input(PIOB, PIR_DETECT_PIN, PIO_PULLUP);
-			pio_set_debounce_filter(PIOB, PIR_DETECT_PIN, 15000); // aprox. 30ms (500+1)*2*(1/32678) = 30.6ms
+			pio_set_debounce_filter(PIOB, PIR_DETECT_PIN, 500); // aprox. 30ms (500+1)*2*(1/32768) = 30.6ms
 
 			pio_handler_set(PIOB, ID_PIOB, PIR_DETECT_PIN, PIO_IT_RISE_EDGE, PIR_detection_callback);
 			NVIC_EnableIRQ((IRQn_Type) ID_PIOB);
 			pmc_set_fast_startup_input(1<<12);
 
-			/*if( PIR_READ_PIN(PIR_DETECT_PIN)){
+			// WKUPx shall be in its active state for at least 4,096 SLCK periods
+			SUPC->SUPC_WUMR |= SUPC_WUMR_WKUPDBC_4096_SCLK; //WKUPDBC = 4096_SCLK => 125ms
+
+			if( PIR_READ_PIN(PIR_DETECT_PIN)){
 				IRQ_type = falling_egde;
 				PIR_base->PIO_FELLSR = PIR_DETECT_PIN;
 				SUPC->SUPC_WUIR = SUPC_WUIR_WKUPEN12_ENABLE | SUPC_WUIR_WKUPT12_LOW;
-			}else{*/
+			}else{
 				PIR_base->PIO_REHLSR = PIR_DETECT_PIN;
 				IRQ_type = rising_egde;
 				SUPC->SUPC_WUIR = SUPC_WUIR_WKUPEN12_ENABLE | SUPC_WUIR_WKUPT12_HIGH;
-			//}
-				pio_enable_interrupt(PIOB, PIR_DETECT_PIN);
+			}
+			pio_enable_interrupt(PIOB, PIR_DETECT_PIN);
 			sensor_status = SENSOR_STATUS_INITIALISED;
 			break;
 
@@ -135,7 +138,7 @@ PIR_SR501_sensor_configure(int type, int enable)
 				sensor_status = SENSOR_STATUS_READY;
 			} else{
 				// Disable the sensor
-				pio_disable_interrupt(PIOB, PIR_DETECT_PIN);
+				//pio_disable_interrupt(PIOB, PIR_DETECT_PIN);
 				sensor_status = SENSOR_STATUS_INITIALISED;
 			}
 			break;

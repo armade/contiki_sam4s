@@ -357,12 +357,21 @@ get_RGB_soft_reading(void)
 	static int status_val;
 	char *buf;
 	RGB_soft_t tmp;
+	union {
+			int status;
+			struct {
+					int sensor:12;
+					int effekt:12;
+					int dummy:8;
+			}sub;
+	}stat;
+
 
 	tmp.all = ((RGB_soft_t *) soft_RGB_ctrl_sensor.value(SENSOR_ERROR))->all;
-	status_val = soft_RGB_ctrl_sensor.status(0);
+	stat.status = soft_RGB_ctrl_sensor.status(0);
 
 	if(soft_RGB_switch_sensor_reading.publish){
-		if((status_val&0xf) == SENSOR_STATUS_READY){
+		if(stat.sub.sensor == SENSOR_STATUS_READY){
 			soft_RGB_switch_sensor_reading.raw = status_val;
 
 			buf = soft_RGB_switch_sensor_reading.converted;
@@ -380,20 +389,28 @@ get_RGB_soft_reading(void)
 	}
 
 	if(soft_RGB_effect_sensor_reading.publish){
-		if((status_val>>12) == 1){
+		if(stat.sub.effekt == 1){
 			soft_RGB_effect_sensor_reading.raw = status_val;
 
 			buf = soft_RGB_effect_sensor_reading.converted;
 			memset(buf, 0, SENSOR_CONVERTED_LEN);
 			INSERT_TXT(buf,"\"colorloop\"");
 		}
-		else if((status_val>>12) == 2)
+		else if(stat.sub.effekt == 2)
 		{
 			soft_RGB_effect_sensor_reading.raw = status_val;
 
 			buf = soft_RGB_effect_sensor_reading.converted;
 			memset(buf, 0, SENSOR_CONVERTED_LEN);
-			INSERT_TXT(buf,"\"random\"");
+			INSERT_TXT(buf,"\"fire\"");
+		}
+		else if(stat.sub.effekt == 3)
+		{
+			soft_RGB_effect_sensor_reading.raw = status_val;
+
+			buf = soft_RGB_effect_sensor_reading.converted;
+			memset(buf, 0, SENSOR_CONVERTED_LEN);
+			INSERT_TXT(buf,"\"rapid red\"");
 		}
 		else
 		{
