@@ -1,5 +1,6 @@
 /*
- * Copyright (c) 2017, Proces-data A/S, http://www.proces-data.com/.
+ * Copyright © 2019, Peter Mikkelsen
+ *
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without

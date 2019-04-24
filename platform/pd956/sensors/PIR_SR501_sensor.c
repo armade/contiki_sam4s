@@ -1,5 +1,6 @@
 /*
- * Copyright (c) 2017, Proces-data A/S, http://www.proces-data.com/.
+ * Copyright © 2019, Peter Mikkelsen
+ *
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -45,16 +46,8 @@ Pio *PIR_base = (Pio *)PIOB;
 
 #define PIR_READ_PIN(x)	((PIR_base->PIO_PDSR & x)?1:0)
 #define SENSOR_PIR_DELAY (1 * 1000) / CLOCK_SECOND//~1ms
-static struct ctimer PIR_timer;
 
 static int sensor_status = SENSOR_STATUS_DISABLED;
-
-static void
-notify_ready(void *not_used)
-{
-	sensor_status = SENSOR_STATUS_READY;
-	sensors_changed(&PIR_SR501_sensor);
-}
 
 volatile uint8_t IRQ_type;
 #define falling_egde 	2
@@ -67,8 +60,6 @@ clock_time_t rising_timestamp;
 static void
 PIR_detection_callback(uint32_t a, uint32_t b)
 {
-
-
 	// Change interrupt condition so we get interrupt on both falling and rising edge.
 	// We have 300ms bounce time so this should be safe
 	if((IRQ_type == falling_egde) && (PIR_READ_PIN(PIR_DETECT_PIN) == 0)){
@@ -77,6 +68,9 @@ PIR_detection_callback(uint32_t a, uint32_t b)
 		falling_timestamp = (clock_time() * 1000) / CLOCK_SECOND; //ms
 		IRQ_type = rising_egde;
 		SUPC->SUPC_WUIR = SUPC_WUIR_WKUPEN12_ENABLE | SUPC_WUIR_WKUPT12_HIGH;
+
+		PMC->PMC_FSPR |= PMC_FSPR_FSTP12; // Fast Startup Polarity Register - high
+
 		sensors_changed(&PIR_SR501_sensor);
 	} else if((IRQ_type == rising_egde) && (PIR_READ_PIN(PIR_DETECT_PIN) == 1)){
 		// Set to Falling Edge
@@ -84,6 +78,9 @@ PIR_detection_callback(uint32_t a, uint32_t b)
 		rising_timestamp = (clock_time() * 1000) / CLOCK_SECOND; //ms
 		IRQ_type = falling_egde;
 		SUPC->SUPC_WUIR = SUPC_WUIR_WKUPEN12_ENABLE | SUPC_WUIR_WKUPT12_LOW;
+
+		PMC->PMC_FSPR &= ~PMC_FSPR_FSTP12; // Fast Startup Polarity Register - low
+
 		sensors_changed(&PIR_SR501_sensor);
 	}
 }
@@ -104,11 +101,11 @@ PIR_SR501_sensor_configure(int type, int enable)
 
 		case SENSORS_HW_INIT:
 			pio_set_input(PIOB, PIR_DETECT_PIN, PIO_PULLUP);
-			pio_set_debounce_filter(PIOB, PIR_DETECT_PIN, 500); // aprox. 30ms (500+1)*2*(1/32768) = 30.6ms
+			pio_set_debounce_filter(PIR_base, PIR_DETECT_PIN, 5000); // aprox. 300ms (5000+1)*2*(1/32768) = 306ms
 
-			pio_handler_set(PIOB, ID_PIOB, PIR_DETECT_PIN, PIO_IT_RISE_EDGE, PIR_detection_callback);
+			pio_handler_set(PIR_base, ID_PIOB, PIR_DETECT_PIN, PIO_IT_RISE_EDGE, PIR_detection_callback);
 			NVIC_EnableIRQ((IRQn_Type) ID_PIOB);
-			pmc_set_fast_startup_input(1<<12);
+			pmc_set_fast_startup_input(PMC_FSMR_FSTT12);
 
 			// WKUPx shall be in its active state for at least 4,096 SLCK periods
 			SUPC->SUPC_WUMR |= SUPC_WUMR_WKUPDBC_4096_SCLK; //WKUPDBC = 4096_SCLK => 125ms
@@ -117,10 +114,14 @@ PIR_SR501_sensor_configure(int type, int enable)
 				IRQ_type = falling_egde;
 				PIR_base->PIO_FELLSR = PIR_DETECT_PIN;
 				SUPC->SUPC_WUIR = SUPC_WUIR_WKUPEN12_ENABLE | SUPC_WUIR_WKUPT12_LOW;
+
+				PMC->PMC_FSPR &= ~PMC_FSPR_FSTP12; // Fast Startup Polarity Register - low
 			}else{
 				PIR_base->PIO_REHLSR = PIR_DETECT_PIN;
 				IRQ_type = rising_egde;
 				SUPC->SUPC_WUIR = SUPC_WUIR_WKUPEN12_ENABLE | SUPC_WUIR_WKUPT12_HIGH;
+
+				PMC->PMC_FSPR |= PMC_FSPR_FSTP12; // Fast Startup Polarity Register - high
 			}
 			pio_enable_interrupt(PIOB, PIR_DETECT_PIN);
 			sensor_status = SENSOR_STATUS_INITIALISED;
@@ -132,14 +133,13 @@ PIR_SR501_sensor_configure(int type, int enable)
 
 			if(enable){
 				// Enable the sensor
-
-
 				sensors_changed(&PIR_SR501_sensor);
 				sensor_status = SENSOR_STATUS_READY;
 			} else{
 				// Disable the sensor
 				//pio_disable_interrupt(PIOB, PIR_DETECT_PIN);
-				sensor_status = SENSOR_STATUS_INITIALISED;
+				//pmc_clr_fast_startup_input(PMC_FSMR_FSTT12);
+				sensor_status = SENSOR_STATUS_NOT_READY;
 			}
 			break;
 	}
