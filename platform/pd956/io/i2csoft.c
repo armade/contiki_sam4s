@@ -14,7 +14,7 @@ www.eXtremeElectronics.co.in
 #include "gpio.h"
 #include "pio_handler.h"
 #if defined(NODE_HTU21D) || defined(NODE_BMP280) || defined(NODE_LM73)
-Pio *I2C_base = (Pio *)PIOA;
+Pio *I2C_base = (Pio *)PIOB;
 
 #define NOP(NO, unused)      asm volatile("NOP");
 

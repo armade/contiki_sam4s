@@ -100,6 +100,7 @@ LIST(MQTT_config_list);
 static MQTT_sub_ele_t *subscribe_ele;
 static MQTT_sub_ele_t MQTT_COMMON_NO_SLEEP_sub_cmd;
 static MQTT_sub_ele_t MQTT_COMMON_RESET_sub_cmd;
+static MQTT_sub_ele_t MQTT_COMMON_NAME_sub_cmd;
 /*---------------------------------------------------------------------------*/
 static struct mqtt_message *msg_ptr = 0;
 static struct etimer publish_periodic_timer;
@@ -597,11 +598,11 @@ static int construct_sub_topic(void)
 	MQTT_COMMON_RESET_sub_cmd.data_handler = pub_reset_handler;
 	list_add(MQTT_subscribe_list, &MQTT_COMMON_RESET_sub_cmd);
 
-	snprintf(MQTT_COMMON_RESET_sub_cmd.topic,
-				sizeof(MQTT_COMMON_RESET_sub_cmd.topic), "Hass/power/%s/%s/set",
+	snprintf(MQTT_COMMON_NAME_sub_cmd.topic,
+				sizeof(MQTT_COMMON_NAME_sub_cmd.topic), "Hass/power/%s/%s/set",
 				client_id, "Name");
-	MQTT_COMMON_RESET_sub_cmd.data_handler = Name_change;
-	list_add(MQTT_subscribe_list, &MQTT_COMMON_RESET_sub_cmd);
+	MQTT_COMMON_NAME_sub_cmd.data_handler = Name_change;
+	list_add(MQTT_subscribe_list, &MQTT_COMMON_NAME_sub_cmd);
 
 
 	//////////////////////////////////////////////////////////////////////////////
@@ -814,9 +815,6 @@ static void state_machine(void)
 		mqtt_register(&conn, &mqtt_client_process, client_id, mqtt_event,
 		MQTT_CLIENT_MAX_SEGMENT_SIZE);
 
-		hass_config = list_head(MQTT_config_list);
-		subscribe_topic = list_head(MQTT_subscribe_list);
-
 		if (strlen(conf->MQTT_user_Password) == 0
 				|| strlen(conf->MQTT_user_name) == 0)
 		{
@@ -843,6 +841,11 @@ static void state_machine(void)
 			DBG("Registered. Connect attempt %u\n", connect_attempt);
 			connect_to_broker();
 		}
+		// TODO: HOTFIX. I don't use retain flag for config, so
+		// It must be sent when reconnection.
+		hass_config = list_head(MQTT_config_list);
+		subscribe_topic = list_head(MQTT_subscribe_list);
+
 		etimer_set(&publish_periodic_timer,
 				NET_CONNECT_PERIODIC);
 		return;

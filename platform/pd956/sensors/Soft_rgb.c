@@ -1,5 +1,5 @@
 /*
- * Copyright © 2019, Peter Mikkelsen
+ * Copyright ï¿½ 2019, Peter Mikkelsen
  *
  * All rights reserved.
  *
@@ -222,7 +222,7 @@ soft_RGB_configure(int type, int enable)
 				 RGB_TIMER.TC_CCR=4;
 				 Sensor_status = SENSOR_STATUS_READY;
 			 } else if(enable == 8){
-				 effect_state = 255;
+				 //effect_state = 255;
 				 RGB_TIMER.TC_CCR=2;
 				 RGB_base->PIO_OER =  RGB_R_GPIO | RGB_G_GPIO | RGB_B_GPIO;
 				 RGB_base->PIO_CODR = RGB_R_GPIO | RGB_G_GPIO | RGB_B_GPIO;

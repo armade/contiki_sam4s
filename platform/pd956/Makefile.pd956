@@ -25,7 +25,7 @@ PLATFORM_SENSOR_DRIVER = 	ADC_temp.c \
 							Neo_Pixel_Ring.c \
 							PIR_SR501_sensor.c
 							
-PLATFORM_IO_DRIVER = i2csoft_2.c \
+PLATFORM_IO_DRIVER = i2csoft.c \
 					cfs-coffee.c \
 					ctk.c
 
