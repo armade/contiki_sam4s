@@ -1069,6 +1069,10 @@ PROCESS_THREAD(mqtt_client_process, ev, data)
 				|| ev == MQTT_publish_sensor_data_event /*||
 				 (ev == sensors_event)*/)
 		{
+			// Need to verify that this works. Previously an error in home assistant
+			// did not allow changes in config. To compensate for this behavior
+			// the config had to be erased first, and the rewritten.
+			state = MQTT_CLIENT_STATE_REGISTERED;
 			state_machine();
 		}
 

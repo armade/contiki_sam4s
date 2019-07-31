@@ -45,7 +45,7 @@
 
 #define ACTIVE_HIGH		1
 #define ACTIVE_LOW		2
-
+ 
 #define MODE 			ACTIVE_HIGH
 
 /*---------------------------------------------------------------------------*/
