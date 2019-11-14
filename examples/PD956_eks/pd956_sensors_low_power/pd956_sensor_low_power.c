@@ -168,6 +168,9 @@ DEMO_SENSOR2(NODE_1_ch_relay1_reading,			"relay1",		UNIT_NONE,		PD956_WEB_DEMO_S
 DEMO_SENSOR2(PIR_motion_reading,						"PIR_sensor",	UNIT_NONE,		PD956_WEB_DEMO_SENSOR_PIR,				binary_sensor_class,		binary_sensor_config_topic,NULL,NULL,motion);
 #endif
 
+#ifdef NODE_christmas_light
+DEMO_SENSOR2(NODE_christmas_light_reading,			"christmas_light",		UNIT_NONE,		PD956_WEB_DEMO_SENSOR_CHRISTMAS_LIGHT,			switch_class,		switch_config_topic,switch_sub_topic,pub_christmas_light_handler,None);
+#endif
 /*---------------------------------------------------------------------------*/
 static void save_config(void)
 {
@@ -773,6 +776,32 @@ static void get_GPS_reading()
 }
 #endif
 
+#ifdef NODE_christmas_light
+static void get_christmas_light_reading()
+{
+	char *buf;
+	int ret;
+
+	if(NODE_christmas_light_reading.publish){
+		ret = christmas_light.value(STATUS_CH1);
+		buf = NODE_christmas_light_reading.converted;
+
+		if(ret != SENSOR_ERROR){
+			NODE_christmas_light_reading.raw = ret;
+			memset(buf, 0, SENSOR_CONVERTED_LEN);
+			if(ret)
+				INSERT_TXT(buf,"\"ON\"");
+			else
+				INSERT_TXT(buf,"\"OFF\"");
+		} else{
+			INSERT_NA(buf);
+		}
+	}
+	SENSORS_DEACTIVATE(christmas_light);
+}
+
+#endif
+
 #ifdef NODE_1_ch_relay
 static void get_relay_reading()
 {
@@ -992,6 +1021,11 @@ static void init_sensors(void)
 	list_add(MQTT_sensor_list, &NODE_1_ch_relay1_reading);
 	INSERT_NA(NODE_1_ch_relay1_reading.converted);
 #endif
+
+#ifdef NODE_christmas_light
+	list_add(MQTT_sensor_list, &NODE_christmas_light_reading);
+	INSERT_NA(NODE_christmas_light_reading.converted);
+#endif
 }
 
 
@@ -1116,6 +1150,12 @@ PROCESS_THREAD(PD956_MAIN_process, ev, data)
 			sensor_busy &= ~(1ul << PD956_WEB_DEMO_SENSOR_RELAY2);
 			sensor_busy &= ~(1ul << PD956_WEB_DEMO_SENSOR_RELAY3);
 			sensor_busy &= ~(1ul << PD956_WEB_DEMO_SENSOR_RELAY4);
+#endif
+
+#ifdef NODE_christmas_light
+		} else if(ev == sensors_event && data == &christmas_light){
+			get_christmas_light_reading();
+			sensor_busy &= ~(1ul << PD956_WEB_DEMO_SENSOR_CHRISTMAS_LIGHT);
 #endif
 
 #ifdef NODE_1_ch_relay

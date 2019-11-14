@@ -1,5 +1,5 @@
 DEFINES+=PROJECT_CONF_H=\"project-conf.h\"
-CFLAGS += -D NODE_PIR_SR501=1  -DLOW_CLOCK=1
+CFLAGS += -D NODE_christmas_light=1  -DLOW_CLOCK=1
 #define NODE_4_ch_relay
 #define NODE_1_ch_relay
 #define NODE_LIGHT
@@ -10,7 +10,7 @@ CFLAGS += -D NODE_PIR_SR501=1  -DLOW_CLOCK=1
 #define NODE_GPS
 #define NODE_DHT11
 #define NODE_PIR_SR501
-
+#define NODE_christmas_light
 
 # dedicated i2c board 20346522
 

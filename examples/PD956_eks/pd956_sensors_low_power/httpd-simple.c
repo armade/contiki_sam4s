@@ -344,6 +344,17 @@ static page_t http_relay1_cfg_page = {
 };
 #endif
 
+#ifdef NODE_christmas_light
+static char generate_christmas_light_config(struct httpd_state *s);
+
+static page_t http_christmas_light_cfg_page = {
+  NULL,
+  "christmas_light.html",
+  "christmas_light Config",
+  generate_christmas_light_config,
+};
+#endif
+
 #ifdef NODE_GPS
 static char generate_maps_config(struct httpd_state *s);
 
@@ -1569,6 +1580,86 @@ PT_THREAD(generate_relay1_config(struct httpd_state *s))
 }
 #endif
 
+#ifdef NODE_christmas_light
+static
+PT_THREAD(generate_christmas_light_config(struct httpd_state *s))
+{
+	static int i = 0;
+  PT_BEGIN(&s->generate_pt);
+
+  /* Generate top matter (doctype, title, nav links etc) */
+  PT_WAIT_THREAD(&s->generate_pt,
+                 generate_top_matter(s, http_christmas_light_cfg_page.title,
+                                     http_config_css2));
+
+  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "<fieldset>"));
+  /* Sensor Settings */
+  PT_WAIT_THREAD(&s->generate_pt,
+                 enqueue_chunk(s, 0, "<h1>christmas_light</h1>"));
+
+  PT_WAIT_THREAD(&s->generate_pt,
+                      enqueue_chunk(s, 0, "%s%s%s", config_div_right,
+                                    "on|off", config_div_close
+                                    ));
+  PT_WAIT_THREAD(&s->generate_pt,
+                 enqueue_chunk(s, 0,
+                               "<form name=\"input\" action=\"%s\" ",
+                               http_christmas_light_cfg_page.filename));
+  PT_WAIT_THREAD(&s->generate_pt,
+                 enqueue_chunk(s, 0, "method=\"post\" enctype=\""));
+  PT_WAIT_THREAD(&s->generate_pt,
+                 enqueue_chunk(s, 0, "application/x-www-form-urlencoded\" "));
+  PT_WAIT_THREAD(&s->generate_pt,
+                 enqueue_chunk(s, 0, "accept-charset=\"UTF-8\">"));
+
+  for(i = 0; i<1; i++)
+  {
+     PT_WAIT_THREAD(&s->generate_pt,
+                    enqueue_chunk(s, 0, "%srelay%d:%s%s", config_div_left,
+                                  i+1, config_div_close,
+                                  config_div_right));
+
+     PT_WAIT_THREAD(&s->generate_pt,
+                    enqueue_chunk(s, 0, "<input type=\"radio\" value=\"1\" "));
+     PT_WAIT_THREAD(&s->generate_pt,
+                    enqueue_chunk(s, 0, "title=\"On\" name=\"relay%d\"%s>",
+                                  i,
+                                  christmas_light.value(i+STATUS_CH1) ? " Checked" : ""));
+     PT_WAIT_THREAD(&s->generate_pt,
+                    enqueue_chunk(s, 0, "<input type=\"radio\" value=\"0\" "));
+     PT_WAIT_THREAD(&s->generate_pt,
+                    enqueue_chunk(s, 0, "title=\"Off\" name=\"relay%d\"%s>%s",
+                                  i,
+                                  christmas_light.status(i+STATUS_CH1) ? "" : " Checked",
+                                  config_div_close));
+   }
+
+  PT_WAIT_THREAD(&s->generate_pt,
+                     enqueue_chunk(s, 0,"<p>"));
+
+  PT_WAIT_THREAD(&s->generate_pt,
+                 enqueue_chunk(s, 0,
+                               "<input type=\"submit\" value=\"Submit\">"));
+  PT_WAIT_THREAD(&s->generate_pt,
+                       enqueue_chunk(s, 0,"</p>"));
+  PT_WAIT_THREAD(&s->generate_pt,
+                 enqueue_chunk(s, 0, "</form>"));
+
+  PT_WAIT_THREAD(&s->generate_pt,
+                      enqueue_chunk(s, 0, CONTENT_CLOSE SECTION_CLOSE));
+
+
+
+      //=====================================================================================
+  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, "</fieldset>"));
+  PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 1, http_bottom));
+
+  PT_END(&s->generate_pt);
+}
+#endif
+
+
+
 #ifdef NODE_GPS
 static
 PT_THREAD(generate_maps_config(struct httpd_state *s))
@@ -2307,6 +2398,10 @@ init(void)
 
 #ifdef NODE_1_ch_relay
   list_add(pages_list, &http_relay1_cfg_page);
+#endif
+
+#ifdef NODE_christmas_light
+  list_add(pages_list, &http_christmas_light_cfg_page);
 #endif
 
 #ifdef NODE_GPS

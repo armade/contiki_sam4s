@@ -72,7 +72,7 @@ void speed_cntr_Move(int step, int accel, int decel, int speed);
 
 
 // Table with control signals for stepper motor
-//(NB: should be 32 bit, but since the highest pin is 10 we can same the flash)
+//(NB: should be 32 bit, but since the highest pin is 10 we can save the flash)
 const uint16_t steptabel[] = {
 	((1<<BIT_A1) | (0<<BIT_A2) | (0<<BIT_B1) | (0<<BIT_B2)),
 	((1<<BIT_A1) | (0<<BIT_A2) | (1<<BIT_B1) | (0<<BIT_B2)),

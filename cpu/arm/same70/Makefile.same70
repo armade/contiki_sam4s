@@ -42,7 +42,6 @@ CFLAGS += 	-mcpu=cortex-m7\
 			-fno-strict-aliasing\
 			-Wall\
 			-g3\
-			-D __SAME70Q20__\
 			-D __VFP_FP__\
 			-D SAME70 \
 			-D MPU_HAS_NOCACHE_REGION 

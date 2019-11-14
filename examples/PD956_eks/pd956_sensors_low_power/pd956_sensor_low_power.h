@@ -106,6 +106,8 @@
 #define PD956_WEB_DEMO_SENSOR_RELAY4	  			8
 
 #define PD956_WEB_DEMO_SENSOR_PIR	  				9
+
+#define PD956_WEB_DEMO_SENSOR_CHRISTMAS_LIGHT		10
 /*---------------------------------------------------------------------------*/
 extern process_event_t MQTT_publish_sensor_data_event;
 extern process_event_t config_loaded_event;

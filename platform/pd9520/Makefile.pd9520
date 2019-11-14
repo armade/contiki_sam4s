@@ -25,10 +25,10 @@ PLATFORM_SENSOR_DRIVER = 	ADC_temp.c \
 							Soft_rgb2.c  \
 							Neo_Pixel_Ring.c
 							
-PLATFORM_IO_DRIVER = i2csoft.c \
-						i2c.c \
-					cfs-coffee.c \
-					ctk.c
+PLATFORM_IO_DRIVER = 		i2csoft.c \
+					 		i2c.c \
+					 		cfs-coffee.c \
+					 		ctk.c
 
 PLATFORM_CRYPT_DRIVER = sha256.c \
 						sha512.c \
@@ -50,7 +50,9 @@ CONTIKI_SOURCEFILES += $(CONTIKI_TARGET_SOURCEFILES)
 
 CLEAN += *.pd9520
 
-CFLAGS += -D NETSTACK_CONF_WITH_IPV6=1 
+CFLAGS += -D NETSTACK_CONF_WITH_IPV6=1  \
+		  -D __SAME70Q21__
+			
 CFLADG += -D CONF_BOARD_ENABLE_CACHE_AT_INIT
 
 

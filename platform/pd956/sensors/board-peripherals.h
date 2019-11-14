@@ -46,6 +46,7 @@
 #include "htu21d-sensor.h"
 #include "GPS-sensor.h"
 #include "PIR_SR501_sensor.h"
+#include "christmas_light.h"
 
 //#define NODE_4_ch_relay
 //#define NODE_1_ch_relay
@@ -57,6 +58,7 @@
 //#define NODE_GPS
 //#define NODE_DHT11
 //#define NODE_PIR_SR501
+//#define NODE_christmas_light
 
 #ifdef NODE_PIR_SR501
 #define SENSOR_STRING 		"PIR_SR501"
@@ -96,6 +98,10 @@
 
 #ifdef NODE_GPS
 #define SENSOR_STRING 		"GPS_mc1010"
+#endif
+
+#ifdef NODE_christmas_light
+#define SENSOR_STRING 		"christmas light"
 #endif
 /*---------------------------------------------------------------------------*/
 #endif /* BOARD_PERIPHERALS_H_ */

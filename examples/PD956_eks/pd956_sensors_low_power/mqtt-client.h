@@ -170,6 +170,8 @@ void pub_relay2_handler(uint8_t *payload, uint16_t len);
 void pub_relay3_handler(uint8_t *payload, uint16_t len);
 void pub_relay4_handler(uint8_t *payload, uint16_t len);
 
+void pub_christmas_light_handler(uint8_t *payload, uint16_t len);
+
 void pub_light_hard_switch_handler(uint8_t *payload, uint16_t len);
 void pub_light_hard_brightness_handler(uint8_t *payload, uint16_t len);
 void pub_light_hard_rgb_handler(uint8_t *payload, uint16_t len);

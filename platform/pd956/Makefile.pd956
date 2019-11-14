@@ -23,7 +23,8 @@ PLATFORM_SENSOR_DRIVER = 	ADC_temp.c \
 							GPS-sensor.c\
 							xmem.c \
 							Neo_Pixel_Ring.c \
-							PIR_SR501_sensor.c
+							PIR_SR501_sensor.c \
+							christmas_light.c
 							
 PLATFORM_IO_DRIVER = i2csoft.c \
 					cfs-coffee.c \

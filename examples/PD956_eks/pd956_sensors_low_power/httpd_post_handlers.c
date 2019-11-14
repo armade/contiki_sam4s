@@ -361,6 +361,34 @@ Relay_post_handler(char *key, int key_len, char *val, int val_len)
 	return HTTPD_SIMPLE_POST_HANDLER_OK;
 }
 #endif
+
+#ifdef NODE_christmas_light
+static int
+christmas_light_post_handler(char *key, int key_len, char *val, int val_len)
+{
+	int ret = HTTPD_SIMPLE_POST_HANDLER_UNKNOWN;
+	uint8_t tmp;
+	if(key_len != strlen("relayx") ||
+			strncasecmp(key, "relay", strlen("relay")) != 0) {
+		/* Not ours */
+		return HTTPD_SIMPLE_POST_HANDLER_UNKNOWN;
+	}
+
+	ret = atoi(val);
+	tmp = *(key+5)-0x30;
+	if(ret == 0 ){
+		christmas_light.value((tmp<<1)+15);
+	}
+	else if(ret == 1){
+		christmas_light.value((tmp<<1)+14);
+	}
+	else{
+		return HTTPD_SIMPLE_POST_HANDLER_ERROR;
+	}
+
+	return HTTPD_SIMPLE_POST_HANDLER_OK;
+}
+#endif
 /*---------------------------------------------------------------------------*/
 static int
 org_id_post_handler(char *key, int key_len, char *val, int val_len)
@@ -709,6 +737,10 @@ HTTPD_SIMPLE_POST_HANDLER(Relay,Relay_post_handler);
 #ifdef NODE_1_ch_relay
 HTTPD_SIMPLE_POST_HANDLER(Relay,Relay_post_handler);
 #endif
+#ifdef NODE_christmas_light
+HTTPD_SIMPLE_POST_HANDLER(christmas_light,christmas_light_post_handler);
+#endif
+
 HTTPD_SIMPLE_POST_HANDLER(Company, org_id_post_handler);
 HTTPD_SIMPLE_POST_HANDLER(Modul_type, type_id_post_handler);
 HTTPD_SIMPLE_POST_HANDLER(Username, event_type_id_post_handler);
@@ -745,6 +777,9 @@ register_http_post_handlers(void)
 #endif
 #ifdef NODE_1_ch_relay
 	httpd_simple_register_post_handler(&Relay_handler);
+#endif
+#ifdef NODE_christmas_light
+	httpd_simple_register_post_handler(&christmas_light_handler);
 #endif
 	httpd_simple_register_post_handler(&Company_handler);
 	httpd_simple_register_post_handler(&Modul_type_handler);

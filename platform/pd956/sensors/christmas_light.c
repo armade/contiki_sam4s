@@ -35,13 +35,13 @@
 #include <string.h>
 #include "contiki.h"
 #include "lib/sensors.h"
-#include "1ch_relay.h"
+#include "christmas_light.h"
 #include "sys/timer.h"
 #include "gpio.h"
 #include "pio_handler.h"
 #include "board-peripherals.h"
 
-#ifdef NODE_1_ch_relay
+#ifdef NODE_christmas_light
 
 #define ACTIVE_HIGH		1
 #define ACTIVE_LOW		2
@@ -66,12 +66,12 @@ static void
 notify_ready(void *not_used)
 {
 	sensor_status = SENSOR_STATUS_READY;
-	sensors_changed(&ch1_relay_PD956);
+	sensors_changed(&christmas_light);
 }
 
 /*---------------------------------------------------------------------------*/
 static int
-relay_value(int type)
+light_value(int type)
 {
 	// Status
 	if((type >= ch1_STATUS_MIN) && (type <= ch1_STATUS_MAX))
@@ -105,7 +105,7 @@ relay_value(int type)
 /*---------------------------------------------------------------------------*/
 
 static int
-relay_configure(int type, int enable)
+light_configure(int type, int enable)
 {
 	switch(type) {
 
@@ -136,11 +136,11 @@ relay_configure(int type, int enable)
 }
 /*---------------------------------------------------------------------------*/
 static int
-relay_status(int type)
+light_status(int type)
 {
 	return sensor_status;
 }
 /*---------------------------------------------------------------------------*/
-SENSORS_SENSOR(ch1_relay_PD956, "1 Ch relay",relay_value, relay_configure, relay_status);
+SENSORS_SENSOR(christmas_light, "christmas light",light_value, light_configure, light_status);
 /*---------------------------------------------------------------------------*/
 #endif

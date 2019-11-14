@@ -79,6 +79,10 @@ SENSORS(
 		,&PIR_SR501_sensor
 #endif
 
+#ifdef NODE_christmas_light
+		,&christmas_light
+#endif
+
 #ifdef NODE_ROUTER
 
 #endif

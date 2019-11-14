@@ -181,8 +181,23 @@ void Name_change(uint8_t *payload, uint16_t len)
 {
 	if(MQTT_CLIENT_CONFIG_EVENT_TYPE_ID_LEN > len){
 		memcpy(conf->Username, payload, len);
+		 new_net_config();
 		process_post(PROCESS_BROADCAST, httpd_simple_event_new_config, NULL);
 	}
+}
+
+void pub_christmas_light_handler(uint8_t *payload, uint16_t len)
+{
+	len -= 2;
+	if(len>1)
+		return;
+	//TODO: check len so payload ONLINE dos'nt turn on
+	if(!memcmp(payload,"ON",2))
+		christmas_light.value(CH1_RELAY_ON);
+	else if(!memcmp(payload,"OFF",3))
+		christmas_light.value(CH1_RELAY_OFF);
+
+	process_post(PROCESS_BROADCAST, Trig_sensors, NULL);
 }
 
 void pub_relay1_handler(uint8_t *payload, uint16_t len)
