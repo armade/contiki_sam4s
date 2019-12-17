@@ -179,10 +179,10 @@ void pub_reset_handler(uint8_t *payload, uint16_t len)
 
 void Name_change(uint8_t *payload, uint16_t len)
 {
-	if(MQTT_CLIENT_CONFIG_EVENT_TYPE_ID_LEN > len){
+	if((MQTT_CLIENT_CONFIG_EVENT_TYPE_ID_LEN > len) && strncmp(conf->Username,payload,sizeof(conf->Username))){
 		memcpy(conf->Username, payload, len);
-		 new_net_config();
 		process_post(PROCESS_BROADCAST, httpd_simple_event_new_config, NULL);
+		new_net_config();
 	}
 }
 
@@ -206,13 +206,24 @@ void pub_relay1_handler(uint8_t *payload, uint16_t len)
 	if(len>1)
 		return;
 	//TODO: check len so payload ONLINE dos'nt turn on
-	if(!memcmp(payload,"ON",2))
+	if(!memcmp(payload,"ON",2)){
+#ifdef NODE_4_ch_relay
 		ch4_relay_PD956.value(CH1_RELAY_ON);
-	else if(!memcmp(payload,"OFF",3))
+#endif
+#ifdef NODE_1_ch_relay
+		ch1_relay_PD956.value(CH1_RELAY_ON);
+#endif
+	}else if(!memcmp(payload,"OFF",3)){
+#ifdef NODE_4_ch_relay
 		ch4_relay_PD956.value(CH1_RELAY_OFF);
-
+#endif
+#ifdef NODE_1_ch_relay
+		ch1_relay_PD956.value(CH1_RELAY_OFF);
+#endif
+}
 	process_post(PROCESS_BROADCAST, Trig_sensors, NULL);
 }
+
 void pub_relay2_handler(uint8_t *payload, uint16_t len)
 {
 	len -= 2;
@@ -531,7 +542,6 @@ static int construct_configs(void)
 									"{\"name\": \"%s %s\","
 									"\"stat_t\": \"%s\","
 									"\"val_tpl\":\"{{ value_json.%s}}\","
-									"\"mdi\":\"lightbulb\","
 									"\"cmd_t\": \"Hass/switch/%s/%s/set\"}",
 									conf->Username,reading->descr, 		//name
 									pub_topic, 							//state_topic
@@ -830,6 +840,9 @@ static void state_machine(void)
 		mqtt_register(&conn, &mqtt_client_process, client_id, mqtt_event,
 		MQTT_CLIENT_MAX_SEGMENT_SIZE);
 
+		hass_config = list_head(MQTT_config_list);
+		subscribe_topic = list_head(MQTT_subscribe_list);
+
 		if (strlen(conf->MQTT_user_Password) == 0
 				|| strlen(conf->MQTT_user_name) == 0)
 		{
@@ -858,8 +871,7 @@ static void state_machine(void)
 		}
 		// TODO: HOTFIX. I don't use retain flag for config, so
 		// It must be sent when reconnection.
-		hass_config = list_head(MQTT_config_list);
-		subscribe_topic = list_head(MQTT_subscribe_list);
+
 
 		etimer_set(&publish_periodic_timer,
 				NET_CONNECT_PERIODIC);
@@ -1084,10 +1096,7 @@ PROCESS_THREAD(mqtt_client_process, ev, data)
 				|| ev == MQTT_publish_sensor_data_event /*||
 				 (ev == sensors_event)*/)
 		{
-			// Need to verify that this works. Previously an error in home assistant
-			// did not allow changes in config. To compensate for this behavior
-			// the config had to be erased first, and the rewritten.
-			state = MQTT_CLIENT_STATE_REGISTERED;
+
 			state_machine();
 		}
 

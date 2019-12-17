@@ -349,7 +349,7 @@ static char generate_christmas_light_config(struct httpd_state *s);
 
 static page_t http_christmas_light_cfg_page = {
   NULL,
-  "christmas_light.html",
+  "chr_light.html",
   "christmas_light Config",
   generate_christmas_light_config,
 };
@@ -628,7 +628,7 @@ PT_THREAD(generate_index(struct httpd_state *s))
 
     memset(ipaddr_buf, 0, IPADDR_BUF_LEN);
     get_neighbour_state_text(ipaddr_buf, s->nbr->state);
-
+    PT_WAIT_THREAD(&s->generate_pt, enqueue_chunk(s, 0, " <br>"));
     	// Just to test
        memset(ipaddr_buf, 0, IPADDR_BUF_LEN);
        for(i=0;i<sizeof(s->nbr->nbr_session_key);i++)
@@ -1468,7 +1468,7 @@ PT_THREAD(generate_relay4_config(struct httpd_state *s))
      PT_WAIT_THREAD(&s->generate_pt,
                     enqueue_chunk(s, 0, "title=\"On\" name=\"relay%d\"%s>",
                                   i,
-								  ch4_relay_PD956.value(i+STATUS_CH1) ? " Checked" : ""));
+								  ch4_relay_PD956.status(i+STATUS_CH1) ? " Checked" : ""));
      PT_WAIT_THREAD(&s->generate_pt,
                     enqueue_chunk(s, 0, "<input type=\"radio\" value=\"0\" "));
      PT_WAIT_THREAD(&s->generate_pt,
@@ -1546,7 +1546,7 @@ PT_THREAD(generate_relay1_config(struct httpd_state *s))
      PT_WAIT_THREAD(&s->generate_pt,
                     enqueue_chunk(s, 0, "title=\"On\" name=\"relay%d\"%s>",
                                   i,
-								  ch1_relay_PD956.value(i+STATUS_CH1) ? " Checked" : ""));
+								  ch1_relay_PD956.status(i+STATUS_CH1) ? " Checked" : ""));
      PT_WAIT_THREAD(&s->generate_pt,
                     enqueue_chunk(s, 0, "<input type=\"radio\" value=\"0\" "));
      PT_WAIT_THREAD(&s->generate_pt,

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2019, Peter Mikkelsen
+ * Copyright ï¿½ 2019, Peter Mikkelsen
  *
  * All rights reserved.
  *
@@ -59,7 +59,7 @@ unsigned pin_array[] = {
 
 static int sensor_status = SENSOR_STATUS_DISABLED;
 
-#define SENSOR_SWITCH_DELAY (10 * 1000) / CLOCK_SECOND//~10ms
+#define SENSOR_SWITCH_DELAY (1 * 100) / CLOCK_SECOND//~0.1ms
 static struct ctimer switch_timer;
 
 static void

@@ -74,7 +74,7 @@
 
 #define DEFAULT_TYPE_ID             "956"
 
-#define DEFAULT_EVENT_TYPE_ID       "Kontor"
+#define DEFAULT_EVENT_TYPE_ID       "light_left"
 #define DEFAULT_BROKER_PORT         1883
 #define DEFAULT_PUBLISH_INTERVAL    (30 * CLOCK_SECOND)
 #define DEFAULT_RSSI_MEAS_INTERVAL  (CLOCK_SECOND * 30)
