@@ -1,5 +1,5 @@
 /*
- * Copyright © 2019, Peter Mikkelsen
+ * Copyright ï¿½ 2019, Peter Mikkelsen
  *
  * All rights reserved.
  *
@@ -116,7 +116,7 @@ relay_configure(int type, int enable)
 #else
 			pio_set_output(PIOA, CH1_PIN,	0, 0, 0);
 #endif
-			enable = SENSOR_STATUS_INITIALISED;
+			sensor_status = SENSOR_STATUS_INITIALISED;
 			break;
 
 		case SENSORS_ACTIVE:
