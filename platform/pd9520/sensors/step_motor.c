@@ -61,7 +61,7 @@
 Pio *step_base = (Pio *)PIOA;
 
 
-static int Sensor_status = SENSOR_STATUS_DISABLED;
+static int sensor_status = SENSOR_STATUS_DISABLED;
 volatile int32_t stepPosition ,stepPosition_request;
 volatile uint8_t Motor_running;
 // Contains data for timer interrupt.
@@ -141,7 +141,7 @@ step_init(int type, int enable)
 		case SENSORS_HW_INIT:
 			configure_step();
 			stepPosition_request = stepPosition=0;
-			Sensor_status = SENSOR_STATUS_INITIALISED;
+			sensor_status = SENSOR_STATUS_INITIALISED;
 
 			// No one but the motor driver uses PIO_ODSR. Atmels framework will
 			// for some reason set this doing initialization. As a hotfix clear all bits.
@@ -151,7 +151,7 @@ step_init(int type, int enable)
 			break;
 
 		case SENSORS_ACTIVE:
-			if(Sensor_status == SENSOR_STATUS_DISABLED)
+			if(sensor_status == SENSOR_STATUS_DISABLED)
 				return SENSOR_STATUS_DISABLED;
 
 			if(enable==1) {
@@ -159,17 +159,17 @@ step_init(int type, int enable)
 				step_base->PIO_OWER = step1_GPIO | step2_GPIO | step3_GPIO | step4_GPIO;
 				step_base->PIO_ODSR = (unsigned)steptabel[stepPosition&7];
 				speed_cntr_Move(stepPosition_request-stepPosition, 5, 5, 40);
-				Sensor_status = SENSOR_STATUS_READY;
+				sensor_status = SENSOR_STATUS_READY;
 			}else if(enable == 10){
 				srd.run_state = STOP;
 			} else {
 				//Disables writing PIO_ODSR for the I/O line
 				step_base->PIO_OWDR = step1_GPIO | step2_GPIO | step3_GPIO | step4_GPIO;
-				Sensor_status = SENSOR_STATUS_INITIALISED;
+				sensor_status = SENSOR_STATUS_INITIALISED;
 			}
 			break;
 	}
-	return Sensor_status;
+	return sensor_status;
 }
 /*---------------------------------------------------------------------------*/
 int
@@ -195,7 +195,7 @@ step_set(int value)
 static int
 step_status(int type)
 {
-	return Sensor_status;
+	return sensor_status;
 }
 /*---------------------------------------------------------------------------*/
 SENSORS_SENSOR(step_sensor, "Step motor", step_set, step_init, step_status);

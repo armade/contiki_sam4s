@@ -119,7 +119,7 @@ typedef struct {
 #define CALIB_DATA_SIZE (sizeof(bmp_280_calibration_t))
 static uint8_t calibration_data[CALIB_DATA_SIZE];
 /*---------------------------------------------------------------------------*/
-static int enabled = SENSOR_STATUS_DISABLED;
+static int sensor_status = SENSOR_STATUS_DISABLED;
 /*---------------------------------------------------------------------------*/
 /* A buffer for the raw reading from the sensor */
 #define SENSOR_DATA_BUF_SIZE   MEAS_DATA_SIZE
@@ -130,6 +130,8 @@ static uint8_t sensor_value[SENSOR_DATA_BUF_SIZE];
 #define SENSOR_STARTUP_DELAY (80 * 1000) / CLOCK_SECOND
 
 static struct ctimer startup_timer;
+
+
 
 static int32_t temp = 0;
 static uint32_t pres = 0;
@@ -209,7 +211,7 @@ notify_ready(void *not_used)
 		   sensor_value[3], sensor_value[4], sensor_value[5]);
 
 	bmp280_convert(sensor_value, &temp, &pres);
-	enabled = SENSOR_STATUS_READY;
+	sensor_status = SENSOR_STATUS_READY;
 	sensors_changed(&bmp_280_sensor);
 }
 /*---------------------------------------------------------------------------*/
@@ -355,8 +357,8 @@ bmp280_value(int type)
 {
 	int rv;
 
-	if(enabled != SENSOR_STATUS_READY) {
-		PRINTF("Sensor disabled or starting up (%d)\n", enabled);
+	if(sensor_status != SENSOR_STATUS_READY) {
+		PRINTF("Sensor disabled or starting up (%d)\n", sensor_status);
 		return SENSOR_ERROR;
 	}
 
@@ -391,34 +393,35 @@ bmp280_configure(int type, int enable)
 	switch(type) {
 		case SENSORS_HW_INIT:
 			SoftI2CInit();
-			enabled = SENSOR_STATUS_INITIALISED;
+
 			bmp280_init();
 			ID = SoftI2Cread_char_register(BMP280_I2C_ADDRESS, ADDR_PROD_ID);
 			if(ID != 0x58)
-				enabled = SENSOR_STATUS_DISABLED;
+				sensor_status = SENSOR_STATUS_DISABLED;
 			else
 				bmp280_enable_sensor(0);
+			sensor_status = SENSOR_STATUS_INITIALISED;
 			break;
 		case SENSORS_ACTIVE:
 			/* Must be initialised first */
-			if(enabled == SENSOR_STATUS_DISABLED) {
+			if(sensor_status == SENSOR_STATUS_DISABLED)
 			  return SENSOR_STATUS_DISABLED;
-			}
+
 			if(enable) {
 			  bmp280_enable_sensor(1);
 			  ctimer_set(&startup_timer, SENSOR_STARTUP_DELAY, notify_ready, NULL);
-			  enabled = SENSOR_STATUS_NOT_READY;
+			  sensor_status = SENSOR_STATUS_NOT_READY;
 			} else {
 			  ctimer_stop(&startup_timer);
 			  bmp280_enable_sensor(0);
-			  enabled = SENSOR_STATUS_INITIALISED;
+			  sensor_status = SENSOR_STATUS_INITIALISED;
 			}
 			break;
 		default:
 			break;
 	}
 
-  return enabled;
+  return sensor_status;
 }
 /*---------------------------------------------------------------------------*/
 /**
@@ -429,7 +432,7 @@ bmp280_configure(int type, int enable)
 static int
 bmp280_status(int type)
 {
-	switch(type) {
+	/*switch(type) {
 		case SENSORS_ACTIVE:
 		case SENSORS_READY:
 			return enabled;
@@ -437,7 +440,8 @@ bmp280_status(int type)
 		default:
 			break;
 	}
-	return SENSOR_STATUS_DISABLED;
+	return SENSOR_STATUS_DISABLED;*/
+	return sensor_status;
 }
 /*---------------------------------------------------------------------------*/
 SENSORS_SENSOR(bmp_280_sensor, "BMP280", bmp280_value, bmp280_configure, bmp280_status);

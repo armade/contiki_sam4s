@@ -131,7 +131,7 @@ static uint32_t htu21_humidity_conversion_time =
 #define SENSOR_STATUS_HUMID_MEAS   30
 
 
-static int sensor_state = SENSOR_STATUS_DISABLED;
+static int sensor_status = SENSOR_STATUS_DISABLED;
 static uint8_t retry_count;
 
 /*---------------------------------------------------------------------------*/
@@ -359,7 +359,7 @@ static void htu21_error(void)
 	// Apply default values
 	htu21_temperature_conversion_time = HTU21_TEMPERATURE_CONVERSION_TIME_T_14b_RH_12b;
 	htu21_humidity_conversion_time = HTU21_HUMIDITY_CONVERSION_TIME_T_14b_RH_12b;
-	sensor_state = SENSOR_STATUS_READY;
+	sensor_status = SENSOR_STATUS_READY;
 	sensors_changed(&HTU21D_sensor);
 }
 /*
@@ -367,7 +367,7 @@ static void htu21_hold_func(void) {
 	uint8_t buffer[3] = { 0 };
 	//uint16_t ret;
 
-	sensor_state = SENSOR_STATUS_TEMP_MEAS;
+	sensor_status = SENSOR_STATUS_TEMP_MEAS;
 	SoftI2C_cmd(HTU21_ADDR, HTU21_READ_TEMPERATURE_HOLD_COMMAND, 0);
 	SoftI2Cread_register(HTU21_ADDR, buffer, 3);
 	HTU21_temp = (buffer[0] << 8) | buffer[1];
@@ -376,7 +376,7 @@ static void htu21_hold_func(void) {
 		htu21_error();
 		return;
 	}
-	sensor_state = SENSOR_STATUS_HUMID_MEAS;
+	sensor_status = SENSOR_STATUS_HUMID_MEAS;
 	SoftI2C_cmd(HTU21_ADDR, HTU21_READ_HUMIDITY_HOLD_COMMAND, 0);
 	SoftI2Cread_register(HTU21_ADDR, buffer, 3);
 	HTU21_humid = (buffer[0] << 8) | buffer[1];
@@ -392,7 +392,7 @@ static void htu21_hold_func(void) {
 	// All done now convert and notify
 	htu21_convert_temperature_and_relative_humidity(&HTU21_temp,
 			&HTU21_humid);
-	sensor_state = SENSOR_STATUS_READY;
+	sensor_status = SENSOR_STATUS_READY;
 	SoftI2CStop();
 	sensors_changed(&HTU21D_sensor);
 }*/
@@ -407,7 +407,7 @@ static void htu21_notify_ready(void *not_used)
 		return;
 	}
 
-	if(sensor_state == SENSOR_STATUS_TEMP_MEAS){
+	if(sensor_status == SENSOR_STATUS_TEMP_MEAS){
 
 		ret = SoftI2Cread_register(HTU21_ADDR, buffer, 3);
 		// If the internal processing is finished, the HTU21D(F)
@@ -435,7 +435,7 @@ static void htu21_notify_ready(void *not_used)
 		// Initiate humidity measurement
 		SoftI2C_cmd(HTU21_ADDR, HTU21_READ_HUMIDITY_NO_HOLD_COMMAND, 0);
 		SoftI2CStop();
-		sensor_state = SENSOR_STATUS_HUMID_MEAS;
+		sensor_status = SENSOR_STATUS_HUMID_MEAS;
 		ctimer_set(&startup_timer, (htu21_humidity_conversion_time * 1000) / CLOCK_SECOND,
 				htu21_notify_ready, NULL);
 		// Test: if not working just remove
@@ -444,7 +444,7 @@ static void htu21_notify_ready(void *not_used)
 
 		return;
 	}
-	if(sensor_state == SENSOR_STATUS_HUMID_MEAS){
+	if(sensor_status == SENSOR_STATUS_HUMID_MEAS){
 
 		ret = SoftI2Cread_register(HTU21_ADDR, buffer, 3);
 		// If the internal processing is finished, the HTU21D(F)
@@ -478,7 +478,7 @@ static void htu21_notify_ready(void *not_used)
 		// All done now convert and notify
 		htu21_convert_temperature_and_relative_humidity(&HTU21_temp, &HTU21_humid);
 		//PRINTF("    %d   %d\n",HTU21_temp,HTU21_humid);
-		sensor_state = SENSOR_STATUS_READY;
+		sensor_status = SENSOR_STATUS_READY;
 		SoftI2CStop();
 		SoftI2CSync(); // If i2c bus gets out of sync the next measurement is bad.
 		sensors_changed(&HTU21D_sensor);
@@ -523,8 +523,8 @@ static void htu21_enable_sensor(bool enable)
  */
 static int htu21_value(int type)
 {
-	/*if(sensor_state != SENSOR_STATUS_READY){
-		PRINTF("HTU21: Sensor disabled or starting up (%d)\n", sensor_state);
+	/*if(sensor_status != SENSOR_STATUS_READY){
+		PRINTF("HTU21: Sensor disabled or starting up (%d)\n", sensor_status);
 		return SENSOR_ERROR;
 	}*/
 
@@ -570,32 +570,32 @@ static int htu21_configure(int type, int enable)
 					snr_ptr[4],	snr_ptr[5],	snr_ptr[6],	snr_ptr[7]);
 
 			htu21_init();
-			sensor_state = SENSOR_STATUS_INITIALISED;
+			sensor_status = SENSOR_STATUS_INITIALISED;
 
 			break;
 		case SENSORS_ACTIVE:
 			/* Must be initialised first */
-			if(sensor_state == SENSOR_STATUS_DISABLED){
+			if(sensor_status == SENSOR_STATUS_DISABLED){
 				//sensors_changed(&HTU21D_sensor);
-				return sensor_state;
+				return sensor_status;
 			}
 			if(enable){
 				htu21_enable_sensor(1);
-				sensor_state = SENSOR_STATUS_TEMP_MEAS;
+				sensor_status = SENSOR_STATUS_TEMP_MEAS;
 				ctimer_set(&startup_timer,
 						htu21_temperature_conversion_time*CLOCK_SECOND/1000, htu21_notify_ready,
 						NULL);
 			} else{
 				ctimer_stop(&startup_timer);
 				htu21_enable_sensor(0);
-				sensor_state = SENSOR_STATUS_INITIALISED;
+				sensor_status = SENSOR_STATUS_INITIALISED;
 			}
 			break;
 		default:
 			break;
 	}
 
-	return sensor_state;
+	return sensor_status;
 }
 /*---------------------------------------------------------------------------*/
 /**
@@ -609,7 +609,7 @@ static int htu21_status(int type)
 	{
 		case SENSORS_ACTIVE:
 		case SENSORS_READY:
-			return sensor_state;
+			return sensor_status;
 
 		default:
 			return SENSOR_STATUS_DISABLED;
