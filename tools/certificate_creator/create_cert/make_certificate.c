@@ -152,7 +152,7 @@ int load_keys(void)
 	SHA_FINAL(&KEY,HASH_KEY_result);
 
 
-	masterkeys_fp = fopen("keys.pri","r");
+	masterkeys_fp = fopen("../../../../keys.pri","r");
 	if(masterkeys_fp != NULL){
 		fread(public,sizeof(public),1,masterkeys_fp);
 		fread(private,sizeof(private), 1, masterkeys_fp);

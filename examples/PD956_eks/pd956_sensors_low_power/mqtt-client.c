@@ -28,7 +28,7 @@
 #define PRINTF(...)
 #endif
 /*---------------------------------------------------------------------------*/
-static const char *broker_ip = "aaaa::1";
+static const char *broker_ip = "bbbb::1";
 /*---------------------------------------------------------------------------*/
 #define ADDRESS_CONVERSION_OK       1
 #define ADDRESS_CONVERSION_ERROR    0
@@ -923,7 +923,7 @@ static void state_machine(void)
 		{
 			if(hass_config != NULL){
 				mqtt_publish(&conn, NULL, hass_config->topic, (uint8_t *) hass_config->arg,
-							strlen(hass_config->arg), MQTT_QOS_LEVEL_0, MQTT_RETAIN_OFF);
+							strlen(hass_config->arg), MQTT_QOS_LEVEL_0, MQTT_RETAIN_ON);
 				hass_config = hass_config->next;
 				break;
 			}

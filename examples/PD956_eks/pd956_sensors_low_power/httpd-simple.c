@@ -1468,13 +1468,13 @@ PT_THREAD(generate_relay4_config(struct httpd_state *s))
      PT_WAIT_THREAD(&s->generate_pt,
                     enqueue_chunk(s, 0, "title=\"On\" name=\"relay%d\"%s>",
                                   i,
-								  ch4_relay_PD956.status(i+STATUS_CH1) ? " Checked" : ""));
+								  ch4_relay_PD956.value(i+STATUS_CH1) ? " Checked" : ""));
      PT_WAIT_THREAD(&s->generate_pt,
                     enqueue_chunk(s, 0, "<input type=\"radio\" value=\"0\" "));
      PT_WAIT_THREAD(&s->generate_pt,
                     enqueue_chunk(s, 0, "title=\"Off\" name=\"relay%d\"%s>%s",
                                   i,
-								  ch4_relay_PD956.status(i+STATUS_CH1) ? "" : " Checked",
+								  ch4_relay_PD956.value(i+STATUS_CH1) ? "" : " Checked",
                                   config_div_close));
    }
 
@@ -1546,13 +1546,13 @@ PT_THREAD(generate_relay1_config(struct httpd_state *s))
      PT_WAIT_THREAD(&s->generate_pt,
                     enqueue_chunk(s, 0, "title=\"On\" name=\"relay%d\"%s>",
                                   i,
-								  ch1_relay_PD956.status(i+STATUS_CH1) ? " Checked" : ""));
+								  ch1_relay_PD956.value(i+STATUS_CH1) ? " Checked" : ""));
      PT_WAIT_THREAD(&s->generate_pt,
                     enqueue_chunk(s, 0, "<input type=\"radio\" value=\"0\" "));
      PT_WAIT_THREAD(&s->generate_pt,
                     enqueue_chunk(s, 0, "title=\"Off\" name=\"relay%d\"%s>%s",
                                   i,
-								  ch1_relay_PD956.status(i+STATUS_CH1) ? "" : " Checked",
+								  ch1_relay_PD956.value(i+STATUS_CH1) ? "" : " Checked",
                                   config_div_close));
    }
 
@@ -1630,7 +1630,7 @@ PT_THREAD(generate_christmas_light_config(struct httpd_state *s))
      PT_WAIT_THREAD(&s->generate_pt,
                     enqueue_chunk(s, 0, "title=\"Off\" name=\"relay%d\"%s>%s",
                                   i,
-                                  christmas_light.status(i+STATUS_CH1) ? "" : " Checked",
+                                  christmas_light.value(i+STATUS_CH1) ? "" : " Checked",
                                   config_div_close));
    }
 

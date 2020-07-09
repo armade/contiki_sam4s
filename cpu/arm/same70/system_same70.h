@@ -74,6 +74,16 @@ void SystemCoreClockUpdate(void);
  */
 void system_init_flash(uint32_t dw_clk);
 
+
+//Functions and type for using floating point from irq
+typedef struct {
+	uint32_t d[16];
+	uint32_t fpscr;
+} fpusave_eabi_t;
+
+void FPU_save_eabi(fpusave_eabi_t *st);
+void FPU_load_eabi(fpusave_eabi_t *st);
+
 /* @cond 0 */
 /**INDENT-OFF**/
 #ifdef __cplusplus
