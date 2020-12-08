@@ -38,7 +38,7 @@
 #include <stdint.h>
 #include "csprng.h"
 #include "board-peripherals.h"
-#ifdef NODE_LIGHT
+//#ifdef NODE_LIGHT
 /*---------------------------------------------------------------------------*/
 #define DEBUG 0
 #if DEBUG
@@ -60,10 +60,10 @@ static void RGB_FIRE_RUN(void *data);
 static void RGB_RAPID_RED_RUN(void *data);										  
 
 volatile RGB_soft_t RGB; // True output
-volatile RGB_soft_t RGB_reload; // True reload output
+//volatile RGB_soft_t RGB_reload; // True reload output
 static RGB_soft_t user_set; // User set value (not modified by brightness)
 
-uint16_t counter=256;
+//uint16_t counter=256;
 
 
 static int Sensor_status = SENSOR_STATUS_DISABLED;
@@ -77,11 +77,42 @@ static int Sensor_status = SENSOR_STATUS_DISABLED;
      ___  ___
   ___|  |_|  |
 */
+typedef struct{
+	unsigned char LED_acc;
+	unsigned int PIN;
+}LED_ctrl_t;
+
+LED_ctrl_t red_led_pin,green_led_pin,blue_led_pin;
+
+static void LED_ctrl(volatile LED_ctrl_t *LED, unsigned intensity)
+{
+	unsigned u;
+	// Just add up intensity. if accu is larger then 256
+	// turn on and save the remaining.
+	u=intensity;
+	u+=LED->LED_acc;
+	LED->LED_acc=u;
+	if (u&256) {//on
+		RGB_base->PIO_SODR = LED->PIN;
+	} else {
+		RGB_base->PIO_CODR = LED->PIN;
+	}
+}
+
+// 10kHz
 void TC2_Handler(void)
 {
 	RGB_TIMER.TC_SR;
 
-	if(counter == 0)
+	// Substitute constant frequency with alternating frequency.
+	// This reduces the irq time and smoothes the lighting.
+
+	//RGB.all = RGB_reload.all;
+	LED_ctrl(&red_led_pin,RGB.led.r);
+	LED_ctrl(&green_led_pin,RGB.led.g);
+	LED_ctrl(&blue_led_pin,RGB.led.b);
+
+	/*if(counter == 0)
 	{
 		counter = 256;
 		RGB.all = RGB_reload.all;
@@ -93,7 +124,7 @@ void TC2_Handler(void)
 		if(counter == RGB.led.g)	RGB_base->PIO_SODR = RGB_G_GPIO;
 		if(counter == RGB.led.b)	RGB_base->PIO_SODR = RGB_B_GPIO;
 		counter--;
-	}
+	}*/
 
 }
 
@@ -134,8 +165,8 @@ value_soft_RGB(uint16_t R,uint16_t G,uint16_t B, uint16_t brightness)
 	tmp.led.b = (gamma_corr(B)*brightness)>>8;
 	tmp.led.brightness = brightness;
 
-	RGB_reload.all = tmp.all;
-
+	//RGB_reload.all = tmp.all;
+	RGB.all = tmp.all;
 	return 1;
 }
 
@@ -158,10 +189,10 @@ soft_RGB_init(void)
 	pmc_enable_periph_clk(RGB_TIMER_ID);
 #if !LOW_CLOCK //120Mhz
 	RGB_TIMER.TC_CMR= 2 + (2<<13); //2=MCK/32   2<<13=up rc compare
-	RGB_TIMER.TC_RC=105; // 120MHz/(32*105*256) = 140 HZ
+	RGB_TIMER.TC_RC=375; // 120MHz/(32*375) = 10kHZ
 #else //30Mhz
 	RGB_TIMER.TC_CMR= 1 + (2<<13); //1=MCK/8   2<<13=up rc compare
-	RGB_TIMER.TC_RC=105; // 30MHz/(8*105*256) = 140 HZ
+	RGB_TIMER.TC_RC=375; // 30MHz/(8*375) = 10kHZ
 #endif
 
 	//RGB_TIMER.TC_CCR=1;
@@ -178,6 +209,10 @@ soft_RGB_init(void)
 	// Output and low
 	RGB_base->PIO_OER  = RGB_R_GPIO | RGB_G_GPIO | RGB_B_GPIO;
 	RGB_base->PIO_CODR = RGB_R_GPIO | RGB_G_GPIO | RGB_B_GPIO;
+
+	red_led_pin.PIN = RGB_R_GPIO;
+	green_led_pin.PIN = RGB_G_GPIO;
+	blue_led_pin.PIN = RGB_B_GPIO;
 
 	return 1;
 }
@@ -203,7 +238,8 @@ soft_RGB_configure(int type, int enable)
 			user_set.led.g = 255;
 			user_set.led.b = 255;
 
-			RGB_reload.all = user_set.all;
+			//RGB_reload.all = user_set.all;
+			RGB.all = user_set.all;
 			soft_RGB_init();
 			Sensor_status = SENSOR_STATUS_INITIALISED;
 
@@ -217,7 +253,7 @@ soft_RGB_configure(int type, int enable)
 				 sensors_changed(&soft_RGB_ctrl_sensor);
 			 }else if(enable == 7){
 				 //effect_state = 255;
-				 counter = 0;
+				 //counter = 0;
 				 RGB_TIMER.TC_CCR=1;
 				 RGB_TIMER.TC_CCR=4;
 				 Sensor_status = SENSOR_STATUS_READY;
@@ -342,4 +378,4 @@ RGB_RAPID_RED_RUN(void *data)
 	ctimer_set(&RGB_effect_timer, next, RGB_RAPID_RED_RUN, NULL);
 }
 /*---------------------------------------------------------------------------*/
-#endif
+//#endif

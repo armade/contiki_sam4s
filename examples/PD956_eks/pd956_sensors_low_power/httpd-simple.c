@@ -349,7 +349,7 @@ static char generate_christmas_light_config(struct httpd_state *s);
 
 static page_t http_christmas_light_cfg_page = {
   NULL,
-  "chr_light.html",
+  "christmas_light.html",
   "christmas_light Config",
   generate_christmas_light_config,
 };

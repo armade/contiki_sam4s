@@ -256,51 +256,6 @@ void system_init_flash( uint32_t ul_clk )
     }
   }
 }
-
-
-/*
- * If we are using floating point from interrupt we must save the registers
- * and restore them afterwords, otherwise we could destroy information
- * used in usermode code.
- *
- * Eksempel:
- *
- * fpusave_t fpustate; //33 word, 132 byte. NOT CHEAP
- * fpusave(&fpustate);
- * asm volatile ("":::"memory");
- *
- * function_using_floatingpoint();
- *
- * asm volatile ("":::"memory");
- * fpuload(&fpustate);
- */
-
-/*
-EABI calling convention (arm-none-eabi-gcc) kræver, at en funktion
-ikke skader de høje floatingpoint registre. Derfor er det kun nødvendigt
-at gemme de lave 16 singleprecision = lave 8 doubleprecision registre.
-*/
-
-void FPU_save_eabi(fpusave_eabi_t *st)
-{
-	unsigned t;
-	asm volatile ("vmrs %0, fpscr" : "=r" (t) );
-	st->fpscr=t;
-
-	t=(unsigned)(st->d);
-	asm volatile ("vstmia.64 %0,{d0-d7}" :: "r" (t));
-}
-
-void FPU_load_eabi(fpusave_eabi_t *st)
-{
-	unsigned t;
-	asm volatile ("vmsr fpscr, %0" : "=r" (t) );
-	st->fpscr=t;
-
-	t=(unsigned)(st->d);
-	asm volatile ("vldmia.64 %0,{d0-d7}" :: "r" (t));
-}
-
 /* @cond 0 */
 /**INDENT-OFF**/
 #ifdef __cplusplus
